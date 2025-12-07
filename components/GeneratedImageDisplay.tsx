@@ -97,15 +97,40 @@ interface GeneratedImageDisplayProps {
 
 export const GeneratedImageDisplay: React.FC<GeneratedImageDisplayProps> = ({ status, error, content, onPreviewClick }) => {
   
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!content?.imageUrl) return;
-    const link = document.createElement('a');
-    link.href = content.imageUrl;
+    
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    link.download = `ai-generated-${timestamp}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const filename = `ai-generated-${timestamp}.png`;
+    
+    // 如果是 base64 数据，直接下载
+    if (content.imageUrl.startsWith('data:')) {
+      const link = document.createElement('a');
+      link.href = content.imageUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+    
+    // 对于外部URL，尝试使用fetch获取blob后下载
+    try {
+      const response = await fetch(content.imageUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (e) {
+      // 如果fetch失败（CORS等问题），在新窗口打开
+      console.error('下载失败，尝试在新窗口打开:', e);
+      window.open(content.imageUrl, '_blank');
+    }
   };
 
   const renderContent = () => {

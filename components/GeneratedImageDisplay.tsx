@@ -3,6 +3,8 @@ import { ApiStatus } from '../types';
 import type { GeneratedContent } from '../types';
 import { DownloadIcon } from './icons/DownloadIcon';
 import { ZoomInIcon } from './icons/ZoomInIcon';
+import { RefreshIcon } from './icons/RefreshIcon';
+import { EditIcon } from './icons/EditIcon';
 import { EmptyState } from './EmptyState';
 import { ImageIcon } from './icons/ImageIcon';
 
@@ -93,9 +95,18 @@ interface GeneratedImageDisplayProps {
   error: string | null;
   content: GeneratedContent | null;
   onPreviewClick: (url: string) => void;
+  onEditAgain?: () => void; // 再次编辑：将生成的图片添加到上传列表
+  onRegenerate?: () => void; // 重新生成：使用新的随机种子
 }
 
-export const GeneratedImageDisplay: React.FC<GeneratedImageDisplayProps> = ({ status, error, content, onPreviewClick }) => {
+export const GeneratedImageDisplay: React.FC<GeneratedImageDisplayProps> = ({ 
+  status, 
+  error, 
+  content, 
+  onPreviewClick,
+  onEditAgain,
+  onRegenerate
+}) => {
   
   const handleDownload = async () => {
     if (!content?.imageUrl) return;
@@ -150,15 +161,27 @@ export const GeneratedImageDisplay: React.FC<GeneratedImageDisplayProps> = ({ st
                         className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
                         style={{ maxHeight: 'calc(100vh - 12rem)'}}
                     />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4 rounded-lg">
-                        <button onClick={() => onPreviewClick(content.imageUrl!)} className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-gray-700/80 rounded-lg shadow-lg hover:bg-gray-600/80 backdrop-blur-sm transition-all transform hover:scale-105" aria-label="预览">
-                            <ZoomInIcon className="w-5 h-5"/>
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 rounded-lg flex-wrap p-4">
+                        <button onClick={() => onPreviewClick(content.imageUrl!)} className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-gray-700/80 rounded-lg shadow-lg hover:bg-gray-600/80 backdrop-blur-sm transition-all transform hover:scale-105" aria-label="预览">
+                            <ZoomInIcon className="w-4 h-4"/>
                             <span>预览</span>
                         </button>
-                        <button onClick={handleDownload} className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white font-bold rounded-lg text-sm shadow-lg hover:bg-indigo-500 backdrop-blur-sm transition-all transform hover:scale-105" aria-label="下载">
-                            <DownloadIcon className="w-5 h-5"/>
+                        <button onClick={handleDownload} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg text-sm shadow-lg hover:bg-indigo-500 backdrop-blur-sm transition-all transform hover:scale-105" aria-label="下载">
+                            <DownloadIcon className="w-4 h-4"/>
                             <span>下载</span>
                         </button>
+                        {onEditAgain && (
+                          <button onClick={onEditAgain} className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white font-bold rounded-lg text-sm shadow-lg hover:bg-teal-500 backdrop-blur-sm transition-all transform hover:scale-105" aria-label="再次编辑">
+                              <EditIcon className="w-4 h-4"/>
+                              <span>再编辑</span>
+                          </button>
+                        )}
+                        {onRegenerate && (
+                          <button onClick={onRegenerate} className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white font-bold rounded-lg text-sm shadow-lg hover:bg-orange-500 backdrop-blur-sm transition-all transform hover:scale-105" aria-label="重新生成">
+                              <RefreshIcon className="w-4 h-4"/>
+                              <span>重生成</span>
+                          </button>
+                        )}
                     </div>
                 </div>
                 {content.text && (

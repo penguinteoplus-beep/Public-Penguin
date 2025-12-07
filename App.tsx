@@ -82,6 +82,8 @@ interface CanvasProps {
   onExportIdeas: () => void;
   onImportIdeas: () => void;
   onReorderIdeas: (ideas: CreativeIdea[]) => void;
+  onEditAgain?: () => void; // 再次编辑
+  onRegenerate?: () => void; // 重新生成
 }
 
 // --- IndexedDB Service ---
@@ -625,6 +627,8 @@ const Canvas: React.FC<CanvasProps> = ({
   onExportIdeas,
   onImportIdeas,
   onReorderIdeas,
+  onEditAgain,
+  onRegenerate,
 }) => (
    <main className="flex-1 flex flex-col items-center justify-center min-w-0 bg-gray-950 relative overflow-hidden">
       {/* Background Gradient */}
@@ -651,6 +655,8 @@ const Canvas: React.FC<CanvasProps> = ({
                 error={error}
                 content={content}
                 onPreviewClick={onPreviewClick}
+                onEditAgain={onEditAgain}
+                onRegenerate={onRegenerate}
               />
           )}
       </div>
@@ -1140,7 +1146,8 @@ const App: React.FC = () => {
 
     try {
       const result = await editImageWithGemini(activeFile, prompt, { aspectRatio, imageSize });
-      setGeneratedContent(result);
+      // 保存生成时使用的原始图片，用于重新生成
+      setGeneratedContent({ ...result, originalFile: activeFile });
       setStatus(ApiStatus.Success);
       
       // 保存到历史记录
@@ -1184,6 +1191,78 @@ const App: React.FC = () => {
   const handleBpInputChange = (id: string, value: string) => {
       setBpInputs(prev => ({...prev, [id]: value}));
   };
+  
+  // 再次编辑：将生成的图片转换为File并添加到上传列表
+  const handleEditAgain = useCallback(async () => {
+    if (!generatedContent?.imageUrl) return;
+    
+    try {
+      let blob: Blob;
+      
+      if (generatedContent.imageUrl.startsWith('data:')) {
+        // base64 转 Blob
+        const response = await fetch(generatedContent.imageUrl);
+        blob = await response.blob();
+      } else {
+        // 外部URL，fetch获取
+        const response = await fetch(generatedContent.imageUrl);
+        blob = await response.blob();
+      }
+      
+      // 创建 File 对象
+      const timestamp = Date.now();
+      const file = new File([blob], `generated-${timestamp}.png`, { type: 'image/png' });
+      
+      // 添加到文件列表并选中
+      setFiles(prevFiles => {
+        const newFiles = [...prevFiles, file];
+        setTimeout(() => setActiveFileIndex(newFiles.length - 1), 0);
+        return newFiles;
+      });
+      
+      // 清除当前生成结果，准备再次编辑
+      setGeneratedContent(null);
+      setStatus(ApiStatus.Idle);
+    } catch (e) {
+      console.error('转换图片失败:', e);
+      setError('无法将图片添加到编辑列表');
+    }
+  }, [generatedContent]);
+  
+  // 重新生成：使用新的随机种子和原始图片重新生成
+  const handleRegenerate = useCallback(async () => {
+    const hasValidApi = apiKey || (thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey);
+    if (!hasValidApi || !prompt) return;
+    
+    // 保存当初使用的原始图片
+    const originalFile = generatedContent?.originalFile || null;
+    
+    setStatus(ApiStatus.Loading);
+    setError(null);
+    setGeneratedContent(null);
+    
+    try {
+      // 生成新的随机种子，使用原始图片而不是当前队列中的图片
+      const newSeed = Math.floor(Math.random() * 2147483647);
+      const result = await editImageWithGemini(originalFile, prompt, { aspectRatio, imageSize, seed: newSeed });
+      // 保持原始图片引用
+      setGeneratedContent({ ...result, originalFile: originalFile });
+      setStatus(ApiStatus.Success);
+      
+      if (result.imageUrl) {
+        await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled);
+      }
+      
+      if (autoSave && result.imageUrl) {
+        downloadImage(result.imageUrl);
+      }
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
+      console.error(errorMessage);
+      setError(`重新生成失败: ${errorMessage}`);
+      setStatus(ApiStatus.Error);
+    }
+  }, [prompt, apiKey, thirdPartyApiConfig, autoSave, downloadImage, aspectRatio, imageSize, saveToHistory, generatedContent]);
 
   return (
     <div className="h-screen bg-gray-950 text-gray-100 font-sans flex flex-row overflow-hidden selection:bg-indigo-500/30">
@@ -1239,6 +1318,8 @@ const App: React.FC = () => {
           onExportIdeas={handleExportIdeas}
           onImportIdeas={() => importIdeasInputRef.current?.click()}
           onReorderIdeas={handleReorderIdeas}
+          onEditAgain={handleEditAgain}
+          onRegenerate={handleRegenerate}
         />
         {view === 'editor' && (
              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30">

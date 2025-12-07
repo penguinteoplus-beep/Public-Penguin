@@ -77,6 +77,7 @@ const fileToGenerativePart = async (file: File): Promise<Part> => {
 export interface ImageEditConfig {
   aspectRatio: string;
   imageSize: string;
+  seed?: number; // 随机种子，用于重新生成
 }
 
 // 将文件转换为 base64
@@ -119,7 +120,8 @@ export const editImageWithThirdPartyApi = async (
     prompt: prompt,
     response_format: 'url',
     aspect_ratio: convertAspectRatio(config.aspectRatio),
-    image_size: config.imageSize as '1K' | '2K' | '4K'
+    image_size: config.imageSize as '1K' | '2K' | '4K',
+    seed: config.seed // 添加随机种子
   };
   
   // 如果有上传图片，添加参考图（图生图模式）

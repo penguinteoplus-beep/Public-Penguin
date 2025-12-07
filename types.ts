@@ -2,6 +2,7 @@
 export interface GeneratedContent {
   text: string | null;
   imageUrl: string | null;
+  originalFile?: File | null; // 保存生成时使用的原始图片，用于重新生成
 }
 
 export enum ApiStatus {
@@ -74,6 +75,7 @@ export interface NanoBananaRequest {
   aspect_ratio?: '4:3' | '3:4' | '16:9' | '9:16' | '2:3' | '3:2' | '1:1' | '4:5' | '5:4' | '21:9';
   image?: string[]; // 参考图数组，url 或 b64_json
   image_size?: '1K' | '2K' | '4K';
+  seed?: number; // 随机种子，用于重复生成相同结果或变化生成
 }
 
 // Nano-banana API 响应

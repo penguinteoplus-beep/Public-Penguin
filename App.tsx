@@ -821,8 +821,38 @@ const App: React.FC = () => {
   };
   
   // 历史记录操作
-  const handleHistorySelect = (item: GenerationHistory) => {
-    setGeneratedContent({ imageUrl: item.imageUrl, text: null });
+  const handleHistorySelect = async (item: GenerationHistory) => {
+    // 恢复原始输入图片（如果有）
+    let restoredInputFile: File | null = null;
+    if (item.inputImageData && item.inputImageType) {
+      try {
+        // 将 base64 转换回 File 对象
+        const byteCharacters = atob(item.inputImageData);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: item.inputImageType });
+        restoredInputFile = new File([blob], item.inputImageName || 'restored-input.png', { type: item.inputImageType });
+        
+        // 添加到文件列表并选中
+        setFiles(prevFiles => {
+          const newFiles = [...prevFiles, restoredInputFile!];
+          setTimeout(() => setActiveFileIndex(newFiles.length - 1), 0);
+          return newFiles;
+        });
+      } catch (e) {
+        console.warn('恢复输入图片失败:', e);
+      }
+    }
+    
+    // 设置生成的内容，并保留原始图片引用用于“重新生成”
+    setGeneratedContent({ 
+      imageUrl: item.imageUrl, 
+      text: null,
+      originalFile: restoredInputFile 
+    });
     setPrompt(item.prompt);
     setStatus(ApiStatus.Success);
     setView('editor'); // 切换到编辑器视图以显示图片
@@ -847,14 +877,36 @@ const App: React.FC = () => {
     }
   };
   
-  const saveToHistory = async (imageUrl: string, promptText: string, isThirdParty: boolean) => {
+  const saveToHistory = async (imageUrl: string, promptText: string, isThirdParty: boolean, inputFile?: File | null) => {
+    // 将输入图片转换为 base64 保存
+    let inputImageData: string | undefined;
+    let inputImageName: string | undefined;
+    let inputImageType: string | undefined;
+    
+    if (inputFile) {
+      try {
+        inputImageData = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+          reader.readAsDataURL(inputFile);
+        });
+        inputImageName = inputFile.name;
+        inputImageType = inputFile.type;
+      } catch (e) {
+        console.warn('保存输入图片失败:', e);
+      }
+    }
+    
     const historyItem: GenerationHistory = {
       id: Date.now(),
       imageUrl,
       prompt: promptText,
       timestamp: Date.now(),
       model: isThirdParty ? (thirdPartyApiConfig.model || 'nano-banana-2') : 'Gemini 3 Pro',
-      isThirdParty
+      isThirdParty,
+      inputImageData,
+      inputImageName,
+      inputImageType
     };
     try {
       await saveHistoryToDB(historyItem);
@@ -1150,9 +1202,9 @@ const App: React.FC = () => {
       setGeneratedContent({ ...result, originalFile: activeFile });
       setStatus(ApiStatus.Success);
       
-      // 保存到历史记录
+      // 保存到历史记录（包含原始输入图片）
       if (result.imageUrl) {
-        await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled);
+        await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled, activeFile);
       }
       
       if (autoSave && result.imageUrl) {
@@ -1250,7 +1302,7 @@ const App: React.FC = () => {
       setStatus(ApiStatus.Success);
       
       if (result.imageUrl) {
-        await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled);
+        await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled, originalFile);
       }
       
       if (autoSave && result.imageUrl) {

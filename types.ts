@@ -134,4 +134,7 @@ export interface GenerationHistory {
   timestamp: number;
   model: string; // 使用的模型
   isThirdParty: boolean; // 是否使用第三方API
+  inputImageData?: string; // 原始输入图片的 base64 数据（用于重新生成）
+  inputImageName?: string; // 原始输入图片的文件名
+  inputImageType?: string; // 原始输入图片的 MIME 类型
 }

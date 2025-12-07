@@ -643,7 +643,7 @@ const Canvas: React.FC<CanvasProps> = ({
               onImport={onImportIdeas}
               onReorder={onReorderIdeas}
             />
-          ) : files.length === 0 ? (
+          ) : files.length === 0 && !content?.imageUrl ? (
               <WelcomeScreen onUploadClick={onUploadClick} />
           ) : (
              <GeneratedImageDisplay

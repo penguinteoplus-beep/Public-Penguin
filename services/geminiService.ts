@@ -97,9 +97,9 @@ const convertAspectRatio = (ratio: string): NanoBananaRequest['aspect_ratio'] | 
   return ratio as NanoBananaRequest['aspect_ratio'];
 };
 
-// 第三方API图片生成
+// 第三方API图片生成 - 支持文生图和图生图
 export const editImageWithThirdPartyApi = async (
-  file: File, 
+  file: File | null, 
   prompt: string, 
   config: ImageEditConfig
 ): Promise<GeneratedContent> => {
@@ -113,19 +113,21 @@ export const editImageWithThirdPartyApi = async (
     throw new Error("请先配置第三方API Base URL");
   }
   
-  // 将上传的图片转换为 base64
-  const imageBase64 = await fileToBase64(file);
-  const imageDataUrl = `data:${file.type};base64,${imageBase64}`;
-  
   // 构建请求体
   const requestBody: NanoBananaRequest = {
     model: thirdPartyConfig.model || 'nano-banana-2',
     prompt: prompt,
     response_format: 'url',
     aspect_ratio: convertAspectRatio(config.aspectRatio),
-    image: [imageDataUrl], // 参考图
     image_size: config.imageSize as '1K' | '2K' | '4K'
   };
+  
+  // 如果有上传图片，添加参考图（图生图模式）
+  if (file) {
+    const imageBase64 = await fileToBase64(file);
+    const imageDataUrl = `data:${file.type};base64,${imageBase64}`;
+    requestBody.image = [imageDataUrl];
+  }
   
   const url = `${thirdPartyConfig.baseUrl.replace(/\/$/, '')}/v1/images/generations`;
   
@@ -244,7 +246,7 @@ export const chatWithThirdPartyApi = async (
   throw new Error("Chat API 未返回有效响应");
 };
 
-export const editImageWithGemini = async (file: File, prompt: string, config: ImageEditConfig): Promise<GeneratedContent> => {
+export const editImageWithGemini = async (file: File | null, prompt: string, config: ImageEditConfig): Promise<GeneratedContent> => {
   // 如果启用了第三方API，使用第三方API
   if (thirdPartyConfig && thirdPartyConfig.enabled) {
     return editImageWithThirdPartyApi(file, prompt, config);
@@ -256,16 +258,27 @@ export const editImageWithGemini = async (file: File, prompt: string, config: Im
   
   const model = 'gemini-3-pro-image-preview';
 
-  if (!file) throw new Error("请上传图片");
   if (!prompt) throw new Error("请输入提示词");
 
-  const imagePart = await fileToGenerativePart(file);
-  const instruction = '请根据以下提示词编辑图片，只输出结果图片，不要输出任何文字描述。';
-  const textPart: Part = { text: `${instruction}\n\n${prompt}` };
-
-  const contents = {
-    parts: [imagePart, textPart],
-  };
+  // 构建内容 - 支持文生图和图生图
+  let contents;
+  
+  if (file) {
+    // 图生图模式
+    const imagePart = await fileToGenerativePart(file);
+    const instruction = '请根据以下提示词编辑图片，只输出结果图片，不要输出任何文字描述。';
+    const textPart: Part = { text: `${instruction}\n\n${prompt}` };
+    contents = {
+      parts: [imagePart, textPart],
+    };
+  } else {
+    // 文生图模式
+    const instruction = '请根据以下提示词生成图片，只输出结果图片，不要输出任何文字描述。';
+    const textPart: Part = { text: `${instruction}\n\n${prompt}` };
+    contents = {
+      parts: [textPart],
+    };
+  }
 
   // Configure image settings
   const imageConfig: any = {

@@ -17,14 +17,14 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onUploadClick }) =
           欢迎来到艾洛魔法世界
         </h2>
         <p className="text-base text-gray-400 mb-6">
-          上传图片，描述你的创意，AI 将为你施展魔法。
+          直接输入提示词生成图片，或上传图片进行编辑创作
         </p>
         <button
           onClick={onUploadClick}
-          className="bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg text-base shadow-lg hover:bg-indigo-500 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 mx-auto"
+          className="bg-white/10 text-gray-300 font-medium py-2.5 px-5 rounded-lg text-sm hover:bg-white/20 transition-all duration-300 flex items-center justify-center gap-2 mx-auto border border-white/10"
         >
-          <UploadIcon className="w-5 h-5" />
-          <span>上传图片开始</span>
+          <UploadIcon className="w-4 h-4" />
+          <span>上传参考图（可选）</span>
         </button>
       </div>
     </div>

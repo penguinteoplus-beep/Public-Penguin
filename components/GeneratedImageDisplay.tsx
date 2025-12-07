@@ -179,7 +179,7 @@ export const GeneratedImageDisplay: React.FC<GeneratedImageDisplayProps> = ({ st
             <EmptyState
               icon={<ImageIcon className="w-16 h-16 text-gray-700" />}
               text="您的作品将在这里展示"
-              subtext="在右侧输入提示词，然后点击生成按钮"
+              subtext="在右侧输入提示词，点击生成按钮即可创作"
             />
           </div>
         );

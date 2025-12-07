@@ -1121,8 +1121,8 @@ const App: React.FC = () => {
       setStatus(ApiStatus.Error);
       return;
     }
-    if (!activeFile || !prompt) {
-      setError('请上传图片并输入提示词');
+    if (!prompt) {
+      setError('请输入提示词');
       setStatus(ApiStatus.Error);
       return;
     }
@@ -1172,7 +1172,8 @@ const App: React.FC = () => {
     };
   }, [handleGenerateClick]);
 
-  const canGenerate = !!activeFile && prompt.trim().length > 0 && status !== ApiStatus.Loading;
+  // 修改canGenerate条件，只需要有prompt即可（文生图不需要图片）
+  const canGenerate = prompt.trim().length > 0 && status !== ApiStatus.Loading;
   
   const isSmartReady = !!activeSmartTemplate && prompt.trim().length > 0;
   const isSmartPlusReady = !!activeSmartPlusTemplate;

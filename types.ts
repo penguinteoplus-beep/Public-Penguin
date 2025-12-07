@@ -137,4 +137,9 @@ export interface GenerationHistory {
   inputImageData?: string; // 原始输入图片的 base64 数据（用于重新生成）
   inputImageName?: string; // 原始输入图片的文件名
   inputImageType?: string; // 原始输入图片的 MIME 类型
+  // 创意库相关信息（用于重新生成时恢复）
+  creativeTemplateId?: number; // 使用的创意库模板 ID
+  creativeTemplateType?: 'smart' | 'smartPlus' | 'bp' | 'none'; // 创意库类型
+  bpInputs?: Record<string, string>; // BP 模式的输入值
+  smartPlusOverrides?: SmartPlusConfig; // SmartPlus 模式的配置
 }

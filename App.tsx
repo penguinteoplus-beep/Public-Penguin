@@ -63,6 +63,7 @@ interface RightPanelProps {
   imageSize: string;
   setImageSize: (value: string) => void;
   isThirdPartyApiEnabled: boolean;
+  onClearTemplate: () => void; // 卸载创意库
 }
 
 interface CanvasProps {
@@ -427,20 +428,50 @@ const RightPanel: React.FC<RightPanelProps> = ({
   imageSize,
   setImageSize,
   isThirdPartyApiEnabled,
-}) => (
+  onClearTemplate,
+}) => {
+  const hasActiveTemplate = activeSmartTemplate || activeSmartPlusTemplate || activeBPTemplate;
+  const activeTemplateName = activeBPTemplate?.title || activeSmartPlusTemplate?.title || activeSmartTemplate?.title;
+  
+  return (
   <aside className="w-[380px] bg-black/40 backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-l border-white/10 z-20">
      <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
         {/* Prompt Section */}
         <div>
           <div className="flex items-center justify-between mb-3">
              <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                {(activeSmartTemplate || activeSmartPlusTemplate || activeBPTemplate) ? '关键词' : '提示词'}
+                {hasActiveTemplate ? '关键词' : '提示词'}
              </h2>
-             {isThirdPartyApiEnabled ? (
-               <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30">Nano-banana-2</span>
-             ) : (
-               <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Gemini 3 Pro</span>
-             )}
+             <div className="flex items-center gap-2">
+               {/* 当前模板标识 + 卸载按钮 */}
+               {hasActiveTemplate && (
+                 <div className="flex items-center gap-1">
+                   <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                     activeBPTemplate 
+                       ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
+                       : activeSmartPlusTemplate
+                       ? 'bg-teal-500/20 text-teal-300 border-teal-500/30'
+                       : 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                   }`}>
+                     {activeTemplateName}
+                   </span>
+                   <button
+                     onClick={onClearTemplate}
+                     className="text-gray-500 hover:text-red-400 transition-colors p-0.5 rounded hover:bg-red-500/10"
+                     title="卸载创意库 (Esc)"
+                   >
+                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                     </svg>
+                   </button>
+                 </div>
+               )}
+               {isThirdPartyApiEnabled ? (
+                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30">Nano-banana-2</span>
+               ) : (
+                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Gemini 3 Pro</span>
+               )}
+             </div>
           </div>
           
            {activeBPTemplate && (
@@ -609,6 +640,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
      </div>
   </aside>
 );
+};
 
 const Canvas: React.FC<CanvasProps> = ({
   view,
@@ -836,14 +868,41 @@ const App: React.FC = () => {
         const blob = new Blob([byteArray], { type: item.inputImageType });
         restoredInputFile = new File([blob], item.inputImageName || 'restored-input.png', { type: item.inputImageType });
         
-        // 添加到文件列表并选中
-        setFiles(prevFiles => {
-          const newFiles = [...prevFiles, restoredInputFile!];
-          setTimeout(() => setActiveFileIndex(newFiles.length - 1), 0);
-          return newFiles;
-        });
+        // 清空其他图片，仅保留恢复的输入图片
+        setFiles([restoredInputFile]);
+        setActiveFileIndex(0);
       } catch (e) {
         console.warn('恢复输入图片失败:', e);
+      }
+    } else {
+      // 没有输入图片，清空文件列表
+      setFiles([]);
+      setActiveFileIndex(null);
+    }
+    
+    // 恢复创意库设置（用于重新生成）
+    setActiveSmartTemplate(null);
+    setActiveSmartPlusTemplate(null);
+    setActiveBPTemplate(null);
+    setBpInputs({});
+    setSmartPlusOverrides(JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
+    
+    if (item.creativeTemplateType && item.creativeTemplateType !== 'none' && item.creativeTemplateId) {
+      const template = creativeIdeas.find(idea => idea.id === item.creativeTemplateId);
+      if (template) {
+        if (item.creativeTemplateType === 'bp') {
+          setActiveBPTemplate(template);
+          if (item.bpInputs) {
+            setBpInputs(item.bpInputs);
+          }
+        } else if (item.creativeTemplateType === 'smartPlus') {
+          setActiveSmartPlusTemplate(template);
+          if (item.smartPlusOverrides) {
+            setSmartPlusOverrides(item.smartPlusOverrides);
+          }
+        } else if (item.creativeTemplateType === 'smart') {
+          setActiveSmartTemplate(template);
+        }
       }
     }
     
@@ -877,7 +936,18 @@ const App: React.FC = () => {
     }
   };
   
-  const saveToHistory = async (imageUrl: string, promptText: string, isThirdParty: boolean, inputFile?: File | null) => {
+  const saveToHistory = async (
+    imageUrl: string, 
+    promptText: string, 
+    isThirdParty: boolean, 
+    inputFile?: File | null,
+    creativeInfo?: {
+      templateId?: number;
+      templateType: 'smart' | 'smartPlus' | 'bp' | 'none';
+      bpInputs?: Record<string, string>;
+      smartPlusOverrides?: SmartPlusConfig;
+    }
+  ) => {
     // 将输入图片转换为 base64 保存
     let inputImageData: string | undefined;
     let inputImageName: string | undefined;
@@ -906,7 +976,12 @@ const App: React.FC = () => {
       isThirdParty,
       inputImageData,
       inputImageName,
-      inputImageType
+      inputImageType,
+      // 创意库信息
+      creativeTemplateId: creativeInfo?.templateId,
+      creativeTemplateType: creativeInfo?.templateType || 'none',
+      bpInputs: creativeInfo?.bpInputs,
+      smartPlusOverrides: creativeInfo?.smartPlusOverrides
     };
     try {
       await saveHistoryToDB(historyItem);
@@ -1202,9 +1277,28 @@ const App: React.FC = () => {
       setGeneratedContent({ ...result, originalFile: activeFile });
       setStatus(ApiStatus.Success);
       
-      // 保存到历史记录（包含原始输入图片）
+      // 保存到历史记录（包含原始输入图片和创意库信息）
       if (result.imageUrl) {
-        await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled, activeFile);
+        // 确定当前使用的创意库类型
+        let templateType: 'smart' | 'smartPlus' | 'bp' | 'none' = 'none';
+        let templateId: number | undefined;
+        if (activeBPTemplate) {
+          templateType = 'bp';
+          templateId = activeBPTemplate.id;
+        } else if (activeSmartPlusTemplate) {
+          templateType = 'smartPlus';
+          templateId = activeSmartPlusTemplate.id;
+        } else if (activeSmartTemplate) {
+          templateType = 'smart';
+          templateId = activeSmartTemplate.id;
+        }
+        
+        await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled, activeFile, {
+          templateId,
+          templateType,
+          bpInputs: templateType === 'bp' ? { ...bpInputs } : undefined,
+          smartPlusOverrides: templateType === 'smartPlus' ? [...smartPlusOverrides] : undefined
+        });
       }
       
       if (autoSave && result.imageUrl) {
@@ -1218,18 +1312,35 @@ const App: React.FC = () => {
     }
   }, [activeFile, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, autoSave, downloadImage, aspectRatio, imageSize]);
 
+  // 卸载创意库：清空所有模板设置
+  const handleClearTemplate = useCallback(() => {
+    setActiveSmartTemplate(null);
+    setActiveSmartPlusTemplate(null);
+    setActiveBPTemplate(null);
+    setBpInputs({});
+    setSmartPlusOverrides(JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
         event.preventDefault();
         handleGenerateClick();
       }
+      // Esc 键卸载创意库
+      if (event.key === 'Escape') {
+        const hasActiveTemplate = activeSmartTemplate || activeSmartPlusTemplate || activeBPTemplate;
+        if (hasActiveTemplate) {
+          event.preventDefault();
+          handleClearTemplate();
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handleGenerateClick]);
+  }, [handleGenerateClick, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, handleClearTemplate]);
 
   // 修改canGenerate条件，只需要有prompt即可（文生图不需要图片）
   const canGenerate = prompt.trim().length > 0 && status !== ApiStatus.Loading;
@@ -1244,7 +1355,7 @@ const App: React.FC = () => {
       setBpInputs(prev => ({...prev, [id]: value}));
   };
   
-  // 再次编辑：将生成的图片转换为File并添加到上传列表
+  // 再次编辑：将生成的图片转换为File，清空其他图片，卸载创意库
   const handleEditAgain = useCallback(async () => {
     if (!generatedContent?.imageUrl) return;
     
@@ -1265,12 +1376,17 @@ const App: React.FC = () => {
       const timestamp = Date.now();
       const file = new File([blob], `generated-${timestamp}.png`, { type: 'image/png' });
       
-      // 添加到文件列表并选中
-      setFiles(prevFiles => {
-        const newFiles = [...prevFiles, file];
-        setTimeout(() => setActiveFileIndex(newFiles.length - 1), 0);
-        return newFiles;
-      });
+      // 清空所有图片，仅保留结果图并选中
+      setFiles([file]);
+      setActiveFileIndex(0);
+      
+      // 清空创意库，还原默认状态
+      setActiveSmartTemplate(null);
+      setActiveSmartPlusTemplate(null);
+      setActiveBPTemplate(null);
+      setBpInputs({});
+      setSmartPlusOverrides(JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
+      setPrompt(''); // 清空提示词
       
       // 清除当前生成结果，准备再次编辑
       setGeneratedContent(null);
@@ -1302,7 +1418,26 @@ const App: React.FC = () => {
       setStatus(ApiStatus.Success);
       
       if (result.imageUrl) {
-        await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled, originalFile);
+        // 重新生成时保留当前的创意库设置
+        let templateType: 'smart' | 'smartPlus' | 'bp' | 'none' = 'none';
+        let templateId: number | undefined;
+        if (activeBPTemplate) {
+          templateType = 'bp';
+          templateId = activeBPTemplate.id;
+        } else if (activeSmartPlusTemplate) {
+          templateType = 'smartPlus';
+          templateId = activeSmartPlusTemplate.id;
+        } else if (activeSmartTemplate) {
+          templateType = 'smart';
+          templateId = activeSmartTemplate.id;
+        }
+        
+        await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled, originalFile, {
+          templateId,
+          templateType,
+          bpInputs: templateType === 'bp' ? { ...bpInputs } : undefined,
+          smartPlusOverrides: templateType === 'smartPlus' ? [...smartPlusOverrides] : undefined
+        });
       }
       
       if (autoSave && result.imageUrl) {
@@ -1405,6 +1540,7 @@ const App: React.FC = () => {
         imageSize={imageSize}
         setImageSize={setImageSize}
         isThirdPartyApiEnabled={thirdPartyApiConfig.enabled}
+        onClearTemplate={handleClearTemplate}
       />
       
       <style>{`

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { KeyIcon } from './icons/KeyIcon';
 import { CheckCircleIcon } from './icons/CheckCircleIcon';
 import { ThirdPartyApiConfig } from '../types';
+import { ExternalLinkIcon } from './icons/ExternalLinkIcon';
+import { WalletIcon } from './icons/WalletIcon';
 
 interface ApiKeyManagerProps {
   apiKey: string;
@@ -24,6 +26,8 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
   const [tpApiKey, setTpApiKey] = useState('');
   const [tpChatModel, setTpChatModel] = useState(thirdPartyConfig.chatModel || 'gemini-2.5-pro');
   const [isTpKeySet, setIsTpKeySet] = useState(false);
+  const [balanceInfo, setBalanceInfo] = useState<string | null>(null);
+  const [isCheckingBalance, setIsCheckingBalance] = useState(false);
 
   useEffect(() => {
     setIsKeySet(!!apiKey);
@@ -58,6 +62,75 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
     };
     onThirdPartyConfigChange(newConfig);
     setTpApiKey('');
+  };
+  
+  // 查询余额功能
+  const handleCheckBalance = async () => {
+    if (!thirdPartyConfig.baseUrl || !thirdPartyConfig.apiKey) {
+      alert('请先配置API地址和Key');
+      return;
+    }
+    
+    setIsCheckingBalance(true);
+    setBalanceInfo(null);
+    
+    try {
+      // 尝试查询余额API（常见端点）
+      const baseUrl = thirdPartyConfig.baseUrl.replace(/\/$/, '');
+      const balanceEndpoints = [
+        '/v1/dashboard/billing/credit_grants',
+        '/v1/billing/credit_grants',
+        '/dashboard/billing/credit_grants',
+        '/v1/me'
+      ];
+      
+      for (const endpoint of balanceEndpoints) {
+        try {
+          const res = await fetch(`${baseUrl}${endpoint}`, {
+            headers: {
+              'Authorization': `Bearer ${thirdPartyConfig.apiKey}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            // 尝试解析不同格式的余额信息
+            if (data.total_granted !== undefined) {
+              setBalanceInfo(`总额: $${data.total_granted?.toFixed(2) || '0'} | 已用: $${data.total_used?.toFixed(2) || '0'}`);
+              break;
+            } else if (data.balance !== undefined) {
+              setBalanceInfo(`余额: $${data.balance?.toFixed(2) || '0'}`);
+              break;
+            } else if (data.credits !== undefined) {
+              setBalanceInfo(`积分: ${data.credits}`);
+              break;
+            } else {
+              setBalanceInfo('查询成功，但无法解析余额格式');
+            }
+          }
+        } catch {
+          continue;
+        }
+      }
+      
+      if (!balanceInfo) {
+        setBalanceInfo('此API不支持余额查询');
+      }
+    } catch (e) {
+      setBalanceInfo('查询失败');
+    } finally {
+      setIsCheckingBalance(false);
+    }
+  };
+  
+  // 跳转到API控制台
+  const handleOpenDashboard = () => {
+    if (thirdPartyConfig.baseUrl) {
+      // 尝试打开管理页面
+      const baseUrl = thirdPartyConfig.baseUrl.replace(/\/v1$/, '').replace(/\/$/, '');
+      window.open(baseUrl, '_blank');
+    }
   };
 
   return (
@@ -136,6 +209,34 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
           >
             保存配置
           </button>
+          
+          {/* 余额查询和跳转功能 */}
+          {isTpKeySet && (
+            <div className="flex flex-col gap-2 pt-2 border-t border-orange-500/20">
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCheckBalance}
+                  disabled={isCheckingBalance}
+                  className="flex-1 py-1.5 bg-gray-700 text-white font-medium rounded-lg text-[10px] hover:bg-gray-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-1"
+                >
+                  <WalletIcon className="w-3 h-3" />
+                  {isCheckingBalance ? '查询中...' : '查询余额'}
+                </button>
+                <button
+                  onClick={handleOpenDashboard}
+                  className="flex-1 py-1.5 bg-gray-700 text-white font-medium rounded-lg text-[10px] hover:bg-gray-600 transition-colors flex items-center justify-center gap-1"
+                >
+                  <ExternalLinkIcon className="w-3 h-3" />
+                  控制台
+                </button>
+              </div>
+              {balanceInfo && (
+                <p className="text-[10px] text-center text-gray-400 bg-gray-800/50 p-1.5 rounded">
+                  {balanceInfo}
+                </p>
+              )}
+            </div>
+          )}
           
           <p className="text-[10px] text-gray-500 leading-relaxed">
             图片生成使用 nano-banana-2，BP智能体使用分析模型进行图片理解。

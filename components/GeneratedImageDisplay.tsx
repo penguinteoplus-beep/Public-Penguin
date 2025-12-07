@@ -14,6 +14,23 @@ const loadingMessages = [
   "高品质的艺术创作需要一点耐心！",
 ];
 
+// 有趣的错误提示消息
+const funnyErrorMessages = [
+  { emoji: "🐧", title: "哎呀，企鹅滑倒了！", subtitle: "让我们给它一点时间站起来再试" },
+  { emoji: "🧙‍♂️", title: "魔法能量不足！", subtitle: "可能需要更多的想象力燃料" },
+  { emoji: "🛠️", title: "AI 在摸鱼！", subtitle: "我们已经通知它回来工作了" },
+  { emoji: "🌌", title: "宇宙射线干扰！", subtitle: "或者只是网络有点小情绪" },
+  { emoji: "🎨", title: "调色板打翻了！", subtitle: "让我们重新整理一下颜料" },
+  { emoji: "🚀", title: "火箭发射失败！", subtitle: "但我们会再次尝试升空" },
+  { emoji: "🔮", title: "水晶球变得混浊！", subtitle: "请稍等，让它重新清晰" },
+  { emoji: "☕", title: "AI 去喝咖啡了！", subtitle: "它很快就会回来继续创作" },
+];
+
+// 获取随机的有趣错误消息
+const getRandomFunnyError = () => {
+  return funnyErrorMessages[Math.floor(Math.random() * funnyErrorMessages.length)];
+};
+
 const LoadingSpinner: React.FC = () => {
   const [message, setMessage] = useState(loadingMessages[0]);
 
@@ -38,12 +55,38 @@ const LoadingSpinner: React.FC = () => {
   );
 };
 
-const ErrorDisplay: React.FC<{ message: string }> = ({ message }) => (
-  <div className="p-4 border-l-4 border-red-500 bg-red-900/20 rounded-r-lg max-w-md mx-auto">
-    <h3 className="font-bold text-red-400">生成失败</h3>
-    <p className="text-red-300 text-sm mt-1">{message}</p>
-  </div>
-);
+const ErrorDisplay: React.FC<{ message: string }> = ({ message }) => {
+  const [funnyError] = useState(() => getRandomFunnyError());
+  
+  return (
+    <div className="flex flex-col items-center justify-center max-w-md mx-auto text-center">
+      {/* 有趣的表情 */}
+      <div className="text-6xl mb-4 animate-bounce">
+        {funnyError.emoji}
+      </div>
+      
+      {/* 有趣的标题 */}
+      <h3 className="text-xl font-bold text-gray-200 mb-2">
+        {funnyError.title}
+      </h3>
+      <p className="text-gray-400 text-sm mb-4">
+        {funnyError.subtitle}
+      </p>
+      
+      {/* 实际错误信息 */}
+      <div className="p-3 border-l-4 border-red-500 bg-red-900/20 rounded-r-lg w-full">
+        <p className="text-red-300 text-xs text-left">
+          <span className="font-semibold">技术详情：</span> {message}
+        </p>
+      </div>
+      
+      {/* 提示 */}
+      <p className="text-[10px] text-gray-500 mt-4">
+        💡 小提示：检查网络连接或尝试简化提示词
+      </p>
+    </div>
+  );
+};
 
 interface GeneratedImageDisplayProps {
   status: ApiStatus;

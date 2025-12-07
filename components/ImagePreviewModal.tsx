@@ -27,6 +27,7 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ imageUrl, 
   const [transform, setTransform] = useState({ scale: 1, posX: 0, posY: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [imageError, setImageError] = useState(false);
 
   const handleZoomIn = () => setTransform(t => ({...t, scale: Math.min(t.scale + 0.2, 5)}));
   const handleZoomOut = () => setTransform(t => ({...t, scale: Math.max(t.scale - 0.2, 0.5)}));
@@ -95,18 +96,34 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ imageUrl, 
         onClick={(e) => e.stopPropagation()}
         onWheel={handleWheel}
       >
-        <img 
-            src={imageUrl} 
-            alt="Image Preview" 
-            className="block w-auto h-auto max-w-full max-h-full object-contain"
-            style={{ 
-                transform: `translate(${transform.posX}px, ${transform.posY}px) scale(${transform.scale})`,
-                cursor: transform.scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
-                transition: isDragging ? 'none' : 'transform 0.1s ease-out',
-            }}
-            draggable={false}
-            onMouseDown={handleMouseDown}
-        />
+        {imageError ? (
+          <div className="flex flex-col items-center justify-center p-8 bg-gray-800/50 rounded-lg">
+            <p className="text-gray-400 mb-2">图片加载失败</p>
+            <p className="text-xs text-gray-500">第三方图片可能已过期或无法访问</p>
+            <a 
+              href={imageUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="mt-3 text-xs text-indigo-400 hover:text-indigo-300 underline"
+            >
+              在新窗口打开原图
+            </a>
+          </div>
+        ) : (
+          <img 
+              src={imageUrl} 
+              alt="Image Preview" 
+              className="block w-auto h-auto max-w-full max-h-full object-contain"
+              style={{ 
+                  transform: `translate(${transform.posX}px, ${transform.posY}px) scale(${transform.scale})`,
+                  cursor: transform.scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
+                  transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+              }}
+              draggable={false}
+              onMouseDown={handleMouseDown}
+              onError={() => setImageError(true)}
+          />
+        )}
       </div>
 
       <div className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-gray-900/70 backdrop-blur-sm rounded-full p-2 flex items-center gap-2 shadow-lg z-10">

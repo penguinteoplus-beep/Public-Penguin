@@ -123,3 +123,13 @@ export interface OpenAIChatResponse {
     total_tokens: number;
   };
 }
+
+// 历史生图记录
+export interface GenerationHistory {
+  id: number;
+  imageUrl: string;
+  prompt: string;
+  timestamp: number;
+  model: string; // 使用的模型
+  isThirdParty: boolean; // 是否使用第三方API
+}

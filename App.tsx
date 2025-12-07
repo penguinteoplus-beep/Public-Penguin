@@ -3,7 +3,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { ImageUploader } from './components/ImageUploader';
 import { GeneratedImageDisplay } from './components/GeneratedImageDisplay';
 import { editImageWithGemini, generateCreativePromptFromImage, initializeAiClient, processBPTemplate, setThirdPartyConfig } from './services/geminiService';
-import { ApiStatus, GeneratedContent, CreativeIdea, SmartPlusConfig, ThirdPartyApiConfig } from './types';
+import { ApiStatus, GeneratedContent, CreativeIdea, SmartPlusConfig, ThirdPartyApiConfig, GenerationHistory } from './types';
 import { ImagePreviewModal } from './components/ImagePreviewModal';
 import { ApiKeyManager } from './components/ApiKeyManager';
 import { AddCreativeIdeaModal } from './components/AddCreativeIdeaModal';
@@ -18,6 +18,8 @@ import { PenguinIcon } from './components/icons/PenguinIcon';
 import { DownloadIcon } from './components/icons/DownloadIcon';
 import { ImageIcon } from './components/icons/ImageIcon';
 import { LightbulbIcon } from './components/icons/LightbulbIcon';
+import { HistoryPanel } from './components/HistoryPanel';
+import { ClockIcon } from './components/icons/ClockIcon';
 
 
 interface LeftPanelProps {
@@ -33,6 +35,10 @@ interface LeftPanelProps {
   onTriggerUpload: () => void;
   autoSaveEnabled: boolean;
   onAutoSaveToggle: (enabled: boolean) => void;
+  history: GenerationHistory[];
+  onHistorySelect: (item: GenerationHistory) => void;
+  onHistoryDelete: (id: number) => void;
+  onHistoryClear: () => void;
 }
 
 interface RightPanelProps {
@@ -80,8 +86,9 @@ interface CanvasProps {
 
 // --- IndexedDB Service ---
 const DB_NAME = 'PenguinElloDB';
-const DB_VERSION = 2; // Incremented for new fields if needed (schemaless mostly, but good practice)
+const DB_VERSION = 3; // Incremented for history store
 const STORE_NAME = 'creativeIdeas';
+const HISTORY_STORE_NAME = 'generationHistory';
 
 const openDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
@@ -92,6 +99,9 @@ const openDB = (): Promise<IDBDatabase> => {
       const db = (event.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(HISTORY_STORE_NAME)) {
+        db.createObjectStore(HISTORY_STORE_NAME, { keyPath: 'id' });
       }
     };
   });
@@ -146,6 +156,52 @@ const importToDB = async (ideas: CreativeIdea[]) => {
         });
     });
 };
+
+// --- History IndexedDB Operations ---
+const getAllHistoryFromDB = async (): Promise<GenerationHistory[]> => {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(HISTORY_STORE_NAME, 'readonly');
+    const store = transaction.objectStore(HISTORY_STORE_NAME);
+    const request = store.getAll();
+    request.onerror = () => reject(new Error("Error fetching history from DB."));
+    request.onsuccess = () => resolve(request.result);
+  });
+};
+
+const saveHistoryToDB = async (item: GenerationHistory) => {
+  const db = await openDB();
+  return new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(HISTORY_STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(HISTORY_STORE_NAME);
+    const request = store.put(item);
+    request.onerror = () => reject(new Error("Error saving history to DB."));
+    request.onsuccess = () => resolve();
+  });
+};
+
+const deleteHistoryFromDB = async (id: number) => {
+  const db = await openDB();
+  return new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(HISTORY_STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(HISTORY_STORE_NAME);
+    const request = store.delete(id);
+    request.onerror = () => reject(new Error("Error deleting history from DB."));
+    request.onsuccess = () => resolve();
+  });
+};
+
+const clearAllHistoryFromDB = async () => {
+  const db = await openDB();
+  return new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(HISTORY_STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(HISTORY_STORE_NAME);
+    const request = store.clear();
+    request.onerror = () => reject(new Error("Error clearing history from DB."));
+    request.onsuccess = () => resolve();
+  });
+};
+// --- End History IndexedDB Operations ---
 // --- End IndexedDB Service ---
 
 
@@ -161,7 +217,11 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
   onFileSelect,
   onTriggerUpload,
   autoSaveEnabled,
-  onAutoSaveToggle
+  onAutoSaveToggle,
+  history,
+  onHistorySelect,
+  onHistoryDelete,
+  onHistoryClear
 }) => (
   <aside className="w-[300px] bg-black/40 backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-r border-white/10 z-20">
       <div className="p-6 border-b border-white/10 flex-shrink-0">
@@ -182,6 +242,20 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
                 onTriggerUpload={onTriggerUpload}
                 />
         </div>
+        
+        {/* 历史记录区域 */}
+        <div className="flex-shrink-0 border-t border-white/10 pt-4">
+          <Accordion icon={<ClockIcon className="w-4 h-4"/>} title="历史生图" isOpen={false}>
+            <div className="pt-2">
+              <HistoryPanel
+                history={history}
+                onSelect={onHistorySelect}
+                onDelete={onHistoryDelete}
+                onClear={onHistoryClear}
+              />
+            </div>
+          </Accordion>
+        </div>
       </div>
       <div className="p-4 mt-auto flex-shrink-0 border-t border-white/10">
          <Accordion icon={<SettingsIcon/>} title="设置" isOpen={!apiKey && !thirdPartyConfig.enabled}>
@@ -192,6 +266,19 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
                 thirdPartyConfig={thirdPartyConfig}
                 onThirdPartyConfigChange={onThirdPartyConfigChange}
               />
+              
+              {/* 当前模型显示 */}
+              <div className="flex items-center justify-between p-2 bg-white/5 rounded-lg border border-white/10">
+                <span className="text-xs text-gray-400">当前模型</span>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  thirdPartyConfig.enabled 
+                    ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' 
+                    : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                }`}>
+                  {thirdPartyConfig.enabled ? thirdPartyConfig.model || 'nano-banana-2' : 'Gemini 3 Pro'}
+                </span>
+              </div>
+              
               <div className="flex items-center justify-between group">
                 <label htmlFor="auto-save-toggle" className="text-sm font-medium text-gray-400 group-hover:text-gray-300 transition-colors flex items-center gap-2 cursor-pointer">
                   <DownloadIcon className="w-4 h-4" />
@@ -619,6 +706,9 @@ const App: React.FC = () => {
     apiKey: '',
     model: 'nano-banana-2'
   });
+  
+  // 历史记录状态
+  const [generationHistory, setGenerationHistory] = useState<GenerationHistory[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importIdeasInputRef = useRef<HTMLInputElement>(null);
@@ -652,6 +742,18 @@ const App: React.FC = () => {
       }
     };
     loadIdeas();
+    
+    // 加载历史记录
+    const loadHistory = async () => {
+      try {
+        let history = await getAllHistoryFromDB();
+        history.sort((a, b) => b.timestamp - a.timestamp); // 按时间倒序
+        setGenerationHistory(history);
+      } catch (e) {
+        console.error("Failed to load history from DB", e);
+      }
+    };
+    loadHistory();
     
     const savedAutoSave = localStorage.getItem('auto_save_enabled');
     if (savedAutoSave) {
@@ -710,6 +812,49 @@ const App: React.FC = () => {
     setThirdPartyApiConfig(config);
     setThirdPartyConfig(config);
     localStorage.setItem('third_party_api_config', JSON.stringify(config));
+  };
+  
+  // 历史记录操作
+  const handleHistorySelect = (item: GenerationHistory) => {
+    setGeneratedContent({ imageUrl: item.imageUrl, text: null });
+    setPrompt(item.prompt);
+    setStatus(ApiStatus.Success);
+  };
+  
+  const handleHistoryDelete = async (id: number) => {
+    try {
+      await deleteHistoryFromDB(id);
+      setGenerationHistory(prev => prev.filter(h => h.id !== id));
+    } catch (e) {
+      console.error("Failed to delete history:", e);
+    }
+  };
+  
+  const handleHistoryClear = async () => {
+    if (!confirm('确定要清空所有历史记录吗？')) return;
+    try {
+      await clearAllHistoryFromDB();
+      setGenerationHistory([]);
+    } catch (e) {
+      console.error("Failed to clear history:", e);
+    }
+  };
+  
+  const saveToHistory = async (imageUrl: string, promptText: string, isThirdParty: boolean) => {
+    const historyItem: GenerationHistory = {
+      id: Date.now(),
+      imageUrl,
+      prompt: promptText,
+      timestamp: Date.now(),
+      model: isThirdParty ? (thirdPartyApiConfig.model || 'nano-banana-2') : 'Gemini 3 Pro',
+      isThirdParty
+    };
+    try {
+      await saveHistoryToDB(historyItem);
+      setGenerationHistory(prev => [historyItem, ...prev].slice(0, 50)); // 最多保存50条
+    } catch (e) {
+      console.error("Failed to save history:", e);
+    }
   };
   
   const downloadImage = useCallback((url: string, filename?: string) => {
@@ -972,6 +1117,12 @@ const App: React.FC = () => {
       const result = await editImageWithGemini(activeFile, prompt, { aspectRatio, imageSize });
       setGeneratedContent(result);
       setStatus(ApiStatus.Success);
+      
+      // 保存到历史记录
+      if (result.imageUrl) {
+        await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled);
+      }
+      
       if (autoSave && result.imageUrl) {
         downloadImage(result.imageUrl);
       }
@@ -1039,6 +1190,10 @@ const App: React.FC = () => {
         onTriggerUpload={() => fileInputRef.current?.click()}
         autoSaveEnabled={autoSave}
         onAutoSaveToggle={handleAutoSaveToggle}
+        history={generationHistory}
+        onHistorySelect={handleHistorySelect}
+        onHistoryDelete={handleHistoryDelete}
+        onHistoryClear={handleHistoryClear}
       />
       <div className="relative flex-1 flex min-w-0">
         <Canvas 

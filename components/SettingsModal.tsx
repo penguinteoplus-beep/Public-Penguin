@@ -1,0 +1,387 @@
+import React, { useState } from 'react';
+import { ThirdPartyApiConfig } from '../types';
+
+interface SettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  // 云服务模式（登录）
+  isLoggedIn: boolean;
+  onLoginClick: () => void;
+  // API 配置
+  thirdPartyConfig: ThirdPartyApiConfig;
+  onThirdPartyConfigChange: (config: ThirdPartyApiConfig) => void;
+  geminiApiKey: string;
+  onGeminiApiKeySave: (key: string) => void;
+  // 自动保存
+  autoSaveEnabled: boolean;
+  onAutoSaveToggle: (enabled: boolean) => void;
+}
+
+type ApiMode = 'cloud' | 'local-thirdparty' | 'local-gemini';
+
+export const SettingsModal: React.FC<SettingsModalProps> = ({
+  isOpen,
+  onClose,
+  isLoggedIn,
+  onLoginClick,
+  thirdPartyConfig,
+  onThirdPartyConfigChange,
+  geminiApiKey,
+  onGeminiApiKeySave,
+  autoSaveEnabled,
+  onAutoSaveToggle,
+}) => {
+  // 确定当前模式
+  const getCurrentMode = (): ApiMode => {
+    if (isLoggedIn && thirdPartyConfig.enabled) return 'cloud';
+    if (thirdPartyConfig.enabled && thirdPartyConfig.apiKey) return 'local-thirdparty';
+    return 'local-gemini';
+  };
+
+  const [activeMode, setActiveMode] = useState<ApiMode>(getCurrentMode());
+  const [localThirdPartyUrl, setLocalThirdPartyUrl] = useState(thirdPartyConfig.baseUrl || '');
+  const [localThirdPartyKey, setLocalThirdPartyKey] = useState(thirdPartyConfig.apiKey || '');
+  const [localGeminiKey, setLocalGeminiKey] = useState(geminiApiKey || '');
+  const [showApiKey, setShowApiKey] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleModeChange = (mode: ApiMode) => {
+    setActiveMode(mode);
+    
+    if (mode === 'cloud') {
+      // 云模式：使用后端配置的 API
+      onThirdPartyConfigChange({
+        ...thirdPartyConfig,
+        enabled: true,
+        apiKey: '', // 云模式不需要前端存储 key
+        baseUrl: '', // 云模式使用后端配置
+      });
+    } else if (mode === 'local-thirdparty') {
+      // 本地第三方 API 模式
+      onThirdPartyConfigChange({
+        ...thirdPartyConfig,
+        enabled: true,
+        apiKey: localThirdPartyKey,
+        baseUrl: localThirdPartyUrl,
+      });
+    } else {
+      // 本地 Gemini 模式
+      onThirdPartyConfigChange({
+        ...thirdPartyConfig,
+        enabled: false,
+      });
+      if (localGeminiKey) {
+        onGeminiApiKeySave(localGeminiKey);
+      }
+    }
+  };
+
+  const handleSaveLocalThirdParty = () => {
+    onThirdPartyConfigChange({
+      ...thirdPartyConfig,
+      enabled: true,
+      apiKey: localThirdPartyKey,
+      baseUrl: localThirdPartyUrl,
+    });
+  };
+
+  const handleSaveGeminiKey = () => {
+    onGeminiApiKeySave(localGeminiKey);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* 背景遮罩 */}
+      <div 
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      
+      {/* 弹窗内容 */}
+      <div className="relative w-full max-w-lg bg-gray-900 rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-fade-in">
+        {/* 头部 */}
+        <div className="p-6 border-b border-white/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-white">设置</h2>
+              <p className="text-sm text-gray-400 mt-1">配置 API 连接方式</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* 内容 */}
+        <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+          {/* API 模式选择 */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">API 连接方式</h3>
+            
+            {/* 云服务模式 - 推荐 */}
+            <div
+              onClick={() => {
+                if (!isLoggedIn) {
+                  onLoginClick();
+                } else {
+                  handleModeChange('cloud');
+                }
+              }}
+              className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                activeMode === 'cloud' && isLoggedIn
+                  ? 'border-indigo-500 bg-indigo-500/10'
+                  : 'border-white/10 hover:border-white/20 bg-white/5'
+              }`}
+            >
+              <div className="flex items-start gap-4">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  activeMode === 'cloud' && isLoggedIn ? 'bg-indigo-500' : 'bg-gray-700'
+                }`}>
+                  <span className="text-xl">☁️</span>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-semibold text-white">云服务模式</h4>
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full">
+                      推荐
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    登录后使用云端 API，享受云创意库、历史同步等功能
+                  </p>
+                  {!isLoggedIn && (
+                    <button className="mt-2 text-xs text-indigo-400 hover:text-indigo-300 font-medium">
+                      点击登录 →
+                    </button>
+                  )}
+                  {isLoggedIn && activeMode === 'cloud' && (
+                    <div className="mt-2 flex items-center gap-2 text-xs text-green-400">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      已连接
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* 选中指示器 */}
+              {activeMode === 'cloud' && isLoggedIn && (
+                <div className="absolute top-3 right-3 w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center">
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            {/* 本地第三方 API 模式 */}
+            <div
+              onClick={() => handleModeChange('local-thirdparty')}
+              className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                activeMode === 'local-thirdparty'
+                  ? 'border-orange-500 bg-orange-500/10'
+                  : 'border-white/10 hover:border-white/20 bg-white/5'
+              }`}
+            >
+              <div className="flex items-start gap-4">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  activeMode === 'local-thirdparty' ? 'bg-orange-500' : 'bg-gray-700'
+                }`}>
+                  <span className="text-xl">🔌</span>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-white">第三方 API</h4>
+                  <p className="text-xs text-gray-400 mt-1">
+                    使用自己的第三方 API (如 nano-banana)，直接从浏览器请求
+                  </p>
+                </div>
+              </div>
+              {activeMode === 'local-thirdparty' && (
+                <div className="absolute top-3 right-3 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            {/* 本地第三方 API 配置表单 */}
+            {activeMode === 'local-thirdparty' && (
+              <div className="ml-14 space-y-3 animate-fade-in">
+                <div>
+                  <label className="text-xs font-medium text-gray-400 block mb-1">API 地址</label>
+                  <input
+                    type="text"
+                    value={localThirdPartyUrl}
+                    onChange={(e) => setLocalThirdPartyUrl(e.target.value)}
+                    placeholder="https://api.example.com"
+                    className="w-full px-3 py-2 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-400 block mb-1">API Key</label>
+                  <div className="relative">
+                    <input
+                      type={showApiKey ? 'text' : 'password'}
+                      value={localThirdPartyKey}
+                      onChange={(e) => setLocalThirdPartyKey(e.target.value)}
+                      placeholder="sk-..."
+                      className="w-full px-3 py-2 pr-10 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                    >
+                      {showApiKey ? '🙈' : '👁️'}
+                    </button>
+                  </div>
+                </div>
+                <button
+                  onClick={handleSaveLocalThirdParty}
+                  className="w-full py-2 text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
+                >
+                  保存配置
+                </button>
+              </div>
+            )}
+
+            {/* 本地 Gemini API 模式 */}
+            <div
+              onClick={() => handleModeChange('local-gemini')}
+              className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                activeMode === 'local-gemini'
+                  ? 'border-purple-500 bg-purple-500/10'
+                  : 'border-white/10 hover:border-white/20 bg-white/5'
+              }`}
+            >
+              <div className="flex items-start gap-4">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  activeMode === 'local-gemini' ? 'bg-purple-500' : 'bg-gray-700'
+                }`}>
+                  <span className="text-xl">💎</span>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-white">Gemini API</h4>
+                  <p className="text-xs text-gray-400 mt-1">
+                    使用 Google Gemini API Key，直接从浏览器请求
+                  </p>
+                </div>
+              </div>
+              {activeMode === 'local-gemini' && (
+                <div className="absolute top-3 right-3 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            {/* 本地 Gemini API 配置表单 */}
+            {activeMode === 'local-gemini' && (
+              <div className="ml-14 space-y-3 animate-fade-in">
+                <div>
+                  <label className="text-xs font-medium text-gray-400 block mb-1">Gemini API Key</label>
+                  <div className="relative">
+                    <input
+                      type={showApiKey ? 'text' : 'password'}
+                      value={localGeminiKey}
+                      onChange={(e) => setLocalGeminiKey(e.target.value)}
+                      placeholder="AIza..."
+                      className="w-full px-3 py-2 pr-10 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                    >
+                      {showApiKey ? '🙈' : '👁️'}
+                    </button>
+                  </div>
+                </div>
+                <button
+                  onClick={handleSaveGeminiKey}
+                  className="w-full py-2 text-sm font-medium bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors"
+                >
+                  保存配置
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* 分割线 */}
+          <div className="border-t border-white/10" />
+
+          {/* 其他设置 */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">其他设置</h3>
+            
+            {/* 自动保存 */}
+            <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">💾</span>
+                <div>
+                  <h4 className="text-sm font-medium text-white">自动保存</h4>
+                  <p className="text-xs text-gray-400">生成图片后自动下载到本地</p>
+                </div>
+              </div>
+              <div className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  className="sr-only peer" 
+                  checked={autoSaveEnabled} 
+                  onChange={(e) => onAutoSaveToggle(e.target.checked)}
+                />
+                <div className="w-11 h-6 bg-gray-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-indigo-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 transition-colors"></div>
+              </div>
+            </div>
+
+            {/* 当前模型显示 */}
+            <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🤖</span>
+                <div>
+                  <h4 className="text-sm font-medium text-white">当前模型</h4>
+                  <p className="text-xs text-gray-400">正在使用的 AI 模型</p>
+                </div>
+              </div>
+              <span className={`text-xs font-medium px-3 py-1 rounded-full ${
+                activeMode === 'cloud' || activeMode === 'local-thirdparty'
+                  ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' 
+                  : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+              }`}>
+                {activeMode === 'cloud' || activeMode === 'local-thirdparty' 
+                  ? thirdPartyConfig.model || 'nano-banana-2' 
+                  : 'Gemini 3 Pro'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* 底部 */}
+        <div className="p-6 border-t border-white/10 bg-black/20">
+          <button
+            onClick={onClose}
+            className="w-full py-3 text-sm font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-xl transition-all shadow-lg shadow-indigo-500/20"
+          >
+            完成
+          </button>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .animate-fade-in { animation: fade-in 0.2s ease-out; }
+      `}</style>
+    </div>
+  );
+};

@@ -5,21 +5,18 @@ import { GeneratedImageDisplay } from './components/GeneratedImageDisplay';
 import { editImageWithGemini, generateCreativePromptFromImage, initializeAiClient, processBPTemplate, setThirdPartyConfig } from './services/geminiService';
 import { ApiStatus, GeneratedContent, CreativeIdea, SmartPlusConfig, ThirdPartyApiConfig, GenerationHistory } from './types';
 import { ImagePreviewModal } from './components/ImagePreviewModal';
-import { ApiKeyManager } from './components/ApiKeyManager';
 import { AddCreativeIdeaModal } from './components/AddCreativeIdeaModal';
+import { SettingsModal } from './components/SettingsModal';
 import { CreativeLibrary } from './components/CreativeLibrary';
 import { WelcomeScreen } from './components/WelcomeScreen';
-import { Accordion } from './components/Accordion';
 import { LibraryIcon } from './components/icons/LibraryIcon';
 import { SettingsIcon } from './components/icons/SettingsIcon';
 import { PlusCircleIcon } from './components/icons/PlusCircleIcon';
 import { GenerateButton } from './components/GenerateButton';
 import { PenguinIcon } from './components/icons/PenguinIcon';
-import { DownloadIcon } from './components/icons/DownloadIcon';
 import { ImageIcon } from './components/icons/ImageIcon';
 import { LightbulbIcon } from './components/icons/LightbulbIcon';
-import { HistoryPanel } from './components/HistoryPanel';
-import { ClockIcon } from './components/icons/ClockIcon';
+import { HistoryStrip } from './components/HistoryStrip';
 import { AuthModal } from './components/AuthModal';
 import { RechargeModal } from './components/RechargeModal';
 import { User, getCurrentUser, logout as apiLogout, isLoggedIn } from './services/api/auth';
@@ -30,27 +27,20 @@ import { PriceConfig } from './types';
 
 
 interface LeftPanelProps {
-  apiKey: string;
-  onApiKeySave: (key: string) => void;
-  thirdPartyConfig: ThirdPartyApiConfig;
-  onThirdPartyConfigChange: (config: ThirdPartyApiConfig) => void;
   files: File[];
   activeFileIndex: number | null;
   onFileSelection: (files: FileList | null) => void;
   onFileRemove: (index: number) => void;
   onFileSelect: (index: number) => void;
   onTriggerUpload: () => void;
-  autoSaveEnabled: boolean;
-  onAutoSaveToggle: (enabled: boolean) => void;
-  history: GenerationHistory[];
-  onHistorySelect: (item: GenerationHistory) => void;
-  onHistoryDelete: (id: number) => void;
-  onHistoryClear: () => void;
   // 用户认证相关
   currentUser: User | null;
   onLoginClick: () => void;
   onLogout: () => void;
   onRechargeClick: () => void;
+  onSettingsClick: () => void;
+  // 当前 API 模式状态
+  isCloudMode: boolean;
 }
 
 interface RightPanelProps {
@@ -97,6 +87,11 @@ interface CanvasProps {
   onReorderIdeas: (ideas: CreativeIdea[]) => void;
   onEditAgain?: () => void; // 再次编辑
   onRegenerate?: () => void; // 重新生成
+  // 历史记录相关
+  history: GenerationHistory[];
+  onHistorySelect: (item: GenerationHistory) => void;
+  onHistoryDelete: (id: number) => void;
+  onHistoryClear: () => void;
 }
 
 // --- IndexedDB Service ---
@@ -221,145 +216,122 @@ const clearAllHistoryFromDB = async () => {
 
 
 const LeftPanel: React.FC<LeftPanelProps> = ({
-  apiKey,
-  onApiKeySave,
-  thirdPartyConfig,
-  onThirdPartyConfigChange,
   files,
   activeFileIndex,
   onFileSelection,
   onFileRemove,
   onFileSelect,
   onTriggerUpload,
-  autoSaveEnabled,
-  onAutoSaveToggle,
-  history,
-  onHistorySelect,
-  onHistoryDelete,
-  onHistoryClear,
   currentUser,
   onLoginClick,
   onLogout,
-  onRechargeClick
+  onRechargeClick,
+  onSettingsClick,
+  isCloudMode,
 }) => (
-  <aside className="w-[300px] bg-black/40 backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-r border-white/10 z-20">
-      <div className="p-6 border-b border-white/10 flex-shrink-0">
-           <div className="flex items-center justify-between">
-             <div>
-               <h1 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-indigo-400 to-purple-500 tracking-tight">
-                🐧 艾洛魔法
-               </h1>
-               <p className="text-[10px] text-gray-400 font-medium tracking-widest mt-1 uppercase">AI Studio Pro</p>
-             </div>
-             {/* 用户头像/登录按钮 */}
-             {currentUser ? (
-               <div className="relative group">
-                 <div className="flex items-center gap-2">
-                   {/* 企鹅币余额 - 点击充值 */}
-                   <button 
-                     onClick={onRechargeClick}
-                     className="flex items-center gap-1 px-2 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-lg hover:bg-yellow-500/20 transition-colors group"
-                     title="点击充值企鹅币"
-                   >
-                     <span className="text-sm group-hover:animate-bounce">🪙</span>
-                     <span className="text-xs font-bold text-yellow-400">{currentUser.coins || 0}</span>
-                     <span className="text-[10px] text-yellow-500/60 group-hover:text-yellow-400">+</span>
-                   </button>
-                   <button className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform">
-                     {currentUser.nickname?.[0] || currentUser.username[0].toUpperCase()}
-                   </button>
-                 </div>
-                 {/* 下拉菜单 */}
-                 <div className="absolute right-0 top-full mt-2 w-40 bg-gray-900 border border-white/10 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                   <div className="p-3 border-b border-white/10">
-                     <p className="text-sm font-medium text-white truncate">{currentUser.nickname || currentUser.username}</p>
-                     <p className="text-[10px] text-gray-500 truncate">{currentUser.email}</p>
-                   </div>
-                   <button
-                     onClick={onLogout}
-                     className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 transition-colors rounded-b-xl"
-                   >
-                     退出登录
-                   </button>
-                 </div>
-               </div>
-             ) : (
-               <button
-                 onClick={onLoginClick}
-                 className="px-3 py-1.5 text-xs font-medium text-indigo-400 border border-indigo-500/30 rounded-lg hover:bg-indigo-500/10 transition-all"
-               >
-                 登录
-               </button>
-             )}
-           </div>
-      </div>
-      <div className="flex-grow p-4 space-y-4 flex flex-col min-h-0 overflow-hidden">
-        <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">资源素材</h2>
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
-             <ImageUploader 
-                files={files}
-                activeFileIndex={activeFileIndex}
-                onFileChange={onFileSelection}
-                onFileRemove={onFileRemove}
-                onFileSelect={onFileSelect}
-                onTriggerUpload={onTriggerUpload}
-                />
+  <aside className="w-[280px] bg-black/40 backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-r border-white/10 z-20">
+      {/* 顶部导航栏 */}
+      <div className="p-4 border-b border-white/10 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🐧</span>
+            <div>
+              <h1 className="text-lg font-black bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-indigo-400 to-purple-500 tracking-tight">
+                艾洛魔法
+              </h1>
+            </div>
+          </div>
+          
+          {/* 工具栏 */}
+          <div className="flex items-center gap-1">
+            {/* API 状态指示器 */}
+            <div 
+              className={`px-2 py-1 rounded-lg text-[10px] font-medium flex items-center gap-1 ${
+                isCloudMode 
+                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' 
+                  : 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
+              }`}
+              title={isCloudMode ? '云服务模式' : '本地模式'}
+            >
+              <span>{isCloudMode ? '☁️' : '🔌'}</span>
+              <span>{isCloudMode ? '云' : '本地'}</span>
+            </div>
+            
+            {/* 设置按钮 */}
+            <button
+              onClick={onSettingsClick}
+              className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all"
+              title="设置"
+            >
+              <SettingsIcon className="w-4 h-4" />
+            </button>
+          </div>
         </div>
         
-        {/* 历史记录区域 */}
-        <div className="flex-shrink-0 border-t border-white/10 pt-4">
-          <Accordion icon={<ClockIcon className="w-4 h-4"/>} title="历史生图" isOpen={false}>
-            <div className="pt-2">
-              <HistoryPanel
-                history={history}
-                onSelect={onHistorySelect}
-                onDelete={onHistoryDelete}
-                onClear={onHistoryClear}
-              />
-            </div>
-          </Accordion>
-        </div>
-      </div>
-      <div className="p-4 mt-auto flex-shrink-0 border-t border-white/10">
-         <Accordion icon={<SettingsIcon/>} title="设置" isOpen={!apiKey && !thirdPartyConfig.enabled}>
-            <div className="flex flex-col gap-4 pt-2">
-              <ApiKeyManager 
-                apiKey={apiKey} 
-                onApiKeySave={onApiKeySave}
-                thirdPartyConfig={thirdPartyConfig}
-                onThirdPartyConfigChange={onThirdPartyConfigChange}
-              />
-              
-              {/* 当前模型显示 */}
-              <div className="flex items-center justify-between p-2 bg-white/5 rounded-lg border border-white/10">
-                <span className="text-xs text-gray-400">当前模型</span>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                  thirdPartyConfig.enabled 
-                    ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' 
-                    : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                }`}>
-                  {thirdPartyConfig.enabled ? thirdPartyConfig.model || 'nano-banana-2' : 'Gemini 3 Pro'}
-                </span>
-              </div>
-              
-              <div className="flex items-center justify-between group">
-                <label htmlFor="auto-save-toggle" className="text-sm font-medium text-gray-400 group-hover:text-gray-300 transition-colors flex items-center gap-2 cursor-pointer">
-                  <DownloadIcon className="w-4 h-4" />
-                  自动保存
-                </label>
-                <div className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    id="auto-save-toggle" 
-                    className="sr-only peer" 
-                    checked={autoSaveEnabled} 
-                    onChange={(e) => onAutoSaveToggle(e.target.checked)}
-                  />
-                  <div className="w-9 h-5 bg-gray-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-indigo-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 transition-colors"></div>
+        {/* 用户信息栏 */}
+        <div className="mt-3 flex items-center justify-between">
+          {currentUser ? (
+            <div className="flex items-center gap-2 flex-1">
+              {/* 头像 */}
+              <div className="relative group">
+                <button className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-xs shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform">
+                  {currentUser.nickname?.[0] || currentUser.username[0].toUpperCase()}
+                </button>
+                {/* 下拉菜单 */}
+                <div className="absolute left-0 top-full mt-2 w-36 bg-gray-900 border border-white/10 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                  <div className="p-2 border-b border-white/10">
+                    <p className="text-xs font-medium text-white truncate">{currentUser.nickname || currentUser.username}</p>
+                    <p className="text-[10px] text-gray-500 truncate">{currentUser.email}</p>
+                  </div>
+                  <button
+                    onClick={onLogout}
+                    className="w-full px-2 py-1.5 text-left text-xs text-red-400 hover:bg-red-500/10 transition-colors rounded-b-xl"
+                  >
+                    退出登录
+                  </button>
                 </div>
               </div>
+              
+              {/* 用户名 */}
+              <span className="text-xs text-gray-300 truncate flex-1">
+                {currentUser.nickname || currentUser.username}
+              </span>
+              
+              {/* 企鹅币余额 */}
+              <button 
+                onClick={onRechargeClick}
+                className="flex items-center gap-1 px-2 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-lg hover:bg-yellow-500/20 transition-colors"
+                title="点击充值企鹅币"
+              >
+                <span className="text-xs">🪙</span>
+                <span className="text-xs font-bold text-yellow-400">{currentUser.coins || 0}</span>
+              </button>
             </div>
-         </Accordion>
+          ) : (
+            <button
+              onClick={onLoginClick}
+              className="flex-1 py-2 text-xs font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all flex items-center justify-center gap-2"
+            >
+              <span>☁️</span>
+              登录使用云服务
+            </button>
+          )}
+        </div>
+      </div>
+      
+      {/* 资源素材区域 */}
+      <div className="flex-grow p-4 flex flex-col min-h-0 overflow-hidden">
+        <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1 mb-3">资源素材</h2>
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <ImageUploader 
+            files={files}
+            activeFileIndex={activeFileIndex}
+            onFileChange={onFileSelection}
+            onFileRemove={onFileRemove}
+            onFileSelect={onFileSelect}
+            onTriggerUpload={onTriggerUpload}
+          />
+        </div>
       </div>
   </aside>
 );
@@ -727,12 +699,16 @@ const Canvas: React.FC<CanvasProps> = ({
   onReorderIdeas,
   onEditAgain,
   onRegenerate,
+  history,
+  onHistorySelect,
+  onHistoryDelete,
+  onHistoryClear,
 }) => (
-   <main className="flex-1 flex flex-col items-center justify-center min-w-0 bg-gray-950 relative overflow-hidden">
+   <main className="flex-1 flex flex-col min-w-0 bg-gray-950 relative overflow-hidden">
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/10 via-gray-950 to-gray-950 pointer-events-none"></div>
       
-      <div className="relative z-10 w-full h-full p-8 flex flex-col">
+      <div className="relative z-10 w-full flex-1 p-8 flex flex-col overflow-hidden">
           {view === 'library' ? (
              <CreativeLibrary
               ideas={creativeIdeas}
@@ -758,6 +734,20 @@ const Canvas: React.FC<CanvasProps> = ({
               />
           )}
       </div>
+      
+      {/* 底部历史记录条 - 只在编辑器视图显示 */}
+      {view === 'editor' && history.length > 0 && (
+        <div className="relative z-10 flex-shrink-0 px-4 pb-4">
+          <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-4">
+            <HistoryStrip
+              history={history}
+              onSelect={onHistorySelect}
+              onDelete={onHistoryDelete}
+              onClear={onHistoryClear}
+            />
+          </div>
+        </div>
+      )}
    </main>
 );
 
@@ -821,6 +811,7 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   const [isRechargeModalOpen, setRechargeModalOpen] = useState(false);
+  const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
   
   // 企鹅币状态 🪙
   const [priceConfig, setPriceConfig] = useState<PriceConfig>({ generateImage: 10, analyzeImage: 5, chat: 2 });
@@ -1740,26 +1731,18 @@ const App: React.FC = () => {
       />
       
       <LeftPanel 
-        apiKey={apiKey}
-        onApiKeySave={handleApiKeySave}
-        thirdPartyConfig={thirdPartyApiConfig}
-        onThirdPartyConfigChange={handleThirdPartyConfigChange}
         files={files}
         activeFileIndex={activeFileIndex}
         onFileSelection={handleFileSelection}
         onFileRemove={handleFileRemove}
         onFileSelect={setActiveFileIndex}
         onTriggerUpload={() => fileInputRef.current?.click()}
-        autoSaveEnabled={autoSave}
-        onAutoSaveToggle={handleAutoSaveToggle}
-        history={generationHistory}
-        onHistorySelect={handleHistorySelect}
-        onHistoryDelete={handleHistoryDelete}
-        onHistoryClear={handleHistoryClear}
         currentUser={currentUser}
         onLoginClick={() => setAuthModalOpen(true)}
         onLogout={handleLogout}
         onRechargeClick={() => setRechargeModalOpen(true)}
+        onSettingsClick={() => setSettingsModalOpen(true)}
+        isCloudMode={!!currentUser && thirdPartyApiConfig.enabled}
       />
       <div className="relative flex-1 flex min-w-0">
         <Canvas 
@@ -1781,9 +1764,13 @@ const App: React.FC = () => {
           onReorderIdeas={handleReorderIdeas}
           onEditAgain={handleEditAgain}
           onRegenerate={handleRegenerate}
+          history={generationHistory}
+          onHistorySelect={handleHistorySelect}
+          onHistoryDelete={handleHistoryDelete}
+          onHistoryClear={handleHistoryClear}
         />
         {view === 'editor' && (
-             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30">
+             <div className={`absolute left-1/2 -translate-x-1/2 z-30 transition-all duration-300 ${generationHistory.length > 0 ? 'bottom-[180px]' : 'bottom-6'}`}>
                 <GenerateButton 
                     onClick={handleGenerateClick}
                     disabled={!canGenerate}
@@ -1853,6 +1840,21 @@ const App: React.FC = () => {
             setCurrentUser({ ...currentUser, coins: newBalance });
           }
         }}
+      />
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+        isLoggedIn={!!currentUser}
+        onLoginClick={() => {
+          setSettingsModalOpen(false);
+          setAuthModalOpen(true);
+        }}
+        thirdPartyConfig={thirdPartyApiConfig}
+        onThirdPartyConfigChange={handleThirdPartyConfigChange}
+        geminiApiKey={apiKey}
+        onGeminiApiKeySave={handleApiKeySave}
+        autoSaveEnabled={autoSave}
+        onAutoSaveToggle={handleAutoSaveToggle}
       />
     </div>
   );

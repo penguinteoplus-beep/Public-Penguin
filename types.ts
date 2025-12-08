@@ -158,7 +158,7 @@ export interface PriceConfig {
 // ========== 桌面系统类型 ==========
 
 // 桌面项目类型
-export type DesktopItemType = 'image' | 'folder';
+export type DesktopItemType = 'image' | 'folder' | 'stack';
 
 // 桌面项目位置
 export interface DesktopPosition {
@@ -196,8 +196,15 @@ export interface DesktopFolderItem extends BaseDesktopItem {
   isOpen?: boolean; // 是否打开
 }
 
+// 叠放项目（Mac风格的堆叠显示）
+export interface DesktopStackItem extends BaseDesktopItem {
+  type: 'stack';
+  itemIds: string[]; // 包含的图片ID列表
+  isExpanded?: boolean; // 是否展开
+}
+
 // 联合类型
-export type DesktopItem = DesktopImageItem | DesktopFolderItem;
+export type DesktopItem = DesktopImageItem | DesktopFolderItem | DesktopStackItem;
 
 // 桌面状态
 export interface DesktopState {

@@ -62,6 +62,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [localThirdPartyKey, setLocalThirdPartyKey] = useState(thirdPartyConfig.apiKey || '');
   const [localGeminiKey, setLocalGeminiKey] = useState(geminiApiKey || '');
   const [showApiKey, setShowApiKey] = useState(false);
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
 
   // 响应 props 变化，重新计算当前模式
   useEffect(() => {
@@ -118,10 +119,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       apiKey: localThirdPartyKey,
       baseUrl: localThirdPartyUrl,
     });
+    setSaveSuccessMessage('第三方 API 配置已保存 ✅');
+    setTimeout(() => setSaveSuccessMessage(null), 2000);
   };
 
   const handleSaveGeminiKey = () => {
     onGeminiApiKeySave(localGeminiKey);
+    setSaveSuccessMessage('Gemini API Key 已保存 ✅');
+    setTimeout(() => setSaveSuccessMessage(null), 2000);
   };
 
   return (
@@ -134,6 +139,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       
       {/* 弹窗内容 */}
       <div className="relative w-full max-w-lg bg-gray-900 rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-fade-in">
+        {/* 保存成功提示 */}
+        {saveSuccessMessage && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-green-500/90 text-white text-sm font-medium rounded-lg shadow-lg animate-fade-in">
+            {saveSuccessMessage}
+          </div>
+        )}
         {/* 头部 */}
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center justify-between">
@@ -384,7 +395,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {themeName === 'christmas' && (
               <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-xl animate-fade-in">
                 <span className="text-2xl">🎄</span>
-                <p className="text-xs text-red-300">圣诞快乐！雪花正在飘落~ ❄️</p>
+                <p className="text-xs text-red-300">圣诞快乐！🎁</p>
               </div>
             )}
           </div>

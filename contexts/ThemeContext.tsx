@@ -288,51 +288,10 @@ export const useTheme = (): ThemeContextValue => {
   return context;
 };
 
-// 雪花装饰组件
+// 雪花装饰组件 - 已禁用，影响打字性能
 export const SnowfallEffect: React.FC = () => {
-  const { theme } = useTheme();
-  
-  if (!theme.decorations.snowflakes) return null;
-  
-  return (
-    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
-      {Array.from({ length: 50 }).map((_, i) => (
-        <div
-          key={i}
-          className="snowflake absolute text-white opacity-80"
-          style={{
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 10}s`,
-            animationDuration: `${8 + Math.random() * 10}s`,
-            fontSize: `${8 + Math.random() * 12}px`,
-          }}
-        >
-          ❄
-        </div>
-      ))}
-      <style>{`
-        @keyframes snowfall {
-          0% {
-            transform: translateY(-10vh) rotate(0deg);
-            opacity: 0;
-          }
-          10% {
-            opacity: 0.8;
-          }
-          90% {
-            opacity: 0.8;
-          }
-          100% {
-            transform: translateY(100vh) rotate(360deg);
-            opacity: 0;
-          }
-        }
-        .snowflake {
-          animation: snowfall linear infinite;
-        }
-      `}</style>
-    </div>
-  );
+  // 直接返回 null，不再渲染雪花效果
+  return null;
 };
 
 // 主题选择器组件

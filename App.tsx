@@ -25,7 +25,7 @@ import * as historyApi from './services/api/history';
 import * as coinsApi from './services/api/coins';
 import { PriceConfig } from './types';
 import { ThemeProvider, useTheme, SnowfallEffect } from './contexts/ThemeContext';
-import { Desktop, createDesktopItemFromHistory } from './components/Desktop';
+import { Desktop, createDesktopItemFromHistory, TOP_OFFSET, DESKTOP_COLS } from './components/Desktop';
 import { HistoryDock } from './components/HistoryDock';
 
 
@@ -1219,7 +1219,7 @@ const App: React.FC = () => {
       bpInputs?: Record<string, string>;
       smartPlusOverrides?: SmartPlusConfig;
     }
-  ) => {
+  ): Promise<number | undefined> => {
     // 将输入图片转换为 base64 保存
     let inputImageData: string | undefined;
     let inputImageName: string | undefined;
@@ -1239,8 +1239,9 @@ const App: React.FC = () => {
       }
     }
     
+    const historyId = Date.now();
     const historyItem: GenerationHistory = {
-      id: Date.now(),
+      id: historyId,
       imageUrl,
       prompt: promptText,
       timestamp: Date.now(),
@@ -1262,15 +1263,18 @@ const App: React.FC = () => {
         const result = await historyApi.createHistory(historyWithoutId as any);
         if (result.success && result.data) {
           setGenerationHistory(prev => [result.data!, ...prev].slice(0, 50));
+          return result.data.id; // 返回后端生成的ID
         }
       } else {
         // 未登录，使用本地IndexedDB
         await saveHistoryToDB(historyItem);
         setGenerationHistory(prev => [historyItem, ...prev].slice(0, 50));
+        return historyId; // 返回本地生成的ID
       }
     } catch (e) {
       console.error("Failed to save history:", e);
     }
+    return undefined;
   };
   
   const downloadImage = useCallback(async (url: string, filename?: string) => {
@@ -1611,10 +1615,47 @@ const App: React.FC = () => {
     }, [desktopItems]);
   
     const handleAddToDesktop = useCallback((item: DesktopImageItem) => {
-      // 添加图片到桌面
-      const newItems = [...desktopItems, item];
-      handleDesktopItemsChange(newItems);
-    }, [desktopItems, handleDesktopItemsChange]);
+      // 添加图片到桌面 - 使用函数式更新确保使用最新状态
+      setDesktopItems(prevItems => {
+        // 在最新状态上查找空闲位置
+        const gridSize = 100;
+        const maxCols = DESKTOP_COLS; // 固定7列
+        
+        // 位置从0开始（渲染时会自动加上居中偏移）
+        const occupiedPositions = new Set(
+          prevItems
+            .filter(existingItem => {
+              const isInFolder = prevItems.some(
+                other => other.type === 'folder' && (other as DesktopFolderItem).itemIds.includes(existingItem.id)
+              );
+              return !isInFolder;
+            })
+            .map(existingItem => `${Math.round(existingItem.position.x / gridSize)},${Math.round(existingItem.position.y / gridSize)}`)
+        );
+        
+        // 从第0列、第0行开始找空位
+        let freePos = { x: 0, y: 0 };
+        for (let y = 0; y < 100; y++) {
+          for (let x = 0; x < maxCols; x++) {
+            const key = `${x},${y}`;
+            if (!occupiedPositions.has(key)) {
+              freePos = { x: x * gridSize, y: y * gridSize };
+              break;
+            }
+          }
+          // 检查是否已找到空位
+          const foundKey = `${Math.round(freePos.x / gridSize)},${Math.round(freePos.y / gridSize)}`;
+          if (!occupiedPositions.has(foundKey)) break;
+        }
+        
+        // 更新项目位置
+        const itemWithPosition = { ...item, position: freePos };
+        const newItems = [...prevItems, itemWithPosition];
+        // 保存到 localStorage
+        localStorage.setItem('desktop_items', JSON.stringify(newItems));
+        return newItems;
+      });
+    }, []);
 
   const handleGenerateClick = useCallback(async () => {
     // 检查API配置：要么有Gemini Key，要么启用了第三方API
@@ -1671,23 +1712,24 @@ const App: React.FC = () => {
           templateType,
           bpInputs: templateType === 'bp' ? { ...bpInputs } : undefined,
           smartPlusOverrides: templateType === 'smartPlus' ? [...smartPlusOverrides] : undefined
+        }).then(savedHistoryId => {
+          // 自动添加到桌面，并关联历史记录ID
+          const freePos = findNextFreePosition();
+          const desktopItem: DesktopImageItem = {
+            id: `img-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+            type: 'image',
+            name: prompt.slice(0, 15) + (prompt.length > 15 ? '...' : ''),
+            position: freePos,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            imageUrl: result.imageUrl!,
+            prompt: prompt,
+            model: thirdPartyApiConfig.enabled ? 'nano-banana-2' : 'Gemini',
+            isThirdParty: thirdPartyApiConfig.enabled,
+            historyId: savedHistoryId, // 关联历史记录，用于重新生成时恢复原始输入图片
+          };
+          handleAddToDesktop(desktopItem);
         });
-        
-        // 自动添加到桌面
-        const freePos = findNextFreePosition();
-        const desktopItem: DesktopImageItem = {
-          id: `img-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
-          type: 'image',
-          name: prompt.slice(0, 15) + (prompt.length > 15 ? '...' : ''),
-          position: freePos,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          imageUrl: result.imageUrl,
-          prompt: prompt,
-          model: thirdPartyApiConfig.enabled ? 'nano-banana-2' : 'Gemini',
-          isThirdParty: thirdPartyApiConfig.enabled,
-        };
-        handleAddToDesktop(desktopItem);
       }
       
       if (autoSave && result.imageUrl) {
@@ -1802,77 +1844,27 @@ const App: React.FC = () => {
     }
   }, [generatedContent]);
   
-  // 重新生成：使用新的随机种子和原始图片重新生成
-  const handleRegenerate = useCallback(async () => {
-    const hasValidApi = apiKey || (thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey);
-    if (!hasValidApi || !prompt) return;
-    
+  // 重新生成：恢复原始输入状态，等待用户手动点击生成
+  const handleRegenerate = useCallback(() => {
     // 保存当初使用的原始图片
     const originalFile = generatedContent?.originalFile || null;
     
-    setStatus(ApiStatus.Loading);
-    setError(null);
-    setGeneratedContent(null);
-    
-    try {
-      // 生成新的随机种子，使用原始图片而不是当前队列中的图片
-      const newSeed = Math.floor(Math.random() * 2147483647);
-      
-      // 获取当前创意库的扣费金额
-      const creativeIdeaCost = activeCreativeIdea?.cost;
-      
-      const result = await editImageWithGemini(originalFile, prompt, { aspectRatio, imageSize, seed: newSeed }, creativeIdeaCost);
-      // 保持原始图片引用
-      setGeneratedContent({ ...result, originalFile: originalFile });
-      setStatus(ApiStatus.Success);
-      
-      if (result.imageUrl) {
-        // 重新生成时保留当前的创意库设置
-        let templateType: 'smart' | 'smartPlus' | 'bp' | 'none' = 'none';
-        let templateId: number | undefined;
-        if (activeBPTemplate) {
-          templateType = 'bp';
-          templateId = activeBPTemplate.id;
-        } else if (activeSmartPlusTemplate) {
-          templateType = 'smartPlus';
-          templateId = activeSmartPlusTemplate.id;
-        } else if (activeSmartTemplate) {
-          templateType = 'smart';
-          templateId = activeSmartTemplate.id;
-        }
-        
-        await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled, originalFile, {
-          templateId,
-          templateType,
-          bpInputs: templateType === 'bp' ? { ...bpInputs } : undefined,
-          smartPlusOverrides: templateType === 'smartPlus' ? [...smartPlusOverrides] : undefined
-        });
-      }
-      
-      if (autoSave && result.imageUrl) {
-        downloadImage(result.imageUrl);
-      }
-      
-      // 重新生成成功后实时更新用户余额
-      if (result.coinsRemaining !== undefined && currentUser) {
-        setCurrentUser({ ...currentUser, coins: result.coinsRemaining });
-      }
-    } catch (e: unknown) {
-      // 检查是否为余额不足错误
-      let errorMessage = 'An unknown error occurred.';
-      if (e instanceof Error) {
-        errorMessage = e.message;
-      }
-      // 如果是来自后端的余额不足提示，直接显示趣味文案
-      if (errorMessage.includes('🐧') || errorMessage.includes('企鹅币') || errorMessage.includes('余额')) {
-        setError(errorMessage);
-      } else {
-        setError(`重新生成失败: ${errorMessage}`);
-      }
-      console.error(errorMessage);
-      setStatus(ApiStatus.Error);
+    // 恢复原始输入图片到 UI 上
+    if (originalFile) {
+      setFiles([originalFile]);
+      setActiveFileIndex(0);
+    } else {
+      setFiles([]);
+      setActiveFileIndex(null);
     }
-  }, [prompt, apiKey, thirdPartyApiConfig, autoSave, downloadImage, aspectRatio, imageSize, saveToHistory, generatedContent, currentUser, activeCreativeIdea, activeBPTemplate, activeSmartPlusTemplate, activeSmartTemplate, bpInputs, smartPlusOverrides]);
+    
+    // 关闭结果浮层，回到编辑状态
+    setStatus(ApiStatus.Idle);
+    setGeneratedContent(null);
+    setError(null);
+    
+    // 提示已恢复 - 保留 prompt 不变，用户可以手动点生成
+  }, [generatedContent]);
 
   const handleDesktopImageDoubleClick = useCallback((item: DesktopImageItem) => {
     // 双击图片预览
@@ -1922,7 +1914,7 @@ const App: React.FC = () => {
     }
   }, [files.length]);
 
-  // 桌面图片操作 - 重新生成
+  // 桌面图片操作 - 重新生成（只恢复状态，不自动生成）
   const handleDesktopImageRegenerate = useCallback(async (item: DesktopImageItem) => {
     if (!item.prompt) {
       setError('此图片没有保存原始提示词，无法重新生成');
@@ -1930,54 +1922,49 @@ const App: React.FC = () => {
       return;
     }
     
-    // 设置提示词并触发生成
+    // 恢复提示词
     setPrompt(item.prompt);
-    setStatus(ApiStatus.Loading);
-    setError(null);
-    setGeneratedContent(null);
     
-    try {
-      const newSeed = Math.floor(Math.random() * 2147483647);
-      const result = await editImageWithGemini(null, item.prompt, { aspectRatio, imageSize, seed: newSeed });
-      setGeneratedContent(result);
-      setStatus(ApiStatus.Success);
-      
-      if (result.imageUrl) {
-        await saveToHistory(result.imageUrl, item.prompt, thirdPartyApiConfig.enabled, null);
-        
-        // 添加到桌面
-        const position = findNextFreePosition();
-        const desktopItem: DesktopImageItem = {
-          id: `img-${Date.now()}`,
-          type: 'image',
-          name: item.prompt.slice(0, 20) + (item.prompt.length > 20 ? '...' : ''),
-          position,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          imageUrl: result.imageUrl,
-          prompt: item.prompt,
-          model: thirdPartyApiConfig.enabled ? 'nano-banana-2' : 'Gemini 3 Pro',
-          isThirdParty: thirdPartyApiConfig.enabled,
-        };
-        handleAddToDesktop(desktopItem);
+    // 尝试恢复原始输入图片（如果有历史记录中的输入图片）
+    if (item.historyId) {
+      const historyItem = generationHistory.find(h => h.id === item.historyId);
+      if (historyItem?.inputImageData && historyItem?.inputImageType) {
+        try {
+          const byteCharacters = atob(historyItem.inputImageData);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: historyItem.inputImageType });
+          const restoredFile = new File([blob], historyItem.inputImageName || 'restored-input.png', { type: historyItem.inputImageType });
+          
+          setFiles([restoredFile]);
+          setActiveFileIndex(0);
+        } catch (e) {
+          console.warn('恢复输入图片失败:', e);
+          setFiles([]);
+          setActiveFileIndex(null);
+        }
+      } else {
+        // 没有输入图片
+        setFiles([]);
+        setActiveFileIndex(null);
       }
-      
-      if (autoSave && result.imageUrl) {
-        downloadImage(result.imageUrl);
-      }
-      
-      if (result.coinsRemaining !== undefined && currentUser) {
-        setCurrentUser({ ...currentUser, coins: result.coinsRemaining });
-      }
-    } catch (e: unknown) {
-      let errorMessage = 'An unknown error occurred.';
-      if (e instanceof Error) {
-        errorMessage = e.message;
-      }
-      setError(`重新生成失败: ${errorMessage}`);
-      setStatus(ApiStatus.Error);
+    } else {
+      // 没有历史记录，清空输入
+      setFiles([]);
+      setActiveFileIndex(null);
     }
-  }, [aspectRatio, imageSize, thirdPartyApiConfig.enabled, autoSave, downloadImage, saveToHistory, findNextFreePosition, handleAddToDesktop, currentUser]);
+    
+    // 关闭结果浮层，回到编辑状态
+    setStatus(ApiStatus.Idle);
+    setGeneratedContent(null);
+    setError(null);
+    
+    // 取消桌面选中，让用户注意力回到编辑区
+    setDesktopSelectedIds([]);
+  }, [generationHistory]);
 
   // 加载桌面数据
   useEffect(() => {

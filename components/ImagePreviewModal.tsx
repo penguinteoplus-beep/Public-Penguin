@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { XCircleIcon } from './icons/XCircleIcon';
 import { ZoomInIcon } from './icons/ZoomInIcon';
 import { ZoomOutIcon } from './icons/ZoomOutIcon';
@@ -12,15 +12,19 @@ interface ImagePreviewModalProps {
 }
 
 export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ imageUrl, onClose }) => {
-  React.useEffect(() => {
+  // ESC 键关闭 - 使用 capture 模式确保优先捕获
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
         onClose();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
+    // 使用 capture 阶段确保模态框优先处理 ESC
+    window.addEventListener('keydown', handleKeyDown, true);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown, true);
     };
   }, [onClose]);
 
@@ -118,7 +122,7 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ imageUrl, 
       
       <div 
         className="relative flex items-center justify-center overflow-hidden rounded-xl"
-        style={{ maxWidth: 'min(800px, 85vw)', maxHeight: 'min(600px, 80vh)' }}
+        style={{ maxWidth: '90vw', maxHeight: '90vh' }}
         onClick={(e) => e.stopPropagation()}
         onWheel={handleWheel}
       >
@@ -139,8 +143,13 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ imageUrl, 
           <img 
               src={imageUrl} 
               alt="Image Preview" 
-              className="block w-auto h-auto max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              className="block rounded-lg shadow-2xl"
               style={{ 
+                  maxWidth: '90vw',
+                  maxHeight: '90vh',
+                  width: 'auto',
+                  height: 'auto',
+                  objectFit: 'contain',
                   transform: `translate(${transform.posX}px, ${transform.posY}px) scale(${transform.scale})`,
                   cursor: transform.scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
                   transition: isDragging ? 'none' : 'transform 0.1s ease-out',

@@ -29,6 +29,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
   const [ideaType, setIdeaType] = useState<'standard' | 'bp' | 'smartPlus'>('standard');
   const [smartPlusConfig, setSmartPlusConfig] = useState<SmartPlusConfig>(() => JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
   const [bpFields, setBpFields] = useState<BPField[]>([]);
+  const [cost, setCost] = useState<number>(0); // 企鹅币扣除数量
   
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -40,6 +41,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
     setIdeaType('standard');
     setSmartPlusConfig(JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
     setBpFields([]);
+    setCost(0);
     setFile(null);
     setPreviewUrl(null); 
     setError(null);
@@ -51,6 +53,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
         setTitle(ideaToEdit.title);
         setPrompt(ideaToEdit.prompt);
         setPreviewUrl(ideaToEdit.imageUrl);
+        setCost(ideaToEdit.cost || 0);
         if (ideaToEdit.isBP) {
             setIdeaType('bp');
             // Migration for old bpVariables if needed, though assumed bpFields is used now
@@ -163,6 +166,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
           title: title.trim(),
           prompt: prompt.trim(),
           imageUrl: imageUrl!,
+          cost: cost, // 始终传递 cost（包括 0），由后端判断是否使用默认值
           isSmart: false, 
           isSmartPlus: ideaType === 'smartPlus',
           isBP: ideaType === 'bp',
@@ -242,6 +246,26 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                             {type === 'smartPlus' && 'SMART+'}
                         </button>
                     ))}
+                  </div>
+                </div>
+                {/* 企鹅币扣除设置 */}
+                <div>
+                  <label htmlFor="idea-cost" className="text-sm font-medium text-gray-300 mb-1 block flex items-center gap-1">
+                    <span>🪙</span> 扣除企鹅币
+                    <span className="text-[10px] text-gray-500 ml-1">(可选)</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="idea-cost"
+                      type="number"
+                      min="0"
+                      max="9999"
+                      value={cost}
+                      onChange={(e) => setCost(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-24 p-2 bg-gray-900 border border-yellow-700/50 rounded-md focus:ring-1 focus:ring-yellow-500 text-yellow-400 font-bold"
+                      placeholder="0"
+                    />
+                    <span className="text-xs text-gray-500">留空或为0时使用默认扣币</span>
                   </div>
                 </div>
             </div>

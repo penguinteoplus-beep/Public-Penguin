@@ -21,9 +21,12 @@ import { LightbulbIcon } from './components/icons/LightbulbIcon';
 import { HistoryPanel } from './components/HistoryPanel';
 import { ClockIcon } from './components/icons/ClockIcon';
 import { AuthModal } from './components/AuthModal';
+import { RechargeModal } from './components/RechargeModal';
 import { User, getCurrentUser, logout as apiLogout, isLoggedIn } from './services/api/auth';
 import * as creativeIdeasApi from './services/api/creativeIdeas';
 import * as historyApi from './services/api/history';
+import * as coinsApi from './services/api/coins';
+import { PriceConfig } from './types';
 
 
 interface LeftPanelProps {
@@ -47,6 +50,7 @@ interface LeftPanelProps {
   currentUser: User | null;
   onLoginClick: () => void;
   onLogout: () => void;
+  onRechargeClick: () => void;
 }
 
 interface RightPanelProps {
@@ -235,7 +239,8 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
   onHistoryClear,
   currentUser,
   onLoginClick,
-  onLogout
+  onLogout,
+  onRechargeClick
 }) => (
   <aside className="w-[300px] bg-black/40 backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-r border-white/10 z-20">
       <div className="p-6 border-b border-white/10 flex-shrink-0">
@@ -249,9 +254,21 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
              {/* 用户头像/登录按钮 */}
              {currentUser ? (
                <div className="relative group">
-                 <button className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform">
-                   {currentUser.nickname?.[0] || currentUser.username[0].toUpperCase()}
-                 </button>
+                 <div className="flex items-center gap-2">
+                   {/* 企鹅币余额 - 点击充值 */}
+                   <button 
+                     onClick={onRechargeClick}
+                     className="flex items-center gap-1 px-2 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-lg hover:bg-yellow-500/20 transition-colors group"
+                     title="点击充值企鹅币"
+                   >
+                     <span className="text-sm group-hover:animate-bounce">🪙</span>
+                     <span className="text-xs font-bold text-yellow-400">{currentUser.coins || 0}</span>
+                     <span className="text-[10px] text-yellow-500/60 group-hover:text-yellow-400">+</span>
+                   </button>
+                   <button className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform">
+                     {currentUser.nickname?.[0] || currentUser.username[0].toUpperCase()}
+                   </button>
+                 </div>
                  {/* 下拉菜单 */}
                  <div className="absolute right-0 top-full mt-2 w-40 bg-gray-900 border border-white/10 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                    <div className="p-3 border-b border-white/10">
@@ -660,6 +677,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
                                 <span className="w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.8)]"></span>
                             )}
                         </div>
+                        {/* 扣币数量显示 */}
+                        {idea.cost && idea.cost > 0 && (
+                          <div className="absolute bottom-1 right-1 flex items-center gap-0.5 px-1.5 py-0.5 bg-black/60 backdrop-blur-sm rounded text-[9px] text-yellow-400 font-medium">
+                            <span>🪙</span>{idea.cost}
+                          </div>
+                        )}
                       </div>
                       <p className="text-[10px] text-gray-400 font-medium truncate w-full text-center group-hover:text-gray-200 transition-colors">
                         {idea.title}
@@ -771,6 +794,9 @@ const App: React.FC = () => {
   const [activeBPTemplate, setActiveBPTemplate] = useState<CreativeIdea | null>(null);
   const [bpInputs, setBpInputs] = useState<Record<string, string>>({});
   
+  // 当前使用的创意库（用于获取扣费金额，不论类型）
+  const [activeCreativeIdea, setActiveCreativeIdea] = useState<CreativeIdea | null>(null);
+  
   // No global polish switch needed for BP anymore, as agents handle intelligence
   // const [bpPolish, setBpPolish] = useState(false); 
 
@@ -794,6 +820,10 @@ const App: React.FC = () => {
   // 用户认证状态
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+  const [isRechargeModalOpen, setRechargeModalOpen] = useState(false);
+  
+  // 企鹅币状态 🪙
+  const [priceConfig, setPriceConfig] = useState<PriceConfig>({ generateImage: 10, analyzeImage: 5, chat: 2 });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importIdeasInputRef = useRef<HTMLInputElement>(null);
@@ -865,6 +895,12 @@ const App: React.FC = () => {
         const history = historyResult.data.sort((a, b) => b.timestamp - a.timestamp);
         setGenerationHistory(history);
       }
+      
+      // 加载价格配置
+      const pricesResult = await coinsApi.getPrices();
+      if (pricesResult.success && pricesResult.data) {
+        setPriceConfig(pricesResult.data);
+      }
     } catch (e) {
       console.error('Failed to load data from backend:', e);
     }
@@ -894,6 +930,19 @@ const App: React.FC = () => {
     setCurrentUser(user);
     // 登录成功后从后端加载数据
     await loadDataFromBackend();
+  };
+  
+  // 刷新用户信息（包括余额）
+  const refreshUserInfo = async () => {
+    if (!isLoggedIn()) return;
+    try {
+      const result = await getCurrentUser();
+      if (result.success && result.data) {
+        setCurrentUser(result.data);
+      }
+    } catch (e) {
+      console.error('Failed to refresh user info:', e);
+    }
   };
   
   // 用户退出登录处理
@@ -989,12 +1038,16 @@ const App: React.FC = () => {
     setActiveSmartTemplate(null);
     setActiveSmartPlusTemplate(null);
     setActiveBPTemplate(null);
+    setActiveCreativeIdea(null);
     setBpInputs({});
     setSmartPlusOverrides(JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
     
     if (item.creativeTemplateType && item.creativeTemplateType !== 'none' && item.creativeTemplateId) {
       const template = creativeIdeas.find(idea => idea.id === item.creativeTemplateId);
       if (template) {
+        // 设置当前使用的创意库（用于扣费）
+        setActiveCreativeIdea(template);
+        
         if (item.creativeTemplateType === 'bp') {
           setActiveBPTemplate(template);
           if (item.bpInputs) {
@@ -1325,6 +1378,9 @@ const App: React.FC = () => {
     setActiveSmartPlusTemplate(null);
     setActiveBPTemplate(null);
     
+    // 保存当前使用的创意库（用于扣费）
+    setActiveCreativeIdea(idea);
+    
     // Reset BP
     setBpInputs({});
 
@@ -1383,14 +1439,9 @@ const App: React.FC = () => {
              setSmartPromptGenStatus(ApiStatus.Idle);
              return;
           }
-           if (!activeFile) {
-                alert('BP 模式需要图片作为智能体分析来源');
-                setSmartPromptGenStatus(ApiStatus.Idle);
-                return;
-           }
-
-           const finalPrompt = await processBPTemplate(activeFile, activeBPTemplate, bpInputs);
-           setPrompt(finalPrompt);
+          // BP模式支持有图片或无图片，传递 activeFile（可能为 null）
+          const finalPrompt = await processBPTemplate(activeFile, activeBPTemplate, bpInputs);
+          setPrompt(finalPrompt);
 
       } else {
           // Standard/Smart Logic (Legacy)
@@ -1454,7 +1505,10 @@ const App: React.FC = () => {
     setGeneratedContent(null);
 
     try {
-      const result = await editImageWithGemini(activeFile, prompt, { aspectRatio, imageSize });
+      // 获取当前创意库的扣费金额（优先用 activeCreativeIdea，它保存了所有类型的创意库）
+      const creativeIdeaCost = activeCreativeIdea?.cost;
+      
+      const result = await editImageWithGemini(activeFile, prompt, { aspectRatio, imageSize }, creativeIdeaCost);
       // 保存生成时使用的原始图片，用于重新生成
       setGeneratedContent({ ...result, originalFile: activeFile });
       setStatus(ApiStatus.Success);
@@ -1486,19 +1540,34 @@ const App: React.FC = () => {
       if (autoSave && result.imageUrl) {
         downloadImage(result.imageUrl);
       }
+      
+      // 生成成功后实时更新用户余额
+      if (result.coinsRemaining !== undefined && currentUser) {
+        setCurrentUser({ ...currentUser, coins: result.coinsRemaining });
+      }
     } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
+      // 检查是否为余额不足错误（402状态码）
+      let errorMessage = 'An unknown error occurred.';
+      if (e instanceof Error) {
+        errorMessage = e.message;
+      }
+      // 如果是来自后端的余额不足提示，直接显示趣味文案
+      if (errorMessage.includes('🐧') || errorMessage.includes('企鹅币') || errorMessage.includes('余额')) {
+        setError(errorMessage);
+      } else {
+        setError(`生成失败: ${errorMessage}`);
+      }
       console.error(errorMessage);
-      setError(`生成失败: ${errorMessage}`);
       setStatus(ApiStatus.Error);
     }
-  }, [activeFile, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, autoSave, downloadImage, aspectRatio, imageSize]);
+  }, [activeFile, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, autoSave, downloadImage, aspectRatio, imageSize, currentUser, activeCreativeIdea]);
 
   // 卸载创意库：清空所有模板设置
   const handleClearTemplate = useCallback(() => {
     setActiveSmartTemplate(null);
     setActiveSmartPlusTemplate(null);
     setActiveBPTemplate(null);
+    setActiveCreativeIdea(null);
     setBpInputs({});
     setSmartPlusOverrides(JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
   }, []);
@@ -1566,6 +1635,7 @@ const App: React.FC = () => {
       setActiveSmartTemplate(null);
       setActiveSmartPlusTemplate(null);
       setActiveBPTemplate(null);
+      setActiveCreativeIdea(null);
       setBpInputs({});
       setSmartPlusOverrides(JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
       setPrompt(''); // 清空提示词
@@ -1594,7 +1664,11 @@ const App: React.FC = () => {
     try {
       // 生成新的随机种子，使用原始图片而不是当前队列中的图片
       const newSeed = Math.floor(Math.random() * 2147483647);
-      const result = await editImageWithGemini(originalFile, prompt, { aspectRatio, imageSize, seed: newSeed });
+      
+      // 获取当前创意库的扣费金额
+      const creativeIdeaCost = activeCreativeIdea?.cost;
+      
+      const result = await editImageWithGemini(originalFile, prompt, { aspectRatio, imageSize, seed: newSeed }, creativeIdeaCost);
       // 保持原始图片引用
       setGeneratedContent({ ...result, originalFile: originalFile });
       setStatus(ApiStatus.Success);
@@ -1625,13 +1699,27 @@ const App: React.FC = () => {
       if (autoSave && result.imageUrl) {
         downloadImage(result.imageUrl);
       }
+      
+      // 重新生成成功后实时更新用户余额
+      if (result.coinsRemaining !== undefined && currentUser) {
+        setCurrentUser({ ...currentUser, coins: result.coinsRemaining });
+      }
     } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
+      // 检查是否为余额不足错误
+      let errorMessage = 'An unknown error occurred.';
+      if (e instanceof Error) {
+        errorMessage = e.message;
+      }
+      // 如果是来自后端的余额不足提示，直接显示趣味文案
+      if (errorMessage.includes('🐧') || errorMessage.includes('企鹅币') || errorMessage.includes('余额')) {
+        setError(errorMessage);
+      } else {
+        setError(`重新生成失败: ${errorMessage}`);
+      }
       console.error(errorMessage);
-      setError(`重新生成失败: ${errorMessage}`);
       setStatus(ApiStatus.Error);
     }
-  }, [prompt, apiKey, thirdPartyApiConfig, autoSave, downloadImage, aspectRatio, imageSize, saveToHistory, generatedContent]);
+  }, [prompt, apiKey, thirdPartyApiConfig, autoSave, downloadImage, aspectRatio, imageSize, saveToHistory, generatedContent, currentUser, activeCreativeIdea, activeBPTemplate, activeSmartPlusTemplate, activeSmartTemplate, bpInputs, smartPlusOverrides]);
 
   return (
     <div className="h-screen bg-gray-950 text-gray-100 font-sans flex flex-row overflow-hidden selection:bg-indigo-500/30">
@@ -1671,6 +1759,7 @@ const App: React.FC = () => {
         currentUser={currentUser}
         onLoginClick={() => setAuthModalOpen(true)}
         onLogout={handleLogout}
+        onRechargeClick={() => setRechargeModalOpen(true)}
       />
       <div className="relative flex-1 flex min-w-0">
         <Canvas 
@@ -1754,6 +1843,16 @@ const App: React.FC = () => {
         isOpen={isAuthModalOpen}
         onClose={() => setAuthModalOpen(false)}
         onLoginSuccess={handleLoginSuccess}
+      />
+      <RechargeModal
+        isOpen={isRechargeModalOpen}
+        onClose={() => setRechargeModalOpen(false)}
+        currentBalance={currentUser?.coins || 0}
+        onRechargeSuccess={(newBalance) => {
+          if (currentUser) {
+            setCurrentUser({ ...currentUser, coins: newBalance });
+          }
+        }}
       />
     </div>
   );

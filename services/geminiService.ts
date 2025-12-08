@@ -2,6 +2,7 @@
 import { GoogleGenAI } from "@google/genai";
 import type { GenerateContentResponse, Part } from "@google/genai";
 import { GeneratedContent, CreativeIdea, SmartPlusConfig, BPField, BPAgentModel, ThirdPartyApiConfig, NanoBananaRequest, NanoBananaResponse, OpenAIChatRequest, OpenAIChatResponse } from '../types';
+import { post, isLoggedIn } from './api';
 
 let ai: GoogleGenAI | null = null;
 
@@ -99,10 +100,13 @@ const convertAspectRatio = (ratio: string): NanoBananaRequest['aspect_ratio'] | 
 };
 
 // 第三方API图片生成 - 支持文生图和图生图
+// 如果已登录，通过后端代理调用（会自动扣费）
+// 如果未登录，直接调用第三方API（不扣费）
 export const editImageWithThirdPartyApi = async (
   file: File | null, 
   prompt: string, 
-  config: ImageEditConfig
+  config: ImageEditConfig,
+  creativeIdeaCost?: number // 创意库定义的扣费金额
 ): Promise<GeneratedContent> => {
   if (!thirdPartyConfig || !thirdPartyConfig.enabled) {
     throw new Error("第三方API未启用");
@@ -115,13 +119,14 @@ export const editImageWithThirdPartyApi = async (
   }
   
   // 构建请求体
-  const requestBody: NanoBananaRequest = {
+  const requestBody: NanoBananaRequest & { creativeIdeaCost?: number } = {
     model: thirdPartyConfig.model || 'nano-banana-2',
     prompt: prompt,
     response_format: 'url',
     aspect_ratio: convertAspectRatio(config.aspectRatio),
     image_size: config.imageSize as '1K' | '2K' | '4K',
-    seed: config.seed // 添加随机种子
+    seed: config.seed,
+    creativeIdeaCost: creativeIdeaCost // 传递创意库扣费金额
   };
   
   // 如果有上传图片，添加参考图（图生图模式）
@@ -130,7 +135,44 @@ export const editImageWithThirdPartyApi = async (
     const imageDataUrl = `data:${file.type};base64,${imageBase64}`;
     requestBody.image = [imageDataUrl];
   }
+
+  // 如果已登录，通过后端代理调用（会扣费）
+  if (isLoggedIn()) {
+    const apiResult = await post<NanoBananaResponse & { coinsDeducted?: number; coinsRemaining?: number }>(
+      '/ai/generate-image',
+      requestBody
+    );
+    
+    if (!apiResult.success) {
+      // 后端返回的错误信息（包括余额不足的趣味提示）
+      throw new Error(apiResult.error || '图像生成失败');
+    }
+    
+    const response = apiResult.data;
+    const result: GeneratedContent = { 
+      text: null, 
+      imageUrl: null,
+      coinsDeducted: response?.coinsDeducted,
+      coinsRemaining: response?.coinsRemaining,
+    };
+    
+    if (response?.data && response.data.length > 0) {
+      const imageData = response.data[0];
+      if (imageData.url) {
+        result.imageUrl = imageData.url;
+      } else if (imageData.b64_json) {
+        result.imageUrl = `data:image/png;base64,${imageData.b64_json}`;
+      }
+    }
+    
+    if (!result.imageUrl) {
+      throw new Error("API 未返回图片");
+    }
+    
+    return result;
+  }
   
+  // 未登录：直接调用第三方API（不扣费）
   const url = `${thirdPartyConfig.baseUrl.replace(/\/$/, '')}/v1/images/generations`;
   
   const response = await withRetry(async () => {
@@ -175,6 +217,8 @@ export const editImageWithThirdPartyApi = async (
 };
 
 // 第三方API文字处理/图片分析 (Chat Completions)
+// 如果已登录，通过后端代理调用（会自动扣费）
+// 如果未登录，直接调用第三方API（不扣费）
 export const chatWithThirdPartyApi = async (
   systemPrompt: string,
   userMessage: string,
@@ -219,7 +263,28 @@ export const chatWithThirdPartyApi = async (
     temperature: 0.7,
     stream: false
   };
+
+  // 如果已登录，通过后端代理调用（会扣费）
+  if (isLoggedIn()) {
+    const apiResult = await post<OpenAIChatResponse & { coinsDeducted?: number; coinsRemaining?: number }>(
+      '/ai/chat',
+      requestBody
+    );
+    
+    if (!apiResult.success) {
+      // 后端返回的错误信息（包括余额不足的趣味提示）
+      throw new Error(apiResult.error || '聊天请求失败');
+    }
+    
+    const response = apiResult.data;
+    if (response?.choices && response.choices.length > 0) {
+      return response.choices[0].message.content.trim();
+    }
+    
+    throw new Error("Chat API 未返回有效响应");
+  }
   
+  // 未登录：直接调用第三方API（不扣费）
   const url = `${thirdPartyConfig.baseUrl.replace(/\/$/, '')}/v1/chat/completions`;
   
   const response = await withRetry(async () => {
@@ -248,10 +313,10 @@ export const chatWithThirdPartyApi = async (
   throw new Error("Chat API 未返回有效响应");
 };
 
-export const editImageWithGemini = async (file: File | null, prompt: string, config: ImageEditConfig): Promise<GeneratedContent> => {
+export const editImageWithGemini = async (file: File | null, prompt: string, config: ImageEditConfig, creativeIdeaCost?: number): Promise<GeneratedContent> => {
   // 如果启用了第三方API，使用第三方API
   if (thirdPartyConfig && thirdPartyConfig.enabled) {
-    return editImageWithThirdPartyApi(file, prompt, config);
+    return editImageWithThirdPartyApi(file, prompt, config, creativeIdeaCost);
   }
   
   if (!ai) {
@@ -327,17 +392,21 @@ export const editImageWithGemini = async (file: File | null, prompt: string, con
 
 // --- BP Agent Logic ---
 
-// 第三方API的BP Agent任务（分析图片）
-const runBPAgentTaskWithThirdParty = async (file: File, instruction: string): Promise<string> => {
-  const systemInstruction = `You are an AI analysis agent. 
+// 第三方API的BP Agent任务（分析图片或纯文本）
+const runBPAgentTaskWithThirdParty = async (file: File | null, instruction: string): Promise<string> => {
+  const systemInstruction = file 
+    ? `You are an AI analysis agent. 
 Your task is to analyze the image based on the user's specific instruction and extract/generate the relevant information.
+Output Rule: Return ONLY the result string. Do not include labels, markdown, or conversational filler. Keep it concise and suitable for use in an image generation prompt.`
+    : `You are an AI creative agent.
+Your task is to generate creative content based on the user's instruction.
 Output Rule: Return ONLY the result string. Do not include labels, markdown, or conversational filler. Keep it concise and suitable for use in an image generation prompt.`;
 
-  return chatWithThirdPartyApi(systemInstruction, instruction, file);
+  return chatWithThirdPartyApi(systemInstruction, instruction, file || undefined);
 };
 
-const runBPAgentTask = async (file: File, instruction: string, model: BPAgentModel): Promise<string> => {
-    // 如果启用了第三方API，使用第三方Chat API进行图片分析
+const runBPAgentTask = async (file: File | null, instruction: string, model: BPAgentModel): Promise<string> => {
+    // 如果启用了第三方API，使用第三方Chat API
     if (thirdPartyConfig && thirdPartyConfig.enabled && thirdPartyConfig.apiKey) {
         return runBPAgentTaskWithThirdParty(file, instruction);
     }
@@ -345,21 +414,34 @@ const runBPAgentTask = async (file: File, instruction: string, model: BPAgentMod
     // 使用 Gemini API
     if (!ai) throw new Error("请先设置 Gemini API Key");
     
-    const imagePart = await fileToGenerativePart(file);
-    const textPart: Part = { text: instruction };
+    // 构建内容部分
+    const parts: Part[] = [];
+    
+    // 如果有图片，添加图片部分
+    if (file) {
+        const imagePart = await fileToGenerativePart(file);
+        parts.push(imagePart);
+    }
+    
+    // 添加文本指令
+    parts.push({ text: instruction } as Part);
 
-    // Strict system instruction for agents to be concise and accurate
-    const systemInstruction = `You are an AI analysis agent. 
+    // 根据是否有图片调整系统指令
+    const systemInstruction = file
+      ? `You are an AI analysis agent. 
     Your task is to analyze the image based on the user's specific instruction and extract/generate the relevant information.
+    Output Rule: Return ONLY the result string. Do not include labels, markdown, or conversational filler. Keep it concise and suitable for use in an image generation prompt.`
+      : `You are an AI creative agent.
+    Your task is to generate creative content based on the user's instruction.
     Output Rule: Return ONLY the result string. Do not include labels, markdown, or conversational filler. Keep it concise and suitable for use in an image generation prompt.`;
 
     const response: GenerateContentResponse = await withRetry(() => 
         ai!.models.generateContent({
-            model: model, // Use specific model (2.5 flash or 3 pro)
-            contents: { parts: [imagePart, textPart] },
+            model: model,
+            contents: { parts },
             config: {
                 systemInstruction: systemInstruction,
-                temperature: 0.7, // slightly creative but focused
+                temperature: 0.7,
             }
         })
     );
@@ -370,7 +452,7 @@ const runBPAgentTask = async (file: File, instruction: string, model: BPAgentMod
 };
 
 export const processBPTemplate = async (
-    file: File,
+    file: File | null,
     templateIdea: CreativeIdea,
     userInputs: Record<string, string>
 ): Promise<string> => {

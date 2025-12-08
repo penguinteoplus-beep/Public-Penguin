@@ -8,6 +8,7 @@ export interface User {
   nickname?: string;
   avatar?: string;
   role: 'user' | 'admin';
+  coins: number; // 企鹅币余额 🪙
   createdAt: number;
   updatedAt: number;
 }

@@ -99,11 +99,11 @@ const convertAspectRatio = (ratio: string): NanoBananaRequest['aspect_ratio'] | 
   return ratio as NanoBananaRequest['aspect_ratio'];
 };
 
-// 第三方API图片生成 - 支持文生图和图生图
+// 第三方API图片生成 - 支持文生图和图生图（支持多图）
 // 如果已登录，通过后端代理调用（会自动扣费）
 // 如果未登录，直接调用第三方API（不扣费）
 export const editImageWithThirdPartyApi = async (
-  file: File | null, 
+  files: File[], // 支持多图，空数组为文生图模式
   prompt: string, 
   config: ImageEditConfig,
   creativeIdeaCost?: number // 创意库定义的扣费金额
@@ -137,11 +137,13 @@ export const editImageWithThirdPartyApi = async (
     creativeIdeaCost: creativeIdeaCost // 传递创意库扣费金额
   };
   
-  // 如果有上传图片，添加参考图（图生图模式）
-  if (file) {
-    const imageBase64 = await fileToBase64(file);
-    const imageDataUrl = `data:${file.type};base64,${imageBase64}`;
-    requestBody.image = [imageDataUrl];
+  // 如果有上传图片，添加参考图（图生图模式，支持多图）
+  if (files.length > 0) {
+    const imagePromises = files.map(async (file) => {
+      const imageBase64 = await fileToBase64(file);
+      return `data:${file.type};base64,${imageBase64}`;
+    });
+    requestBody.image = await Promise.all(imagePromises);
   }
 
   // 云模式：通过后端代理调用（会扣费）
@@ -329,10 +331,10 @@ export const chatWithThirdPartyApi = async (
   throw new Error("Chat API 未返回有效响应");
 };
 
-export const editImageWithGemini = async (file: File | null, prompt: string, config: ImageEditConfig, creativeIdeaCost?: number): Promise<GeneratedContent> => {
+export const editImageWithGemini = async (files: File[], prompt: string, config: ImageEditConfig, creativeIdeaCost?: number): Promise<GeneratedContent> => {
   // 如果启用了第三方API，使用第三方API
   if (thirdPartyConfig && thirdPartyConfig.enabled) {
-    return editImageWithThirdPartyApi(file, prompt, config, creativeIdeaCost);
+    return editImageWithThirdPartyApi(files, prompt, config, creativeIdeaCost);
   }
   
   if (!ai) {
@@ -343,16 +345,18 @@ export const editImageWithGemini = async (file: File | null, prompt: string, con
 
   if (!prompt) throw new Error("请输入提示词");
 
-  // 构建内容 - 支持文生图和图生图
+  // 构建内容 - 支持文生图和图生图（支持多图）
   let contents;
   
-  if (file) {
-    // 图生图模式
-    const imagePart = await fileToGenerativePart(file);
-    const instruction = '请根据以下提示词编辑图片，只输出结果图片，不要输出任何文字描述。';
+  if (files.length > 0) {
+    // 图生图模式（支持多图）
+    const imageParts = await Promise.all(files.map(file => fileToGenerativePart(file)));
+    const instruction = files.length > 1 
+      ? '请根据以下提示词，参考所有输入图片进行编辑/融合/创作，只输出结果图片，不要输出任何文字描述。'
+      : '请根据以下提示词编辑图片，只输出结果图片，不要输出任何文字描述。';
     const textPart: Part = { text: `${instruction}\n\n${prompt}` };
     contents = {
-      parts: [imagePart, textPart],
+      parts: [...imageParts, textPart],
     };
   } else {
     // 文生图模式

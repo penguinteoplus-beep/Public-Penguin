@@ -2,7 +2,7 @@
 export interface GeneratedContent {
   text: string | null;
   imageUrl: string | null;
-  originalFile?: File | null; // 保存生成时使用的原始图片，用于重新生成
+  originalFiles?: File[]; // 保存生成时使用的所有原始图片，用于重新生成（支持多图）
   coinsDeducted?: number; // 本次扣除的企鹅币
   coinsRemaining?: number; // 扣除后的余额
 }

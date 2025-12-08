@@ -1164,7 +1164,7 @@ const App: React.FC = () => {
     setGeneratedContent({ 
       imageUrl: item.imageUrl, 
       text: null,
-      originalFile: restoredInputFile 
+      originalFiles: restoredInputFile ? [restoredInputFile] : [] 
     });
     setPrompt(item.prompt);
     setStatus(ApiStatus.Success);
@@ -1686,9 +1686,10 @@ const App: React.FC = () => {
       // 获取当前创意库的扣费金额（优先用 activeCreativeIdea，它保存了所有类型的创意库）
       const creativeIdeaCost = activeCreativeIdea?.cost;
       
-      const result = await editImageWithGemini(activeFile, prompt, { aspectRatio, imageSize }, creativeIdeaCost);
-      // 保存生成时使用的原始图片，用于重新生成
-      setGeneratedContent({ ...result, originalFile: activeFile });
+      // 传递所有上传的文件（支持多图编辑）
+      const result = await editImageWithGemini(files, prompt, { aspectRatio, imageSize }, creativeIdeaCost);
+      // 保存生成时使用的所有原始图片，用于重新生成
+      setGeneratedContent({ ...result, originalFiles: [...files] });
       setStatus(ApiStatus.Success);
       
       // 保存到历史记录（包含原始输入图片和创意库信息）
@@ -1707,7 +1708,7 @@ const App: React.FC = () => {
           templateId = activeSmartTemplate.id;
         }
         
-        await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled, activeFile, {
+        await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled, files.length > 0 ? files[0] : null, {
           templateId,
           templateType,
           bpInputs: templateType === 'bp' ? { ...bpInputs } : undefined,
@@ -1755,7 +1756,7 @@ const App: React.FC = () => {
       console.error(errorMessage);
       setStatus(ApiStatus.Error);
     }
-  }, [activeFile, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, autoSave, downloadImage, aspectRatio, imageSize, currentUser, activeCreativeIdea, findNextFreePosition, handleAddToDesktop]);
+  }, [files, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, autoSave, downloadImage, aspectRatio, imageSize, currentUser, activeCreativeIdea, findNextFreePosition, handleAddToDesktop]);
 
   // 卸载创意库：清空所有模板设置
   const handleClearTemplate = useCallback(() => {
@@ -1795,7 +1796,7 @@ const App: React.FC = () => {
   const isSmartPlusReady = !!activeSmartPlusTemplate;
   const isBPReady = !!activeBPTemplate; // BP is ready to click penguin anytime to fill variables
   
-  const canGenerateSmartPrompt = (!!activeFile && (isSmartReady || isSmartPlusReady)) || (isBPReady) && smartPromptGenStatus !== ApiStatus.Loading;
+  const canGenerateSmartPrompt = ((files.length > 0) && (isSmartReady || isSmartPlusReady)) || (isBPReady) && smartPromptGenStatus !== ApiStatus.Loading;
 
   const handleBpInputChange = (id: string, value: string) => {
       setBpInputs(prev => ({...prev, [id]: value}));
@@ -1846,12 +1847,12 @@ const App: React.FC = () => {
   
   // 重新生成：恢复原始输入状态，等待用户手动点击生成
   const handleRegenerate = useCallback(() => {
-    // 保存当初使用的原始图片
-    const originalFile = generatedContent?.originalFile || null;
+    // 保存当初使用的所有原始图片
+    const originalFiles = generatedContent?.originalFiles || [];
     
     // 恢复原始输入图片到 UI 上
-    if (originalFile) {
-      setFiles([originalFile]);
+    if (originalFiles.length > 0) {
+      setFiles(originalFiles);
       setActiveFileIndex(0);
     } else {
       setFiles([]);

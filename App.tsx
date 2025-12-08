@@ -43,7 +43,7 @@ interface LeftPanelProps {
   onRechargeClick: () => void;
   onSettingsClick: () => void;
   // 当前 API 模式状态
-  isCloudMode: boolean;
+  currentApiMode: 'cloud' | 'local-thirdparty' | 'local-gemini';
 }
 
 interface RightPanelProps {
@@ -245,9 +245,35 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
   onLogout,
   onRechargeClick,
   onSettingsClick,
-  isCloudMode,
+  currentApiMode,
 }) => {
   const { theme } = useTheme();
+  
+  // 根据模式获取显示信息
+  const getModeDisplay = () => {
+    switch (currentApiMode) {
+      case 'cloud':
+        return {
+          icon: '☁️',
+          text: '云端模式 - 已连接',
+          bgClass: 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30',
+        };
+      case 'local-thirdparty':
+        return {
+          icon: '🔌',
+          text: '本地模式 - 第三方API',
+          bgClass: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
+        };
+      case 'local-gemini':
+        return {
+          icon: '💎',
+          text: '本地模式 - Gemini',
+          bgClass: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
+        };
+    }
+  };
+  
+  const modeDisplay = getModeDisplay();
   
   return (
   <aside className="w-[280px] backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-r z-20" style={{ backgroundColor: theme.colors.bgPanel, borderColor: theme.colors.border }}>
@@ -275,14 +301,10 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
         
         {/* API 状态指示器 - 单独一行 */}
         <div 
-          className={`mt-3 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2 ${
-            isCloudMode 
-              ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' 
-              : 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
-          }`}
+          className={`mt-3 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2 ${modeDisplay.bgClass}`}
         >
-          <span className="text-base">{isCloudMode ? '☁️' : '🔌'}</span>
-          <span>{isCloudMode ? '云服务模式 - 已连接' : '本地模式'}</span>
+          <span className="text-base">{modeDisplay.icon}</span>
+          <span>{modeDisplay.text}</span>
         </div>
         
         {/* 用户信息栏 */}
@@ -980,6 +1002,18 @@ const App: React.FC = () => {
   // 用户登录成功处理
   const handleLoginSuccess = async (user: User) => {
     setCurrentUser(user);
+    // 登录成功后，如果没有本地配置，默认切换到云端模式
+    if (!thirdPartyApiConfig.apiKey && !thirdPartyApiConfig.baseUrl) {
+      const cloudConfig: ThirdPartyApiConfig = {
+        ...thirdPartyApiConfig,
+        enabled: true,
+        apiKey: '',
+        baseUrl: '',
+      };
+      setThirdPartyApiConfig(cloudConfig);
+      setThirdPartyConfig(cloudConfig);
+      localStorage.setItem('third_party_api_config', JSON.stringify(cloudConfig));
+    }
     // 登录成功后从后端加载数据
     await loadDataFromBackend();
   };
@@ -1001,6 +1035,16 @@ const App: React.FC = () => {
   const handleLogout = async () => {
     apiLogout();
     setCurrentUser(null);
+    // 退出后，如果没有本地配置，切换到本地Gemini模式
+    if (!thirdPartyApiConfig.apiKey && !thirdPartyApiConfig.baseUrl) {
+      const localConfig: ThirdPartyApiConfig = {
+        ...thirdPartyApiConfig,
+        enabled: false,
+      };
+      setThirdPartyApiConfig(localConfig);
+      setThirdPartyConfig(localConfig);
+      localStorage.setItem('third_party_api_config', JSON.stringify(localConfig));
+    }
     // 退出后切换到本地数据
     await loadDataFromLocal();
   };
@@ -1981,7 +2025,18 @@ const App: React.FC = () => {
         onLogout={handleLogout}
         onRechargeClick={() => setRechargeModalOpen(true)}
         onSettingsClick={() => setSettingsModalOpen(true)}
-        isCloudMode={!!currentUser && thirdPartyApiConfig.enabled}
+        currentApiMode={
+          // 计算当前模式
+          thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey && thirdPartyApiConfig.baseUrl
+            ? 'local-thirdparty'
+            : !thirdPartyApiConfig.enabled && apiKey
+              ? 'local-gemini'
+              : currentUser && thirdPartyApiConfig.enabled
+                ? 'cloud'
+                : currentUser
+                  ? 'cloud'
+                  : 'local-gemini'
+        }
       />
       <div className="relative flex-1 flex min-w-0">
         <Canvas 

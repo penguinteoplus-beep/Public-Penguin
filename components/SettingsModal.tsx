@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ThirdPartyApiConfig } from '../types';
 import { useTheme, ThemeName } from '../contexts/ThemeContext';
 
@@ -33,10 +33,27 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onAutoSaveToggle,
 }) => {
   const { themeName, setTheme, allThemes } = useTheme();
-  // 确定当前模式
+  
+  // 确定当前模式 - 根据实际配置自动选择
   const getCurrentMode = (): ApiMode => {
-    if (isLoggedIn && thirdPartyConfig.enabled) return 'cloud';
-    if (thirdPartyConfig.enabled && thirdPartyConfig.apiKey) return 'local-thirdparty';
+    // 优先级：
+    // 1. 如果本地配置了第三方API（有apiKey和baseUrl），用本地第三方
+    if (thirdPartyConfig.enabled && thirdPartyConfig.apiKey && thirdPartyConfig.baseUrl) {
+      return 'local-thirdparty';
+    }
+    // 2. 如果本地配置了Gemini API Key，用本地Gemini
+    if (!thirdPartyConfig.enabled && geminiApiKey) {
+      return 'local-gemini';
+    }
+    // 3. 如果已登录且启用了thirdParty（但没有本地key），用云端
+    if (isLoggedIn && thirdPartyConfig.enabled) {
+      return 'cloud';
+    }
+    // 4. 已登录默认用云端
+    if (isLoggedIn) {
+      return 'cloud';
+    }
+    // 5. 未登录默认用本地Gemini
     return 'local-gemini';
   };
 
@@ -45,6 +62,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [localThirdPartyKey, setLocalThirdPartyKey] = useState(thirdPartyConfig.apiKey || '');
   const [localGeminiKey, setLocalGeminiKey] = useState(geminiApiKey || '');
   const [showApiKey, setShowApiKey] = useState(false);
+
+  // 响应 props 变化，重新计算当前模式
+  useEffect(() => {
+    setActiveMode(getCurrentMode());
+  }, [isLoggedIn, thirdPartyConfig.enabled, thirdPartyConfig.apiKey, thirdPartyConfig.baseUrl, geminiApiKey]);
+
+  // 同步本地输入状态
+  useEffect(() => {
+    setLocalThirdPartyUrl(thirdPartyConfig.baseUrl || '');
+    setLocalThirdPartyKey(thirdPartyConfig.apiKey || '');
+  }, [thirdPartyConfig.baseUrl, thirdPartyConfig.apiKey]);
+
+  useEffect(() => {
+    setLocalGeminiKey(geminiApiKey || '');
+  }, [geminiApiKey]);
 
   if (!isOpen) return null;
 
@@ -373,7 +405,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <p className="text-xs text-gray-400">生成图片后自动下载到本地</p>
                 </div>
               </div>
-              <div className="relative inline-flex items-center cursor-pointer">
+              <label className="relative inline-flex items-center cursor-pointer">
                 <input 
                   type="checkbox" 
                   className="sr-only peer" 
@@ -381,7 +413,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   onChange={(e) => onAutoSaveToggle(e.target.checked)}
                 />
                 <div className="w-11 h-6 bg-gray-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-indigo-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 transition-colors"></div>
-              </div>
+              </label>
             </div>
 
             {/* 当前模型显示 */}

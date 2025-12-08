@@ -20,6 +20,10 @@ import { ImageIcon } from './components/icons/ImageIcon';
 import { LightbulbIcon } from './components/icons/LightbulbIcon';
 import { HistoryPanel } from './components/HistoryPanel';
 import { ClockIcon } from './components/icons/ClockIcon';
+import { AuthModal } from './components/AuthModal';
+import { User, getCurrentUser, logout as apiLogout, isLoggedIn } from './services/api/auth';
+import * as creativeIdeasApi from './services/api/creativeIdeas';
+import * as historyApi from './services/api/history';
 
 
 interface LeftPanelProps {
@@ -39,6 +43,10 @@ interface LeftPanelProps {
   onHistorySelect: (item: GenerationHistory) => void;
   onHistoryDelete: (id: number) => void;
   onHistoryClear: () => void;
+  // 用户认证相关
+  currentUser: User | null;
+  onLoginClick: () => void;
+  onLogout: () => void;
 }
 
 interface RightPanelProps {
@@ -224,14 +232,49 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
   history,
   onHistorySelect,
   onHistoryDelete,
-  onHistoryClear
+  onHistoryClear,
+  currentUser,
+  onLoginClick,
+  onLogout
 }) => (
   <aside className="w-[300px] bg-black/40 backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-r border-white/10 z-20">
       <div className="p-6 border-b border-white/10 flex-shrink-0">
-           <h1 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-indigo-400 to-purple-500 tracking-tight">
-            🐧 艾洛魔法
-           </h1>
-           <p className="text-[10px] text-gray-400 font-medium tracking-widest mt-1 uppercase">AI Studio Pro</p>
+           <div className="flex items-center justify-between">
+             <div>
+               <h1 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-indigo-400 to-purple-500 tracking-tight">
+                🐧 艾洛魔法
+               </h1>
+               <p className="text-[10px] text-gray-400 font-medium tracking-widest mt-1 uppercase">AI Studio Pro</p>
+             </div>
+             {/* 用户头像/登录按钮 */}
+             {currentUser ? (
+               <div className="relative group">
+                 <button className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform">
+                   {currentUser.nickname?.[0] || currentUser.username[0].toUpperCase()}
+                 </button>
+                 {/* 下拉菜单 */}
+                 <div className="absolute right-0 top-full mt-2 w-40 bg-gray-900 border border-white/10 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                   <div className="p-3 border-b border-white/10">
+                     <p className="text-sm font-medium text-white truncate">{currentUser.nickname || currentUser.username}</p>
+                     <p className="text-[10px] text-gray-500 truncate">{currentUser.email}</p>
+                   </div>
+                   <button
+                     onClick={onLogout}
+                     className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 transition-colors rounded-b-xl"
+                   >
+                     退出登录
+                   </button>
+                 </div>
+               </div>
+             ) : (
+               <button
+                 onClick={onLoginClick}
+                 className="px-3 py-1.5 text-xs font-medium text-indigo-400 border border-indigo-500/30 rounded-lg hover:bg-indigo-500/10 transition-all"
+               >
+                 登录
+               </button>
+             )}
+           </div>
       </div>
       <div className="flex-grow p-4 space-y-4 flex flex-col min-h-0 overflow-hidden">
         <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">资源素材</h2>
@@ -747,6 +790,10 @@ const App: React.FC = () => {
   
   // 历史记录状态
   const [generationHistory, setGenerationHistory] = useState<GenerationHistory[]>([]);
+  
+  // 用户认证状态
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isAuthModalOpen, setAuthModalOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importIdeasInputRef = useRef<HTMLInputElement>(null);
@@ -770,34 +817,92 @@ const App: React.FC = () => {
       }
     }
     
-    const loadIdeas = async () => {
-      try {
-        let ideas = await getAllFromDB();
-        ideas.sort((a, b) => (b.order || 0) - (a.order || 0)); 
-        setCreativeIdeas(ideas);
-      } catch (e) {
-        console.error("Failed to load creative ideas from DB", e);
+    // 检查登录状态并加载数据
+    const initializeData = async () => {
+      // 检查是否已登录
+      if (isLoggedIn()) {
+        try {
+          const userResult = await getCurrentUser();
+          if (userResult.success && userResult.data) {
+            setCurrentUser(userResult.data);
+            // 已登录，从后端API加载数据
+            await loadDataFromBackend();
+          } else {
+            // Token无效，从本地加载
+            await loadDataFromLocal();
+          }
+        } catch (e) {
+          console.error('Failed to verify login:', e);
+          await loadDataFromLocal();
+        }
+      } else {
+        // 未登录，从本地加载
+        await loadDataFromLocal();
       }
     };
-    loadIdeas();
     
-    // 加载历史记录
-    const loadHistory = async () => {
-      try {
-        let history = await getAllHistoryFromDB();
-        history.sort((a, b) => b.timestamp - a.timestamp); // 按时间倒序
-        setGenerationHistory(history);
-      } catch (e) {
-        console.error("Failed to load history from DB", e);
-      }
-    };
-    loadHistory();
+    initializeData();
     
     const savedAutoSave = localStorage.getItem('auto_save_enabled');
     if (savedAutoSave) {
         setAutoSave(JSON.parse(savedAutoSave));
     }
   }, []);
+  
+  // 从后端API加载数据
+  const loadDataFromBackend = async () => {
+    try {
+      // 加载创意库
+      const ideasResult = await creativeIdeasApi.getAllCreativeIdeas();
+      if (ideasResult.success && ideasResult.data) {
+        const ideas = ideasResult.data.sort((a, b) => (b.order || 0) - (a.order || 0));
+        setCreativeIdeas(ideas);
+      }
+      
+      // 加载历史记录
+      const historyResult = await historyApi.getAllHistory();
+      if (historyResult.success && historyResult.data) {
+        const history = historyResult.data.sort((a, b) => b.timestamp - a.timestamp);
+        setGenerationHistory(history);
+      }
+    } catch (e) {
+      console.error('Failed to load data from backend:', e);
+    }
+  };
+  
+  // 从本地IndexedDB加载数据
+  const loadDataFromLocal = async () => {
+    try {
+      let ideas = await getAllFromDB();
+      ideas.sort((a, b) => (b.order || 0) - (a.order || 0)); 
+      setCreativeIdeas(ideas);
+    } catch (e) {
+      console.error("Failed to load creative ideas from DB", e);
+    }
+    
+    try {
+      let history = await getAllHistoryFromDB();
+      history.sort((a, b) => b.timestamp - a.timestamp);
+      setGenerationHistory(history);
+    } catch (e) {
+      console.error("Failed to load history from DB", e);
+    }
+  };
+  
+  // 用户登录成功处理
+  const handleLoginSuccess = async (user: User) => {
+    setCurrentUser(user);
+    // 登录成功后从后端加载数据
+    await loadDataFromBackend();
+  };
+  
+  // 用户退出登录处理
+  const handleLogout = async () => {
+    apiLogout();
+    setCurrentUser(null);
+    // 退出后切换到本地数据
+    await loadDataFromLocal();
+  };
 
   const handleSetPrompt = (value: string) => {
     setPrompt(value);
@@ -919,7 +1024,16 @@ const App: React.FC = () => {
   
   const handleHistoryDelete = async (id: number) => {
     try {
-      await deleteHistoryFromDB(id);
+      if (currentUser) {
+        // 登录状态，使用后端API
+        const result = await historyApi.deleteHistory(id);
+        if (!result.success) {
+          throw new Error(result.error || '删除失败');
+        }
+      } else {
+        // 未登录，使用本地IndexedDB
+        await deleteHistoryFromDB(id);
+      }
       setGenerationHistory(prev => prev.filter(h => h.id !== id));
     } catch (e) {
       console.error("Failed to delete history:", e);
@@ -929,7 +1043,16 @@ const App: React.FC = () => {
   const handleHistoryClear = async () => {
     if (!confirm('确定要清空所有历史记录吗？')) return;
     try {
-      await clearAllHistoryFromDB();
+      if (currentUser) {
+        // 登录状态，使用后端API
+        const result = await historyApi.clearAllHistory();
+        if (!result.success) {
+          throw new Error(result.error || '清空失败');
+        }
+      } else {
+        // 未登录，使用本地IndexedDB
+        await clearAllHistoryFromDB();
+      }
       setGenerationHistory([]);
     } catch (e) {
       console.error("Failed to clear history:", e);
@@ -984,8 +1107,18 @@ const App: React.FC = () => {
       smartPlusOverrides: creativeInfo?.smartPlusOverrides
     };
     try {
-      await saveHistoryToDB(historyItem);
-      setGenerationHistory(prev => [historyItem, ...prev].slice(0, 50)); // 最多保存50条
+      if (currentUser) {
+        // 登录状态，使用后端API
+        const { id, ...historyWithoutId } = historyItem;
+        const result = await historyApi.createHistory(historyWithoutId as any);
+        if (result.success && result.data) {
+          setGenerationHistory(prev => [result.data!, ...prev].slice(0, 50));
+        }
+      } else {
+        // 未登录，使用本地IndexedDB
+        await saveHistoryToDB(historyItem);
+        setGenerationHistory(prev => [historyItem, ...prev].slice(0, 50));
+      }
     } catch (e) {
       console.error("Failed to save history:", e);
     }
@@ -1055,11 +1188,24 @@ const App: React.FC = () => {
               const ideas = JSON.parse(content);
 
               if (Array.isArray(ideas) && ideas.every(idea => 'id' in idea && 'title' in idea && 'prompt' in idea && 'imageUrl' in idea)) {
-                  await importToDB(ideas as CreativeIdea[]);
-                  const allIdeas = await getAllFromDB();
-                  allIdeas.sort((a, b) => (b.order || 0) - (a.order || 0));
-                  setCreativeIdeas(allIdeas);
-                  alert(`已导入 ${ideas.length} 个创意!`);
+                  if (currentUser) {
+                    // 登录状态，使用后端API
+                    const ideasWithoutId = ideas.map(({ id, ...rest }) => rest);
+                    const result = await creativeIdeasApi.importCreativeIdeas(ideasWithoutId as any);
+                    if (result.success) {
+                      await loadDataFromBackend();
+                      alert(`已导入 ${ideas.length} 个创意!`);
+                    } else {
+                      throw new Error(result.error || '导入失败');
+                    }
+                  } else {
+                    // 未登录，使用本地IndexedDB
+                    await importToDB(ideas as CreativeIdea[]);
+                    const allIdeas = await getAllFromDB();
+                    allIdeas.sort((a, b) => (b.order || 0) - (a.order || 0));
+                    setCreativeIdeas(allIdeas);
+                    alert(`已导入 ${ideas.length} 个创意!`);
+                  }
               } else {
                   throw new Error("文件格式无效");
               }
@@ -1077,21 +1223,40 @@ const App: React.FC = () => {
   
   const handleSaveCreativeIdea = async (idea: Partial<CreativeIdea>) => {
     try {
-      let ideaToSave: CreativeIdea;
-
-      if (idea.id) { // Existing idea
+      if (currentUser) {
+        // 登录状态，使用后端API
+        if (idea.id) {
+          // 更新现有创意
+          const result = await creativeIdeasApi.updateCreativeIdea(idea.id, idea);
+          if (!result.success) {
+            throw new Error(result.error || '更新失败');
+          }
+        } else {
+          // 创建新创意
+          const newOrder = creativeIdeas.length > 0 ? Math.max(...creativeIdeas.map(i => i.order || 0)) + 1 : 1;
+          const { id, ...ideaWithoutId } = idea as any;
+          const result = await creativeIdeasApi.createCreativeIdea({ ...ideaWithoutId, order: newOrder });
+          if (!result.success) {
+            throw new Error(result.error || '创建失败');
+          }
+        }
+        // 重新加载数据
+        await loadDataFromBackend();
+      } else {
+        // 未登录，使用本地IndexedDB
+        let ideaToSave: CreativeIdea;
+        if (idea.id) {
           const existingIdea = creativeIdeas.find(i => i.id === idea.id);
           ideaToSave = { ...existingIdea, ...idea, id: idea.id } as CreativeIdea;
-      } else { // New idea
+        } else {
           const newOrder = creativeIdeas.length > 0 ? Math.max(...creativeIdeas.map(i => i.order || 0)) + 1 : 1;
           ideaToSave = { ...idea, id: Date.now(), order: newOrder } as CreativeIdea;
+        }
+        await saveToDB(ideaToSave);
+        const updatedIdeas = await getAllFromDB();
+        updatedIdeas.sort((a, b) => (b.order || 0) - (a.order || 0));
+        setCreativeIdeas(updatedIdeas);
       }
-
-      await saveToDB(ideaToSave);
-
-      const updatedIdeas = await getAllFromDB();
-      updatedIdeas.sort((a, b) => (b.order || 0) - (a.order || 0));
-      setCreativeIdeas(updatedIdeas);
 
       setAddIdeaModalOpen(false);
       setEditingIdea(null);
@@ -1103,11 +1268,20 @@ const App: React.FC = () => {
 
   const handleDeleteCreativeIdea = async (id: number) => {
     try {
-      await deleteFromDB(id);
-      
-      const updatedIdeas = await getAllFromDB();
-      updatedIdeas.sort((a, b) => (b.order || 0) - (a.order || 0));
-      setCreativeIdeas(updatedIdeas);
+      if (currentUser) {
+        // 登录状态，使用后端API
+        const result = await creativeIdeasApi.deleteCreativeIdea(id);
+        if (!result.success) {
+          throw new Error(result.error || '删除失败');
+        }
+        await loadDataFromBackend();
+      } else {
+        // 未登录，使用本地IndexedDB
+        await deleteFromDB(id);
+        const updatedIdeas = await getAllFromDB();
+        updatedIdeas.sort((a, b) => (b.order || 0) - (a.order || 0));
+        setCreativeIdeas(updatedIdeas);
+      }
     } catch (e) {
       console.error("Failed to delete creative idea:", e);
       alert(`删除失败: ${e instanceof Error ? e.message : 'Unknown error'}`);
@@ -1131,7 +1305,15 @@ const App: React.FC = () => {
             order: reorderedIdeas.length - index,
         }));
         setCreativeIdeas(ideasToUpdate);
-        await Promise.all(ideasToUpdate.map(idea => saveToDB(idea)));
+        
+        if (currentUser) {
+          // 登录状态，使用后端API
+          const orderedIds = ideasToUpdate.map(i => i.id);
+          await creativeIdeasApi.reorderCreativeIdeas(orderedIds);
+        } else {
+          // 未登录，使用本地IndexedDB
+          await Promise.all(ideasToUpdate.map(idea => saveToDB(idea)));
+        }
     } catch (e) {
         console.error("Failed to reorder ideas:", e);
     }
@@ -1486,6 +1668,9 @@ const App: React.FC = () => {
         onHistorySelect={handleHistorySelect}
         onHistoryDelete={handleHistoryDelete}
         onHistoryClear={handleHistoryClear}
+        currentUser={currentUser}
+        onLoginClick={() => setAuthModalOpen(true)}
+        onLogout={handleLogout}
       />
       <div className="relative flex-1 flex min-w-0">
         <Canvas 
@@ -1564,6 +1749,11 @@ const App: React.FC = () => {
         onClose={() => { setAddIdeaModalOpen(false); setEditingIdea(null); }}
         onSave={handleSaveCreativeIdea}
         ideaToEdit={editingIdea}
+      />
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
       />
     </div>
   );

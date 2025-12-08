@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ThirdPartyApiConfig } from '../types';
+import { useTheme, ThemeName } from '../contexts/ThemeContext';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   autoSaveEnabled,
   onAutoSaveToggle,
 }) => {
+  const { themeName, setTheme, allThemes } = useTheme();
   // 确定当前模式
   const getCurrentMode = (): ApiMode => {
     if (isLoggedIn && thirdPartyConfig.enabled) return 'cloud';
@@ -311,6 +313,46 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 >
                   保存配置
                 </button>
+              </div>
+            )}
+          </div>
+
+          {/* 分割线 */}
+          <div className="border-t border-white/10" />
+
+          {/* 主题设置 */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">主题设置</h3>
+            
+            <div className="grid grid-cols-4 gap-3">
+              {allThemes.map((t) => (
+                <button
+                  key={t.name}
+                  onClick={() => setTheme(t.name)}
+                  className={`relative p-4 rounded-xl border-2 transition-all ${
+                    themeName === t.name
+                      ? 'border-white/40 bg-white/10 ring-2 ring-white/20'
+                      : 'border-white/10 hover:border-white/20 bg-white/5'
+                  }`}
+                >
+                  <div className="text-3xl text-center mb-2">{t.icon}</div>
+                  <p className="text-xs text-center text-gray-300 font-medium">{t.displayName}</p>
+                  {themeName === t.name && (
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+            
+            {/* 圣诞主题提示 */}
+            {themeName === 'christmas' && (
+              <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-xl animate-fade-in">
+                <span className="text-2xl">🎄</span>
+                <p className="text-xs text-red-300">圣诞快乐！雪花正在飘落~ ❄️</p>
               </div>
             )}
           </div>

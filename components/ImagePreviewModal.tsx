@@ -117,7 +117,8 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ imageUrl, 
       `}</style>
       
       <div 
-        className="relative max-w-[90vw] max-h-[90vh] flex items-center justify-center overflow-hidden"
+        className="relative flex items-center justify-center overflow-hidden rounded-xl"
+        style={{ maxWidth: 'min(800px, 85vw)', maxHeight: 'min(600px, 80vh)' }}
         onClick={(e) => e.stopPropagation()}
         onWheel={handleWheel}
       >
@@ -138,7 +139,7 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ imageUrl, 
           <img 
               src={imageUrl} 
               alt="Image Preview" 
-              className="block w-auto h-auto max-w-full max-h-full object-contain"
+              className="block w-auto h-auto max-w-full max-h-full object-contain rounded-lg shadow-2xl"
               style={{ 
                   transform: `translate(${transform.posX}px, ${transform.posY}px) scale(${transform.scale})`,
                   cursor: transform.scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',

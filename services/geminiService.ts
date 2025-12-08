@@ -111,11 +111,19 @@ export const editImageWithThirdPartyApi = async (
   if (!thirdPartyConfig || !thirdPartyConfig.enabled) {
     throw new Error("第三方API未启用");
   }
-  if (!thirdPartyConfig.apiKey) {
-    throw new Error("请先配置第三方API Key");
-  }
-  if (!thirdPartyConfig.baseUrl) {
-    throw new Error("请先配置第三方API Base URL");
+  
+  // 云模式（已登录）：直接走后端代理，不需要前端 API Key
+  // 本地模式（未登录）：需要前端配置 API Key
+  const isCloudMode = isLoggedIn();
+  
+  if (!isCloudMode) {
+    // 本地模式才需要检查前端 API 配置
+    if (!thirdPartyConfig.apiKey) {
+      throw new Error("请先配置第三方API Key");
+    }
+    if (!thirdPartyConfig.baseUrl) {
+      throw new Error("请先配置第三方API Base URL");
+    }
   }
   
   // 构建请求体
@@ -136,8 +144,8 @@ export const editImageWithThirdPartyApi = async (
     requestBody.image = [imageDataUrl];
   }
 
-  // 如果已登录，通过后端代理调用（会扣费）
-  if (isLoggedIn()) {
+  // 云模式：通过后端代理调用（会扣费）
+  if (isCloudMode) {
     const apiResult = await post<NanoBananaResponse & { coinsDeducted?: number; coinsRemaining?: number }>(
       '/ai/generate-image',
       requestBody
@@ -227,11 +235,19 @@ export const chatWithThirdPartyApi = async (
   if (!thirdPartyConfig || !thirdPartyConfig.enabled) {
     throw new Error("第三方API未启用");
   }
-  if (!thirdPartyConfig.apiKey) {
-    throw new Error("请先配置第三方API Key");
-  }
-  if (!thirdPartyConfig.baseUrl) {
-    throw new Error("请先配置第三方API Base URL");
+  
+  // 云模式（已登录）：直接走后端代理，不需要前端 API Key
+  // 本地模式（未登录）：需要前端配置 API Key
+  const isCloudMode = isLoggedIn();
+  
+  if (!isCloudMode) {
+    // 本地模式才需要检查前端 API 配置
+    if (!thirdPartyConfig.apiKey) {
+      throw new Error("请先配置第三方API Key");
+    }
+    if (!thirdPartyConfig.baseUrl) {
+      throw new Error("请先配置第三方API Base URL");
+    }
   }
   
   // 构建用户消息内容 - 根据API文档格式
@@ -264,8 +280,8 @@ export const chatWithThirdPartyApi = async (
     stream: false
   };
 
-  // 如果已登录，通过后端代理调用（会扣费）
-  if (isLoggedIn()) {
+  // 云模式：通过后端代理调用（会扣费）
+  if (isCloudMode) {
     const apiResult = await post<OpenAIChatResponse & { coinsDeducted?: number; coinsRemaining?: number }>(
       '/ai/chat',
       requestBody

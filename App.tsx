@@ -3,7 +3,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { ImageUploader } from './components/ImageUploader';
 import { GeneratedImageDisplay } from './components/GeneratedImageDisplay';
 import { editImageWithGemini, generateCreativePromptFromImage, initializeAiClient, processBPTemplate, setThirdPartyConfig } from './services/geminiService';
-import { ApiStatus, GeneratedContent, CreativeIdea, SmartPlusConfig, ThirdPartyApiConfig, GenerationHistory } from './types';
+import { ApiStatus, GeneratedContent, CreativeIdea, SmartPlusConfig, ThirdPartyApiConfig, GenerationHistory, DesktopItem, DesktopImageItem, DesktopFolderItem } from './types';
 import { ImagePreviewModal } from './components/ImagePreviewModal';
 import { AddCreativeIdeaModal } from './components/AddCreativeIdeaModal';
 import { SettingsModal } from './components/SettingsModal';
@@ -24,6 +24,9 @@ import * as creativeIdeasApi from './services/api/creativeIdeas';
 import * as historyApi from './services/api/history';
 import * as coinsApi from './services/api/coins';
 import { PriceConfig } from './types';
+import { ThemeProvider, useTheme, SnowfallEffect } from './contexts/ThemeContext';
+import { Desktop, createDesktopItemFromHistory } from './components/Desktop';
+import { HistoryDock } from './components/HistoryDock';
 
 
 interface LeftPanelProps {
@@ -87,11 +90,26 @@ interface CanvasProps {
   onReorderIdeas: (ideas: CreativeIdea[]) => void;
   onEditAgain?: () => void; // 再次编辑
   onRegenerate?: () => void; // 重新生成
+  onDismissResult?: () => void; // 关闭结果浮层
   // 历史记录相关
   history: GenerationHistory[];
   onHistorySelect: (item: GenerationHistory) => void;
   onHistoryDelete: (id: number) => void;
   onHistoryClear: () => void;
+  // 桌面模式相关
+  desktopItems: DesktopItem[];
+  onDesktopItemsChange: (items: DesktopItem[]) => void;
+  onDesktopImageDoubleClick: (item: DesktopImageItem) => void;
+  desktopSelectedIds: string[];
+  onDesktopSelectionChange: (ids: string[]) => void;
+  openFolderId: string | null;
+  onFolderOpen: (id: string) => void;
+  onFolderClose: () => void;
+  onRenameItem: (id: string, newName: string) => void;
+  // 图片操作回调
+  onDesktopImagePreview?: (item: DesktopImageItem) => void;
+  onDesktopImageEditAgain?: (item: DesktopImageItem) => void;
+  onDesktopImageRegenerate?: (item: DesktopImageItem) => void;
 }
 
 // --- IndexedDB Service ---
@@ -228,8 +246,11 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
   onRechargeClick,
   onSettingsClick,
   isCloudMode,
-}) => (
-  <aside className="w-[280px] bg-black/40 backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-r border-white/10 z-20">
+}) => {
+  const { theme } = useTheme();
+  
+  return (
+  <aside className="w-[280px] backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-r z-20" style={{ backgroundColor: theme.colors.bgPanel, borderColor: theme.colors.border }}>
       {/* 顶部导航栏 */}
       <div className="p-4 border-b border-white/10 flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -242,30 +263,26 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
             </div>
           </div>
           
-          {/* 工具栏 */}
-          <div className="flex items-center gap-1">
-            {/* API 状态指示器 */}
-            <div 
-              className={`px-2 py-1 rounded-lg text-[10px] font-medium flex items-center gap-1 ${
-                isCloudMode 
-                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' 
-                  : 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
-              }`}
-              title={isCloudMode ? '云服务模式' : '本地模式'}
-            >
-              <span>{isCloudMode ? '☁️' : '🔌'}</span>
-              <span>{isCloudMode ? '云' : '本地'}</span>
-            </div>
-            
-            {/* 设置按钮 */}
-            <button
-              onClick={onSettingsClick}
-              className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all"
-              title="设置"
-            >
-              <SettingsIcon className="w-4 h-4" />
-            </button>
-          </div>
+          {/* 设置按钮 */}
+          <button
+            onClick={onSettingsClick}
+            className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all"
+            title="设置"
+          >
+            <SettingsIcon className="w-4 h-4" />
+          </button>
+        </div>
+        
+        {/* API 状态指示器 - 单独一行 */}
+        <div 
+          className={`mt-3 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2 ${
+            isCloudMode 
+              ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' 
+              : 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
+          }`}
+        >
+          <span className="text-base">{isCloudMode ? '☁️' : '🔌'}</span>
+          <span>{isCloudMode ? '云服务模式 - 已连接' : '本地模式'}</span>
         </div>
         
         {/* 用户信息栏 */}
@@ -334,7 +351,8 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
         </div>
       </div>
   </aside>
-);
+  );
+};
 
 const SmartPlusDirector: React.FC<{
     config: SmartPlusConfig;
@@ -699,32 +717,81 @@ const Canvas: React.FC<CanvasProps> = ({
   onReorderIdeas,
   onEditAgain,
   onRegenerate,
+  onDismissResult,
   history,
   onHistorySelect,
   onHistoryDelete,
   onHistoryClear,
-}) => (
-   <main className="flex-1 flex flex-col min-w-0 bg-gray-950 relative overflow-hidden">
+  desktopItems,
+  onDesktopItemsChange,
+  onDesktopImageDoubleClick,
+  desktopSelectedIds,
+  onDesktopSelectionChange,
+  openFolderId,
+  onFolderOpen,
+  onFolderClose,
+  onRenameItem,
+  onDesktopImagePreview,
+  onDesktopImageEditAgain,
+  onDesktopImageRegenerate,
+}) => {
+  const { theme } = useTheme();
+  
+  return (
+   <main 
+     className="flex-1 flex flex-col min-w-0 relative overflow-hidden select-none" 
+     style={{ backgroundColor: theme.colors.bgPrimary }}
+     onDragStart={(e) => e.preventDefault()}
+   >
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/10 via-gray-950 to-gray-950 pointer-events-none"></div>
       
-      <div className="relative z-10 w-full flex-1 p-8 flex flex-col overflow-hidden">
-          {view === 'library' ? (
-             <CreativeLibrary
-              ideas={creativeIdeas}
-              onBack={onBack}
-              onAdd={onAdd}
-              onDelete={onDelete}
-              onEdit={onEdit}
-              onUse={onUse}
-              onExport={onExportIdeas}
-              onImport={onImportIdeas}
-              onReorder={onReorderIdeas}
-            />
-          ) : files.length === 0 && !content?.imageUrl ? (
-              <WelcomeScreen onUploadClick={onUploadClick} />
-          ) : (
-             <GeneratedImageDisplay
+      {view === 'library' ? (
+        <div className="relative z-10 w-full flex-1 p-8 flex flex-col overflow-hidden">
+          <CreativeLibrary
+            ideas={creativeIdeas}
+            onBack={onBack}
+            onAdd={onAdd}
+            onDelete={onDelete}
+            onEdit={onEdit}
+            onUse={onUse}
+            onExport={onExportIdeas}
+            onImport={onImportIdeas}
+            onReorder={onReorderIdeas}
+          />
+        </div>
+      ) : (
+        /* 桌面模式 - 始终显示 */
+        <div className="relative z-10 flex-1 overflow-hidden">
+          <Desktop
+            items={desktopItems}
+            onItemsChange={onDesktopItemsChange}
+            onImageDoubleClick={onDesktopImageDoubleClick}
+            onFolderDoubleClick={(folder) => onFolderOpen(folder.id)}
+            openFolderId={openFolderId}
+            onFolderClose={onFolderClose}
+            selectedIds={desktopSelectedIds}
+            onSelectionChange={onDesktopSelectionChange}
+            onRenameItem={onRenameItem}
+            onImagePreview={onDesktopImagePreview}
+            onImageEditAgain={onDesktopImageEditAgain}
+            onImageRegenerate={onDesktopImageRegenerate}
+          />
+          
+          {/* 生成结果浮层 */}
+          {(status === ApiStatus.Loading || (status === ApiStatus.Success && content) || (status === ApiStatus.Error && error)) && (
+            <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-40 bg-gray-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10 p-4">
+              {/* 关闭按钮 */}
+              {status !== ApiStatus.Loading && onDismissResult && (
+                <button
+                  onClick={onDismissResult}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-colors border border-white/20"
+                  title="关闭"
+                >
+                  ×
+                </button>
+              )}
+              <GeneratedImageDisplay
                 status={status}
                 error={error}
                 content={content}
@@ -732,24 +799,13 @@ const Canvas: React.FC<CanvasProps> = ({
                 onEditAgain={onEditAgain}
                 onRegenerate={onRegenerate}
               />
+            </div>
           )}
-      </div>
-      
-      {/* 底部历史记录条 - 只在编辑器视图显示 */}
-      {view === 'editor' && history.length > 0 && (
-        <div className="relative z-10 flex-shrink-0 px-4 pb-4">
-          <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 p-4">
-            <HistoryStrip
-              history={history}
-              onSelect={onHistorySelect}
-              onDelete={onHistoryDelete}
-              onClear={onHistoryClear}
-            />
-          </div>
         </div>
       )}
    </main>
-);
+  );
+};
 
 export const defaultSmartPlusConfig: SmartPlusConfig = [
     { id: 1, label: 'Product', enabled: true, features: '' },
@@ -772,7 +828,7 @@ const App: React.FC = () => {
   const [apiKey, setApiKey] = useState<string>('');
   const [creativeIdeas, setCreativeIdeas] = useState<CreativeIdea[]>([]);
   
-  const [view, setView] = useState<'editor' | 'library'>('editor');
+  const [view, setView] = useState<'editor' | 'library'>('editor'); // 默认编辑器模式（显示桌面）
   const [isAddIdeaModalOpen, setAddIdeaModalOpen] = useState(false);
   const [editingIdea, setEditingIdea] = useState<CreativeIdea | null>(null);
   
@@ -815,6 +871,11 @@ const App: React.FC = () => {
   
   // 企鹅币状态 🪙
   const [priceConfig, setPriceConfig] = useState<PriceConfig>({ generateImage: 10, analyzeImage: 5, chat: 2 });
+
+  // 桌面状态
+  const [desktopItems, setDesktopItems] = useState<DesktopItem[]>([]);
+  const [desktopSelectedIds, setDesktopSelectedIds] = useState<string[]>([]);
+  const [openFolderId, setOpenFolderId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importIdeasInputRef = useRef<HTMLInputElement>(null);
@@ -1469,6 +1530,47 @@ const App: React.FC = () => {
       setSmartPromptGenStatus(ApiStatus.Error);
     }
   }, [activeFile, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, smartPlusOverrides, bpInputs]);
+  
+    // 桌面操作处理
+    const handleDesktopItemsChange = useCallback((items: DesktopItem[]) => {
+      setDesktopItems(items);
+      // 保存到 localStorage
+      localStorage.setItem('desktop_items', JSON.stringify(items));
+    }, []);
+  
+    // 查找桌面空闲位置
+    const findNextFreePosition = useCallback((): { x: number, y: number } => {
+      const gridSize = 100;
+      const maxCols = 10; // 每行最多10个
+      const occupiedPositions = new Set(
+        desktopItems
+          .filter(item => {
+            // 只考虑不在文件夹内的项目
+            const isInFolder = desktopItems.some(
+              other => other.type === 'folder' && (other as DesktopFolderItem).itemIds.includes(item.id)
+            );
+            return !isInFolder;
+          })
+          .map(item => `${Math.round(item.position.x / gridSize)},${Math.round(item.position.y / gridSize)}`)
+      );
+      
+      // 从左上角开始找空位
+      for (let y = 0; y < 100; y++) {
+        for (let x = 0; x < maxCols; x++) {
+          const key = `${x},${y}`;
+          if (!occupiedPositions.has(key)) {
+            return { x: x * gridSize, y: y * gridSize };
+          }
+        }
+      }
+      return { x: 0, y: 0 };
+    }, [desktopItems]);
+  
+    const handleAddToDesktop = useCallback((item: DesktopImageItem) => {
+      // 添加图片到桌面
+      const newItems = [...desktopItems, item];
+      handleDesktopItemsChange(newItems);
+    }, [desktopItems, handleDesktopItemsChange]);
 
   const handleGenerateClick = useCallback(async () => {
     // 检查API配置：要么有Gemini Key，要么启用了第三方API
@@ -1526,6 +1628,22 @@ const App: React.FC = () => {
           bpInputs: templateType === 'bp' ? { ...bpInputs } : undefined,
           smartPlusOverrides: templateType === 'smartPlus' ? [...smartPlusOverrides] : undefined
         });
+        
+        // 自动添加到桌面
+        const freePos = findNextFreePosition();
+        const desktopItem: DesktopImageItem = {
+          id: `img-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+          type: 'image',
+          name: prompt.slice(0, 15) + (prompt.length > 15 ? '...' : ''),
+          position: freePos,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          imageUrl: result.imageUrl,
+          prompt: prompt,
+          model: thirdPartyApiConfig.enabled ? 'nano-banana-2' : 'Gemini',
+          isThirdParty: thirdPartyApiConfig.enabled,
+        };
+        handleAddToDesktop(desktopItem);
       }
       
       if (autoSave && result.imageUrl) {
@@ -1551,7 +1669,7 @@ const App: React.FC = () => {
       console.error(errorMessage);
       setStatus(ApiStatus.Error);
     }
-  }, [activeFile, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, autoSave, downloadImage, aspectRatio, imageSize, currentUser, activeCreativeIdea]);
+  }, [activeFile, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, autoSave, downloadImage, aspectRatio, imageSize, currentUser, activeCreativeIdea, findNextFreePosition, handleAddToDesktop]);
 
   // 卸载创意库：清空所有模板设置
   const handleClearTemplate = useCallback(() => {
@@ -1712,8 +1830,129 @@ const App: React.FC = () => {
     }
   }, [prompt, apiKey, thirdPartyApiConfig, autoSave, downloadImage, aspectRatio, imageSize, saveToHistory, generatedContent, currentUser, activeCreativeIdea, activeBPTemplate, activeSmartPlusTemplate, activeSmartTemplate, bpInputs, smartPlusOverrides]);
 
+  const handleDesktopImageDoubleClick = useCallback((item: DesktopImageItem) => {
+    // 双击图片预览
+    setPreviewImageUrl(item.imageUrl);
+  }, []);
+
+  // 关闭生成结果浮层
+  const handleDismissResult = useCallback(() => {
+    setStatus(ApiStatus.Idle);
+    setGeneratedContent(null);
+    setError(null);
+  }, []);
+
+  const handleRenameItem = useCallback((id: string, newName: string) => {
+    const updatedItems = desktopItems.map(item => {
+      if (item.id === id) {
+        return { ...item, name: newName, updatedAt: Date.now() };
+      }
+      return item;
+    });
+    handleDesktopItemsChange(updatedItems);
+  }, [desktopItems, handleDesktopItemsChange]);
+
+  // 桌面图片操作 - 预览
+  const handleDesktopImagePreview = useCallback((item: DesktopImageItem) => {
+    setPreviewImageUrl(item.imageUrl);
+  }, []);
+
+  // 桌面图片操作 - 再编辑（将图片添加到上传列表并设置提示词）
+  const handleDesktopImageEditAgain = useCallback(async (item: DesktopImageItem) => {
+    try {
+      // 将图片URL转换为File对象
+      const response = await fetch(item.imageUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `${item.name}.png`, { type: 'image/png' });
+      
+      // 添加到文件列表
+      setFiles(prev => [...prev, file]);
+      setActiveFileIndex(files.length); // 选中新添加的图片
+      
+      // 设置提示词
+      if (item.prompt) {
+        setPrompt(item.prompt);
+      }
+    } catch (e) {
+      console.error('添加图片到编辑列表失败:', e);
+    }
+  }, [files.length]);
+
+  // 桌面图片操作 - 重新生成
+  const handleDesktopImageRegenerate = useCallback(async (item: DesktopImageItem) => {
+    if (!item.prompt) {
+      setError('此图片没有保存原始提示词，无法重新生成');
+      setStatus(ApiStatus.Error);
+      return;
+    }
+    
+    // 设置提示词并触发生成
+    setPrompt(item.prompt);
+    setStatus(ApiStatus.Loading);
+    setError(null);
+    setGeneratedContent(null);
+    
+    try {
+      const newSeed = Math.floor(Math.random() * 2147483647);
+      const result = await editImageWithGemini(null, item.prompt, { aspectRatio, imageSize, seed: newSeed });
+      setGeneratedContent(result);
+      setStatus(ApiStatus.Success);
+      
+      if (result.imageUrl) {
+        await saveToHistory(result.imageUrl, item.prompt, thirdPartyApiConfig.enabled, null);
+        
+        // 添加到桌面
+        const position = findNextFreePosition();
+        const desktopItem: DesktopImageItem = {
+          id: `img-${Date.now()}`,
+          type: 'image',
+          name: item.prompt.slice(0, 20) + (item.prompt.length > 20 ? '...' : ''),
+          position,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          imageUrl: result.imageUrl,
+          prompt: item.prompt,
+          model: thirdPartyApiConfig.enabled ? 'nano-banana-2' : 'Gemini 3 Pro',
+          isThirdParty: thirdPartyApiConfig.enabled,
+        };
+        handleAddToDesktop(desktopItem);
+      }
+      
+      if (autoSave && result.imageUrl) {
+        downloadImage(result.imageUrl);
+      }
+      
+      if (result.coinsRemaining !== undefined && currentUser) {
+        setCurrentUser({ ...currentUser, coins: result.coinsRemaining });
+      }
+    } catch (e: unknown) {
+      let errorMessage = 'An unknown error occurred.';
+      if (e instanceof Error) {
+        errorMessage = e.message;
+      }
+      setError(`重新生成失败: ${errorMessage}`);
+      setStatus(ApiStatus.Error);
+    }
+  }, [aspectRatio, imageSize, thirdPartyApiConfig.enabled, autoSave, downloadImage, saveToHistory, findNextFreePosition, handleAddToDesktop, currentUser]);
+
+  // 加载桌面数据
+  useEffect(() => {
+    const savedDesktopItems = localStorage.getItem('desktop_items');
+    if (savedDesktopItems) {
+      try {
+        const items = JSON.parse(savedDesktopItems) as DesktopItem[];
+        setDesktopItems(items);
+      } catch (e) {
+        console.error('Failed to load desktop items:', e);
+      }
+    }
+  }, []);
+
   return (
     <div className="h-screen bg-gray-950 text-gray-100 font-sans flex flex-row overflow-hidden selection:bg-indigo-500/30">
+      {/* 雪花效果 */}
+      <SnowfallEffect />
+      
       <input 
         ref={fileInputRef}
         type="file"
@@ -1764,13 +2003,26 @@ const App: React.FC = () => {
           onReorderIdeas={handleReorderIdeas}
           onEditAgain={handleEditAgain}
           onRegenerate={handleRegenerate}
+          onDismissResult={handleDismissResult}
           history={generationHistory}
           onHistorySelect={handleHistorySelect}
           onHistoryDelete={handleHistoryDelete}
           onHistoryClear={handleHistoryClear}
+          desktopItems={desktopItems}
+          onDesktopItemsChange={handleDesktopItemsChange}
+          onDesktopImageDoubleClick={handleDesktopImageDoubleClick}
+          desktopSelectedIds={desktopSelectedIds}
+          onDesktopSelectionChange={setDesktopSelectedIds}
+          openFolderId={openFolderId}
+          onFolderOpen={setOpenFolderId}
+          onFolderClose={() => setOpenFolderId(null)}
+          onRenameItem={handleRenameItem}
+          onDesktopImagePreview={handleDesktopImagePreview}
+          onDesktopImageEditAgain={handleDesktopImageEditAgain}
+          onDesktopImageRegenerate={handleDesktopImageRegenerate}
         />
         {view === 'editor' && (
-             <div className={`absolute left-1/2 -translate-x-1/2 z-30 transition-all duration-300 ${generationHistory.length > 0 ? 'bottom-[180px]' : 'bottom-6'}`}>
+             <div className="absolute left-1/2 -translate-x-1/2 z-30 transition-all duration-300 bottom-6">
                 <GenerateButton 
                     onClick={handleGenerateClick}
                     disabled={!canGenerate}
@@ -1860,4 +2112,13 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+// 包裹应用的主题Provider
+const AppWithTheme: React.FC = () => {
+  return (
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
+  );
+};
+
+export default AppWithTheme;

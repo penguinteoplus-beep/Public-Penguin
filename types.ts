@@ -154,3 +154,56 @@ export interface PriceConfig {
   analyzeImage: number;
   chat: number;
 }
+
+// ========== 桌面系统类型 ==========
+
+// 桌面项目类型
+export type DesktopItemType = 'image' | 'folder';
+
+// 桌面项目位置
+export interface DesktopPosition {
+  x: number;
+  y: number;
+}
+
+// 基础桌面项目
+export interface BaseDesktopItem {
+  id: string;
+  type: DesktopItemType;
+  name: string;
+  position: DesktopPosition;
+  createdAt: number;
+  updatedAt: number;
+}
+
+// 图片项目
+export interface DesktopImageItem extends BaseDesktopItem {
+  type: 'image';
+  imageUrl: string;
+  thumbnailUrl?: string;
+  prompt?: string;
+  model?: string;
+  isThirdParty?: boolean;
+  historyId?: number; // 关联的历史记录ID
+}
+
+// 文件夹项目
+export interface DesktopFolderItem extends BaseDesktopItem {
+  type: 'folder';
+  color?: string; // 文件夹颜色
+  icon?: string; // 自定义图标
+  itemIds: string[]; // 包含的项目ID列表
+  isOpen?: boolean; // 是否打开
+}
+
+// 联合类型
+export type DesktopItem = DesktopImageItem | DesktopFolderItem;
+
+// 桌面状态
+export interface DesktopState {
+  items: DesktopItem[];
+  selectedIds: string[];
+  openFolderId: string | null; // 当前打开的文件夹ID
+  gridSize: number; // 网格大小
+  showGrid: boolean; // 是否显示网格
+}

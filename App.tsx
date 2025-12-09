@@ -614,7 +614,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                              <span className="text-[10px] text-indigo-400 font-mono">{aspectRatio}</span>
                         </div>
                         <div className="grid grid-cols-6 gap-1.5">
-                            {['Auto', '1:1', '3:4', '4:3', '9:16', '16:9'].map(ratio => (
+                            {['Auto', '1:1', '3:4', '4:3', '9:16', '16:9', '2:3', '3:2', '4:5', '5:4', '21:9'].map(ratio => (
                                 <button
                                     key={ratio}
                                     onClick={() => setAspectRatio(ratio)}
@@ -1375,6 +1375,12 @@ const App: React.FC = () => {
   };
   
   const handleSaveCreativeIdea = async (idea: Partial<CreativeIdea>) => {
+    console.log('[handleSaveCreativeIdea] 接收到数据:', {
+      id: idea.id,
+      suggestedAspectRatio: idea.suggestedAspectRatio,
+      suggestedResolution: idea.suggestedResolution
+    });
+    
     try {
       if (currentUser) {
         // 登录状态，使用后端API
@@ -1405,9 +1411,20 @@ const App: React.FC = () => {
           const newOrder = creativeIdeas.length > 0 ? Math.max(...creativeIdeas.map(i => i.order || 0)) + 1 : 1;
           ideaToSave = { ...idea, id: Date.now(), order: newOrder } as CreativeIdea;
         }
+        
+        console.log('[handleSaveCreativeIdea] 保存到IndexedDB:', {
+          suggestedAspectRatio: ideaToSave.suggestedAspectRatio,
+          suggestedResolution: ideaToSave.suggestedResolution
+        });
+        
         await saveToDB(ideaToSave);
         const updatedIdeas = await getAllFromDB();
         updatedIdeas.sort((a, b) => (b.order || 0) - (a.order || 0));
+        
+        console.log('[handleSaveCreativeIdea] 从 IndexedDB 读取后:', 
+          updatedIdeas.map(i => ({ id: i.id, ratio: i.suggestedAspectRatio, res: i.suggestedResolution }))
+        );
+        
         setCreativeIdeas(updatedIdeas);
       }
 
@@ -1480,6 +1497,14 @@ const App: React.FC = () => {
     
     // 保存当前使用的创意库（用于扣费）
     setActiveCreativeIdea(idea);
+    
+    // 应用创意库建议的宽高比和分辨率
+    if (idea.suggestedAspectRatio) {
+      setAspectRatio(idea.suggestedAspectRatio);
+    }
+    if (idea.suggestedResolution) {
+      setImageSize(idea.suggestedResolution);
+    }
     
     // Reset BP
     setBpInputs({});

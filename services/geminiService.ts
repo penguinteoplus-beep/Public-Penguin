@@ -427,12 +427,17 @@ Output Rule: Return ONLY the result string. Do not include labels, markdown, or 
 
 const runBPAgentTask = async (file: File | null, instruction: string, model: BPAgentModel): Promise<string> => {
     // 如果启用了第三方API，使用第三方Chat API
-    if (thirdPartyConfig && thirdPartyConfig.enabled && thirdPartyConfig.apiKey) {
+    if (thirdPartyConfig && thirdPartyConfig.enabled) {
+        // 检查是否登录或有本地API Key
+        const isCloud = isLoggedIn();
+        if (!isCloud && !thirdPartyConfig.apiKey) {
+            throw new Error("请先配置第三方API Key或登录账户");
+        }
         return runBPAgentTaskWithThirdParty(file, instruction);
     }
     
     // 使用 Gemini API
-    if (!ai) throw new Error("请先设置 Gemini API Key");
+    if (!ai) throw new Error("请先设置 Gemini API Key 或启用第三方API");
     
     // 构建内容部分
     const parts: Part[] = [];
@@ -482,37 +487,137 @@ export const processBPTemplate = async (
 
     let finalPrompt = templateIdea.prompt;
     const fields = templateIdea.bpFields;
-
-    // 1. Run Agents (Parallel)
+    
+    // 构建字段名称到ID的映射
+    const nameToId: Record<string, string> = {};
+    const nameToField: Record<string, typeof fields[0]> = {};
+    fields.forEach(f => {
+        nameToId[f.name] = f.id;
+        nameToField[f.name] = f;
+    });
+    
+    // 解析Agent指令中的依赖
+    const parseDependencies = (instruction: string): { inputs: string[], agents: string[] } => {
+        const inputs: string[] = [];
+        const agents: string[] = [];
+        
+        // 匹配 /变量名 (用户输入)
+        const inputMatches = instruction.match(/\/([a-zA-Z_][a-zA-Z0-9_]*)/g);
+        if (inputMatches) {
+            inputMatches.forEach(match => {
+                const name = match.slice(1); // 移除 /
+                if (nameToField[name]?.type === 'input') {
+                    inputs.push(name);
+                }
+            });
+        }
+        
+        // 匹配 {变量名} (Agent结果)
+        const agentMatches = instruction.match(/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g);
+        if (agentMatches) {
+            agentMatches.forEach(match => {
+                const name = match.slice(1, -1); // 移除 { 和 }
+                if (nameToField[name]?.type === 'agent') {
+                    agents.push(name);
+                }
+            });
+        }
+        
+        return { inputs, agents };
+    };
+    
+    // 分类Agent：依赖图片的 vs 纯文本分析的
     const agentFields = fields.filter(f => f.type === 'agent');
-    const agentPromises = agentFields.map(async (field) => {
-        if (!field.agentConfig) return { id: field.id, result: '' };
-        try {
-            const result = await runBPAgentTask(file, field.agentConfig.instruction, field.agentConfig.model);
-            return { id: field.id, result };
-        } catch (e) {
-            console.error(`Agent ${field.name} failed:`, e);
-            return { id: field.id, result: `[Agent Error: ${field.name}]` };
+    const inputFields = fields.filter(f => f.type === 'input');
+    
+    // 构建依赖图并进行拓扑排序
+    const agentDependencies: Record<string, { inputs: string[], agents: string[] }> = {};
+    agentFields.forEach(agent => {
+        if (agent.agentConfig) {
+            agentDependencies[agent.name] = parseDependencies(agent.agentConfig.instruction);
+        } else {
+            agentDependencies[agent.name] = { inputs: [], agents: [] };
         }
     });
-
-    const agentResults = await Promise.all(agentPromises);
-    const agentMap = agentResults.reduce((acc, curr) => {
-        acc[curr.id] = curr.result;
-        return acc;
-    }, {} as Record<string, string>);
-
-    // 2. Replace Agents in Template: {Name}
-    fields.filter(f => f.type === 'agent').forEach(f => {
-        const val = agentMap[f.id] || '';
-        // Global replace for {Name}
-        finalPrompt = finalPrompt.split(`{${f.name}}`).join(val);
-    });
-
-    // 3. Replace Manual Inputs: /Name
-    fields.filter(f => f.type === 'input').forEach(f => {
+    
+    // 拓扑排序：确定Agent执行顺序
+    const executionOrder: string[] = [];
+    const visited = new Set<string>();
+    const visiting = new Set<string>(); // 用于检测循环依赖
+    
+    const topologicalSort = (agentName: string): boolean => {
+        if (visited.has(agentName)) return true;
+        if (visiting.has(agentName)) {
+            console.warn(`检测到循环依赖: ${agentName}`);
+            return false; // 循环依赖
+        }
+        
+        visiting.add(agentName);
+        
+        const deps = agentDependencies[agentName];
+        if (deps) {
+            // 先处理依赖的Agent
+            for (const depAgent of deps.agents) {
+                if (!topologicalSort(depAgent)) {
+                    return false;
+                }
+            }
+        }
+        
+        visiting.delete(agentName);
+        visited.add(agentName);
+        executionOrder.push(agentName);
+        return true;
+    };
+    
+    // 对所有Agent进行拓扑排序
+    for (const agent of agentFields) {
+        topologicalSort(agent.name);
+    }
+    
+    // 存储结果
+    const agentResults: Record<string, string> = {};
+    
+    // 按顺序执行Agent
+    for (const agentName of executionOrder) {
+        const field = nameToField[agentName];
+        if (!field || field.type !== 'agent' || !field.agentConfig) continue;
+        
+        let instruction = field.agentConfig.instruction;
+        
+        // 替换指令中的用户输入 /Name
+        inputFields.forEach(inputField => {
+            const val = userInputs[inputField.id] || '';
+            instruction = instruction.split(`/${inputField.name}`).join(val);
+        });
+        
+        // 替换指令中已执行Agent的结果 {Name}
+        for (const [name, result] of Object.entries(agentResults)) {
+            instruction = instruction.split(`{${name}}`).join(result);
+        }
+        
+        // 执行Agent
+        try {
+            console.log(`[BP Agent] 执行 ${agentName}, 指令: ${instruction.substring(0, 100)}...`);
+            const result = await runBPAgentTask(file, instruction, field.agentConfig.model);
+            console.log(`[BP Agent] ${agentName} 完成, 结果: ${result.substring(0, 100)}...`);
+            agentResults[agentName] = result;
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            console.error(`[BP Agent] ${agentName} 失败:`, errorMsg);
+            // 显示更详细的错误信息
+            agentResults[agentName] = `[Agent错误: ${errorMsg}]`;
+        }
+    }
+    
+    // 替换最终模板中的Agent结果 {Name}
+    for (const [name, result] of Object.entries(agentResults)) {
+        finalPrompt = finalPrompt.split(`{${name}}`).join(result);
+    }
+    
+    // 替换最终模板中的用户输入 /Name
+    inputFields.forEach(f => {
         const val = userInputs[f.id] || '';
-        // Global replace for /Name
         finalPrompt = finalPrompt.split(`/${f.name}`).join(val);
     });
 

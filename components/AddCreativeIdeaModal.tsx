@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { CreativeIdea, SmartPlusConfig, SmartPlusComponent, BPField, BPFieldType, BPAgentModel } from '../types';
+import { CreativeIdea, SmartPlusConfig, SmartPlusComponent, BPField, BPFieldType, BPAgentModel, AspectRatioType, ImageSizeType } from '../types';
 import { UploadIcon } from './icons/UploadIcon';
 import { XCircleIcon } from './icons/XCircleIcon';
 import { PlusCircleIcon } from './icons/PlusCircleIcon';
@@ -30,6 +30,8 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
   const [smartPlusConfig, setSmartPlusConfig] = useState<SmartPlusConfig>(() => JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
   const [bpFields, setBpFields] = useState<BPField[]>([]);
   const [cost, setCost] = useState<number>(0); // Pebbling 鹅卵石扣除数量
+  const [suggestedAspectRatio, setSuggestedAspectRatio] = useState<AspectRatioType | ''>('');
+  const [suggestedResolution, setSuggestedResolution] = useState<ImageSizeType | ''>('');
   
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -42,6 +44,8 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
     setSmartPlusConfig(JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
     setBpFields([]);
     setCost(0);
+    setSuggestedAspectRatio('');
+    setSuggestedResolution('');
     setFile(null);
     setPreviewUrl(null); 
     setError(null);
@@ -50,10 +54,18 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
   useEffect(() => {
     if (isOpen) {
       if (ideaToEdit) {
+        console.log('[AddCreativeIdeaModal] 加载编辑数据:', {
+          id: ideaToEdit.id,
+          suggestedAspectRatio: ideaToEdit.suggestedAspectRatio,
+          suggestedResolution: ideaToEdit.suggestedResolution
+        });
+        
         setTitle(ideaToEdit.title);
         setPrompt(ideaToEdit.prompt);
         setPreviewUrl(ideaToEdit.imageUrl);
         setCost(ideaToEdit.cost || 0);
+        setSuggestedAspectRatio(ideaToEdit.suggestedAspectRatio || '');
+        setSuggestedResolution(ideaToEdit.suggestedResolution || '');
         if (ideaToEdit.isBP) {
             setIdeaType('bp');
             // Migration for old bpVariables if needed, though assumed bpFields is used now
@@ -166,13 +178,17 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
           title: title.trim(),
           prompt: prompt.trim(),
           imageUrl: imageUrl!,
-          cost: cost, // 始终传递 cost（包括 0），由后端判断是否使用默认值
+          cost: cost,
+          suggestedAspectRatio: suggestedAspectRatio !== '' ? suggestedAspectRatio as AspectRatioType : undefined,
+          suggestedResolution: suggestedResolution !== '' ? suggestedResolution as ImageSizeType : undefined,
           isSmart: false, 
           isSmartPlus: ideaType === 'smartPlus',
           isBP: ideaType === 'bp',
           smartPlusConfig: ideaType === 'smartPlus' ? smartPlusConfig : undefined,
           bpFields: ideaType === 'bp' ? bpFields : undefined,
         };
+        
+        console.log('[CreativeIdea] 保存:', { ratio: ideaData.suggestedAspectRatio, res: ideaData.suggestedResolution });
         onSave(ideaData);
     } catch (e) {
         console.error("Failed to process image file for saving:", e);
@@ -269,6 +285,50 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                   </div>
                 </div>
             </div>
+        </div>
+        
+        {/* 建议宽高比和分辨率设置 */}
+        <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700">
+          <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+            <span>🖼️</span> 建议分辨率与宽高比
+            <span className="text-[10px] text-gray-500 font-normal">(选中创意库时自动应用)</span>
+          </h3>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="text-xs text-gray-400 mb-1 block">宽高比</label>
+              <select
+                value={suggestedAspectRatio}
+                onChange={(e) => setSuggestedAspectRatio(e.target.value as AspectRatioType | '')}
+                className="w-full p-2 bg-gray-800 border border-gray-600 rounded-md text-sm text-gray-200 focus:ring-1 focus:ring-indigo-500"
+              >
+                <option value="">不指定</option>
+                <option value="Auto">🎲 Auto 自动</option>
+                <option value="1:1">■ 1:1 正方形</option>
+                <option value="4:3">🖼 4:3 横版</option>
+                <option value="3:4">🖼 3:4 竖版</option>
+                <option value="16:9">🎬 16:9 宽屏</option>
+                <option value="9:16">📱 9:16 手机</option>
+                <option value="2:3">📷 2:3 摄影</option>
+                <option value="3:2">📷 3:2 摄影横</option>
+                <option value="4:5">📸 4:5 社交</option>
+                <option value="5:4">📸 5:4 社交横</option>
+                <option value="21:9">🎞 21:9 电影</option>
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="text-xs text-gray-400 mb-1 block">分辨率</label>
+              <select
+                value={suggestedResolution}
+                onChange={(e) => setSuggestedResolution(e.target.value as ImageSizeType | '')}
+                className="w-full p-2 bg-gray-800 border border-gray-600 rounded-md text-sm text-gray-200 focus:ring-1 focus:ring-indigo-500"
+              >
+                <option value="">不指定</option>
+                <option value="1K">🖼 1K 快速</option>
+                <option value="2K">🖼 2K 标准</option>
+                <option value="4K">🖼 4K 高清</option>
+              </select>
+            </div>
+          </div>
         </div>
         
         {/* BP Field Manager */}

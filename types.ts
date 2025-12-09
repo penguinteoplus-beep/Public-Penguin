@@ -38,6 +38,12 @@ export interface BPField {
   }
 }
 
+// 支持的宽高比类型
+export type AspectRatioType = 'Auto' | '4:3' | '3:4' | '16:9' | '9:16' | '2:3' | '3:2' | '1:1' | '4:5' | '5:4' | '21:9';
+
+// 支持的分辨率类型
+export type ImageSizeType = '1K' | '2K' | '4K';
+
 export interface CreativeIdea {
   id: number;
   title: string;
@@ -50,6 +56,10 @@ export interface CreativeIdea {
   bpFields?: BPField[]; // Renamed from bpVariables to support generic fields
   order?: number;
   cost?: number; // 使用此创意库生成图片需要扣除的 Pebbling 鹅卵石数量 🪨
+  
+  // 建议的宽高比和分辨率
+  suggestedAspectRatio?: AspectRatioType;
+  suggestedResolution?: ImageSizeType;
   
   // Deprecated but kept for type compatibility during migration if needed
   bpVariables?: any[]; 

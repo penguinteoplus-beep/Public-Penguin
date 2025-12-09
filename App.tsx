@@ -92,6 +92,9 @@ interface CanvasProps {
   onEditAgain?: () => void; // 再次编辑
   onRegenerate?: () => void; // 重新生成
   onDismissResult?: () => void; // 关闭结果浮层
+  // 故事系统相关
+  prompt?: string;
+  imageSize?: string;
   // 历史记录相关
   history: GenerationHistory[];
   onHistorySelect: (item: GenerationHistory) => void;
@@ -698,6 +701,8 @@ const Canvas: React.FC<CanvasProps> = ({
   onEditAgain,
   onRegenerate,
   onDismissResult,
+  prompt,
+  imageSize,
   history,
   onHistorySelect,
   onHistoryDelete,
@@ -813,6 +818,8 @@ const Canvas: React.FC<CanvasProps> = ({
                 onPreviewClick={onPreviewClick}
                 onEditAgain={onEditAgain}
                 onRegenerate={onRegenerate}
+                prompt={prompt}
+                imageSize={imageSize}
               />
             </div>
           )}
@@ -1597,12 +1604,50 @@ const App: React.FC = () => {
     }
   }, [activeFile, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, smartPlusOverrides, bpInputs]);
   
+    // 安全保存桌面项目到 localStorage（移除大型 base64 数据）
+    const safeDesktopSave = useCallback((items: DesktopItem[]) => {
+      try {
+        // 保存前移除 base64 imageUrl 以节省空间（有 historyId 可恢复）
+        const itemsForStorage = items.map(item => {
+          if (item.type === 'image') {
+            const imageItem = item as DesktopImageItem;
+            // 如果 imageUrl 是 base64 且有 historyId，则不存储 imageUrl
+            if (imageItem.imageUrl?.startsWith('data:') && imageItem.historyId) {
+              const { imageUrl, ...rest } = imageItem;
+              return { ...rest, imageUrl: '' }; // 留空标记，加载时从历史恢复
+            }
+          }
+          return item;
+        });
+        localStorage.setItem('desktop_items', JSON.stringify(itemsForStorage));
+      } catch (e) {
+        if (e instanceof Error && e.name === 'QuotaExceededError') {
+          console.warn('Desktop storage quota exceeded, clearing oldest items...');
+          // 配额超出时，尝试只保留最新的20个项目
+          const recentItems = items.slice(-20);
+          try {
+            const itemsForStorage = recentItems.map(item => {
+              if (item.type === 'image') {
+                const { imageUrl, ...rest } = item as DesktopImageItem;
+                return { ...rest, imageUrl: '' };
+              }
+              return item;
+            });
+            localStorage.setItem('desktop_items', JSON.stringify(itemsForStorage));
+          } catch {
+            console.error('Failed to save desktop items even after cleanup');
+          }
+        } else {
+          console.error('Failed to save desktop items:', e);
+        }
+      }
+    }, []);
+
     // 桌面操作处理
     const handleDesktopItemsChange = useCallback((items: DesktopItem[]) => {
       setDesktopItems(items);
-      // 保存到 localStorage
-      localStorage.setItem('desktop_items', JSON.stringify(items));
-    }, []);
+      safeDesktopSave(items);
+    }, [safeDesktopSave]);
   
     // 查找桌面空闲位置
     const findNextFreePosition = useCallback((): { x: number, y: number } => {
@@ -1669,8 +1714,24 @@ const App: React.FC = () => {
         // 更新项目位置
         const itemWithPosition = { ...item, position: freePos };
         const newItems = [...prevItems, itemWithPosition];
-        // 保存到 localStorage
-        localStorage.setItem('desktop_items', JSON.stringify(newItems));
+        // 延迟保存到 localStorage（使用 safeDesktopSave 避免配额超限）
+        setTimeout(() => {
+          try {
+            const itemsForStorage = newItems.map(itm => {
+              if (itm.type === 'image') {
+                const imageItem = itm as DesktopImageItem;
+                if (imageItem.imageUrl?.startsWith('data:') && imageItem.historyId) {
+                  const { imageUrl, ...rest } = imageItem;
+                  return { ...rest, imageUrl: '' };
+                }
+              }
+              return itm;
+            });
+            localStorage.setItem('desktop_items', JSON.stringify(itemsForStorage));
+          } catch (e) {
+            console.warn('Desktop storage failed, items kept in memory only:', e);
+          }
+        }, 0);
         return newItems;
       });
     }, []);
@@ -1985,18 +2046,32 @@ const App: React.FC = () => {
     setDesktopSelectedIds([]);
   }, [generationHistory]);
 
-  // 加载桌面数据
+  // 加载桌面数据（并从历史记录恢复空的 imageUrl）
   useEffect(() => {
     const savedDesktopItems = localStorage.getItem('desktop_items');
     if (savedDesktopItems) {
       try {
         const items = JSON.parse(savedDesktopItems) as DesktopItem[];
-        setDesktopItems(items);
+        // 从历史记录中恢复空的 imageUrl
+        const restoredItems = items.map(item => {
+          if (item.type === 'image') {
+            const imageItem = item as DesktopImageItem;
+            if (!imageItem.imageUrl && imageItem.historyId) {
+              // 查找历史记录中的图片
+              const historyEntry = generationHistory.find(h => h.id === imageItem.historyId);
+              if (historyEntry?.imageUrl) {
+                return { ...imageItem, imageUrl: historyEntry.imageUrl };
+              }
+            }
+          }
+          return item;
+        });
+        setDesktopItems(restoredItems);
       } catch (e) {
         console.error('Failed to load desktop items:', e);
       }
     }
-  }, []);
+  }, [generationHistory]);
 
   return (
     <div className="h-screen bg-gray-950 text-gray-100 font-sans flex flex-row overflow-hidden selection:bg-indigo-500/30">
@@ -2066,6 +2141,8 @@ const App: React.FC = () => {
           onEditAgain={handleEditAgain}
           onRegenerate={handleRegenerate}
           onDismissResult={handleDismissResult}
+          prompt={prompt}
+          imageSize={imageSize}
           history={generationHistory}
           onHistorySelect={handleHistorySelect}
           onHistoryDelete={handleHistoryDelete}

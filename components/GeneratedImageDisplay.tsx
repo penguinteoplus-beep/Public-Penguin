@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ApiStatus } from '../types';
 import type { GeneratedContent } from '../types';
 import { DownloadIcon } from './icons/DownloadIcon';
@@ -7,8 +7,10 @@ import { RefreshIcon } from './icons/RefreshIcon';
 import { EditIcon } from './icons/EditIcon';
 import { EmptyState } from './EmptyState';
 import { ImageIcon } from './icons/ImageIcon';
+import { getMatchedStory } from '../services/storyLibrary';
 
-const loadingMessages = [
+// 默认加载消息（当没有prompt时使用）
+const defaultLoadingMessages = [
   "正在召唤 AI 创作精灵...",
   "正在用像素绘画...",
   "魔法正在发生，请稍候...",
@@ -33,26 +35,55 @@ const getRandomFunnyError = () => {
   return funnyErrorMessages[Math.floor(Math.random() * funnyErrorMessages.length)];
 };
 
-const LoadingSpinner: React.FC = () => {
-  const [message, setMessage] = useState(loadingMessages[0]);
+const LoadingSpinner: React.FC<{ prompt?: string; imageSize?: string }> = ({ prompt = '', imageSize = '2K' }) => {
+  // 使用 useMemo 确保故事在组件生命周期内保持不变
+  const story = useMemo(() => {
+    if (prompt) {
+      return getMatchedStory(prompt, imageSize);
+    }
+    return null;
+  }, [prompt, imageSize]);
+
+  const messages = story?.messages || defaultLoadingMessages;
+  const interval = story?.interval || 2500;
+  const themeEmoji = story?.theme?.emoji || '✨';
+  const themeName = story?.theme?.name || '创作中';
+
+  const [messageIndex, setMessageIndex] = useState(0);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      setMessage(prevMessage => {
-        const currentIndex = loadingMessages.indexOf(prevMessage);
-        const nextIndex = (currentIndex + 1) % loadingMessages.length;
-        return loadingMessages[nextIndex];
-      });
-    }, 2500);
+      setMessageIndex(prev => (prev + 1) % messages.length);
+    }, interval);
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [messages.length, interval]);
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 text-center">
+    <div className="flex flex-col items-center justify-center gap-4 text-center max-w-sm">
+      {/* 主题标识 */}
+      {story && (
+        <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+          <span>{themeEmoji}</span>
+          <span>{themeName}主题故事</span>
+        </div>
+      )}
       <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-indigo-400"></div>
       <p className="text-lg text-gray-300 font-semibold mt-2">AI 正在思考...</p>
-      <p className="text-sm text-gray-400 transition-opacity duration-500">{message}</p>
+      <p className="text-sm text-gray-400 transition-all duration-500 leading-relaxed px-2 min-h-[3rem]">
+        {messages[messageIndex]}
+      </p>
+      {/* 进度指示 */}
+      <div className="flex gap-1 mt-1">
+        {messages.map((_, idx) => (
+          <div
+            key={idx}
+            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+              idx === messageIndex ? 'bg-indigo-400 scale-125' : 'bg-gray-600'
+            }`}
+          />
+        ))}
+      </div>
     </div>
   );
 };
@@ -97,6 +128,8 @@ interface GeneratedImageDisplayProps {
   onPreviewClick: (url: string) => void;
   onEditAgain?: () => void; // 再次编辑：将生成的图片添加到上传列表
   onRegenerate?: () => void; // 重新生成：使用新的随机种子
+  prompt?: string; // 用户提示词，用于匹配故事主题
+  imageSize?: string; // 分辨率，用于决定故事长度
 }
 
 export const GeneratedImageDisplay: React.FC<GeneratedImageDisplayProps> = ({ 
@@ -105,7 +138,9 @@ export const GeneratedImageDisplay: React.FC<GeneratedImageDisplayProps> = ({
   content, 
   onPreviewClick,
   onEditAgain,
-  onRegenerate
+  onRegenerate,
+  prompt,
+  imageSize
 }) => {
   
   const handleDownload = async () => {
@@ -147,7 +182,7 @@ export const GeneratedImageDisplay: React.FC<GeneratedImageDisplayProps> = ({
   const renderContent = () => {
     switch (status) {
       case ApiStatus.Loading:
-        return <LoadingSpinner />;
+        return <LoadingSpinner prompt={prompt} imageSize={imageSize} />;
       case ApiStatus.Error:
         return error ? <ErrorDisplay message={error} /> : null;
       case ApiStatus.Success:

@@ -6,6 +6,7 @@ import { ZoomInIcon } from './icons/ZoomInIcon';
 import { DownloadIcon } from './icons/DownloadIcon';
 import { EditIcon } from './icons/EditIcon';
 import { RefreshIcon } from './icons/RefreshIcon';
+import JSZip from 'jszip';
 
 interface DesktopProps {
   items: DesktopItem[];
@@ -76,9 +77,9 @@ export const Desktop: React.FC<DesktopProps> = ({
   const [clipboard, setClipboard] = useState<ClipboardState | null>(null);
   const [dropTargetFolderId, setDropTargetFolderId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [hasDragged, setHasDragged] = useState(false); // 是否发生了拖拽
-  const [justDragged, setJustDragged] = useState(false); // 刚刚完成拖拽（用于防止拖拽后立即触发预览）
   const [hideFileNames, setHideFileNames] = useState(false); // 是否隐藏文件名
+  const [isExporting, setIsExporting] = useState(false); // 导出中状态
+  const [showPreview, setShowPreview] = useState(false); // 是否显示预览（空格键控制）
 
   // 获取当前显示的项目（根据是否在文件夹内）
   const baseItems = openFolderId
@@ -194,15 +195,6 @@ export const Desktop: React.FC<DesktopProps> = ({
       const newPos = { x: e.clientX, y: e.clientY };
       setDragCurrentPos(newPos);
       
-      // 检测是否超过拖拽阈值
-      if (dragStartPos) {
-        const deltaX = Math.abs(newPos.x - dragStartPos.x);
-        const deltaY = Math.abs(newPos.y - dragStartPos.y);
-        if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
-          setHasDragged(true);
-        }
-      }
-      
       // 检测是否拖动到文件夹上
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
@@ -210,7 +202,6 @@ export const Desktop: React.FC<DesktopProps> = ({
         const mouseY = e.clientY - rect.top + containerRef.current.scrollTop;
         
         // 查找鼠标下的文件夹（排除已选中的项目）
-        // 需要考虑偏移量
         const gridContentWidth = DESKTOP_COLS * gridSize;
         const hPadding = Math.max(20, (containerRef.current.clientWidth - gridContentWidth) / 2);
         
@@ -246,41 +237,124 @@ export const Desktop: React.FC<DesktopProps> = ({
         });
         onItemsChange(updatedItems);
         onSelectionChange([]);
-      } else if (dragStartPos && dragCurrentPos && hasDragged) {
+      } else if (dragStartPos && dragCurrentPos) {
         const deltaX = dragCurrentPos.x - dragStartPos.x;
         const deltaY = dragCurrentPos.y - dragStartPos.y;
 
-        // 多选拖动时保持相对位置关系
         // 找到拖动的基准项目（被点击的那个）
         const baseItem = items.find(i => i.id === dragItemId);
-        if (!baseItem) return;
-        
-        // 计算基准项目的新位置并吸附到网格
-        const baseNewPos = {
-          x: Math.max(0, baseItem.position.x + deltaX),
-          y: Math.max(0, baseItem.position.y + deltaY),
-        };
-        const baseSnappedPos = snapToGrid(baseNewPos);
-        
-        // 计算实际的偏移量（吸附后的）
-        const actualDeltaX = baseSnappedPos.x - baseItem.position.x;
-        const actualDeltaY = baseSnappedPos.y - baseItem.position.y;
-
-        // 更新所有选中项目的位置，保持相对位置不变
-        const updatedItems = items.map(item => {
-          if (selectedIds.includes(item.id)) {
-            return {
-              ...item,
-              position: {
-                x: Math.max(0, item.position.x + actualDeltaX),
-                y: Math.max(0, item.position.y + actualDeltaY),
-              },
-              updatedAt: Date.now(),
+        if (baseItem) {
+          // 计算固定边界
+          const cHeight = containerRef.current?.clientHeight || 600;
+          const fixedMaxX = (DESKTOP_COLS - 1) * gridSize;
+          const fixedMaxY = Math.max(0, Math.floor((cHeight - TOP_OFFSET - ICON_SIZE - 40) / gridSize) * gridSize);
+          
+          // 单个项目拖拽：使用 findNearestFreePosition 避免重叠
+          if (selectedIds.length === 1) {
+            const targetPos = {
+              x: Math.min(fixedMaxX, Math.max(0, baseItem.position.x + deltaX)),
+              y: Math.min(fixedMaxY, Math.max(0, baseItem.position.y + deltaY)),
             };
+            // 找到最近的空闲位置（排除自己）
+            const freePos = findNearestFreePosition(targetPos, baseItem.id);
+            // 确保在边界内
+            freePos.x = Math.min(fixedMaxX, Math.max(0, freePos.x));
+            freePos.y = Math.min(fixedMaxY, Math.max(0, freePos.y));
+            
+            const updatedItems = items.map(item => {
+              if (item.id === baseItem.id) {
+                return {
+                  ...item,
+                  position: freePos,
+                  updatedAt: Date.now(),
+                };
+              }
+              return item;
+            });
+            onItemsChange(updatedItems);
+          } else {
+            // 多选拖动：保持相对位置，逐个检查并避免重叠
+            const baseNewPos = {
+              x: Math.min(fixedMaxX, Math.max(0, baseItem.position.x + deltaX)),
+              y: Math.min(fixedMaxY, Math.max(0, baseItem.position.y + deltaY)),
+            };
+            const baseSnappedPos = snapToGrid(baseNewPos);
+            baseSnappedPos.x = Math.min(fixedMaxX, Math.max(0, baseSnappedPos.x));
+            baseSnappedPos.y = Math.min(fixedMaxY, Math.max(0, baseSnappedPos.y));
+            
+            const actualDeltaX = baseSnappedPos.x - baseItem.position.x;
+            const actualDeltaY = baseSnappedPos.y - baseItem.position.y;
+
+            // 计算所有选中项目的新位置
+            const newPositions: Map<string, DesktopPosition> = new Map();
+            const occupiedPositions: Set<string> = new Set();
+            
+            // 先记录所有未选中项目的位置
+            currentItems.forEach(item => {
+              if (!selectedIds.includes(item.id)) {
+                const pos = snapToGrid(item.position);
+                occupiedPositions.add(`${pos.x},${pos.y}`);
+              }
+            });
+            
+            // 为每个选中项目找到不重叠的位置
+            selectedIds.forEach(id => {
+              const item = items.find(i => i.id === id);
+              if (!item) return;
+              
+              let targetPos = {
+                x: Math.min(fixedMaxX, Math.max(0, item.position.x + actualDeltaX)),
+                y: Math.min(fixedMaxY, Math.max(0, item.position.y + actualDeltaY)),
+              };
+              targetPos = snapToGrid(targetPos);
+              targetPos.x = Math.min(fixedMaxX, Math.max(0, targetPos.x));
+              targetPos.y = Math.min(fixedMaxY, Math.max(0, targetPos.y));
+              
+              // 检查是否与已占用位置冲突
+              let posKey = `${targetPos.x},${targetPos.y}`;
+              if (occupiedPositions.has(posKey)) {
+                // 寻找最近的空闲位置
+                for (let distance = 1; distance < 20; distance++) {
+                  let found = false;
+                  for (let dx = -distance; dx <= distance && !found; dx++) {
+                    for (let dy = -distance; dy <= distance && !found; dy++) {
+                      if (Math.abs(dx) === distance || Math.abs(dy) === distance) {
+                        const testPos = {
+                          x: Math.min(fixedMaxX, Math.max(0, targetPos.x + dx * gridSize)),
+                          y: Math.min(fixedMaxY, Math.max(0, targetPos.y + dy * gridSize)),
+                        };
+                        const testKey = `${testPos.x},${testPos.y}`;
+                        if (!occupiedPositions.has(testKey)) {
+                          targetPos = testPos;
+                          posKey = testKey;
+                          found = true;
+                        }
+                      }
+                    }
+                  }
+                  if (found) break;
+                }
+              }
+              
+              newPositions.set(id, targetPos);
+              occupiedPositions.add(posKey);
+            });
+            
+            // 更新所有选中项目的位置
+            const updatedItems = items.map(item => {
+              const newPos = newPositions.get(item.id);
+              if (newPos) {
+                return {
+                  ...item,
+                  position: newPos,
+                  updatedAt: Date.now(),
+                };
+              }
+              return item;
+            });
+            onItemsChange(updatedItems);
           }
-          return item;
-        });
-        onItemsChange(updatedItems);
+        }
       }
 
       setIsDragging(false);
@@ -288,12 +362,6 @@ export const Desktop: React.FC<DesktopProps> = ({
       setDragCurrentPos(null);
       setDragItemId(null);
       setDropTargetFolderId(null);
-      // 如果发生了拖拽，设置 justDragged 标志，延迟清除
-      if (hasDragged) {
-        setJustDragged(true);
-        setTimeout(() => setJustDragged(false), 100);
-      }
-      setHasDragged(false);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -680,14 +748,32 @@ export const Desktop: React.FC<DesktopProps> = ({
         onSelectionChange(currentItems.map(item => item.id));
       }
       
-      // Escape 取消选中
+      // Escape 取消选中和关闭预览
       if (e.key === 'Escape') {
+        setShowPreview(false);
         onSelectionChange([]);
+      }
+      
+      // 空格键显示预览
+      if (e.key === ' ' && selectedIds.length === 1) {
+        e.preventDefault();
+        setShowPreview(true);
+      }
+    };
+    
+    const handleKeyUp = (e: KeyboardEvent) => {
+      // 空格键松开时隐藏预览
+      if (e.key === ' ') {
+        setShowPreview(false);
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
   }, [selectedIds, items, editingItemId, handleCopy, handleCut, handlePaste, currentItems, onSelectionChange]);
 
   // 计算拖拽偏移
@@ -701,9 +787,9 @@ export const Desktop: React.FC<DesktopProps> = ({
 
   const dragOffset = getDragOffset();
 
-  // 获取当前选中的单个图片项目（只有在没有拖拽时才显示预览）
+  // 获取当前选中的单个图片项目（只有按空格键时才显示预览）
   const selectedImageItem = (() => {
-    if (selectedIds.length !== 1 || isDragging || isSelecting || hasDragged || justDragged) return null;
+    if (!showPreview || selectedIds.length !== 1 || isDragging || isSelecting) return null;
     const item = currentItems.find(i => i.id === selectedIds[0]);
     if (item?.type !== 'image') return null;
     return item as DesktopImageItem;
@@ -741,10 +827,110 @@ export const Desktop: React.FC<DesktopProps> = ({
     }
   };
 
+  // 获取文件夹/叠放内的所有图片
+  const getImagesFromContainer = (containerId: string): DesktopImageItem[] => {
+    const container = items.find(i => i.id === containerId);
+    if (!container) return [];
+    
+    const itemIds = (container as DesktopFolderItem | DesktopStackItem).itemIds || [];
+    return itemIds
+      .map(id => items.find(i => i.id === id))
+      .filter((item): item is DesktopImageItem => item?.type === 'image');
+  };
+
+  // 批量下载（逐个下载）
+  const handleBatchDownload = async (imageItems: DesktopImageItem[]) => {
+    if (imageItems.length === 0) return;
+    setIsExporting(true);
+    
+    for (let i = 0; i < imageItems.length; i++) {
+      await handleDownloadImage(imageItems[i]);
+      // 每个文件之间稍微延迟，避免浏览器拦截
+      if (i < imageItems.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
+    setIsExporting(false);
+    setContextMenu(null);
+  };
+
+  // 压缩包导出
+  const handleExportAsZip = async (containerName: string, imageItems: DesktopImageItem[]) => {
+    if (imageItems.length === 0) return;
+    setIsExporting(true);
+    
+    try {
+      const zip = new JSZip();
+      const folder = zip.folder(containerName) || zip;
+      
+      for (let i = 0; i < imageItems.length; i++) {
+        const img = imageItems[i];
+        const filename = `${img.name.replace(/[\\/:*?"<>|]/g, '_')}.png`;
+        
+        try {
+          let blob: Blob;
+          if (img.imageUrl.startsWith('data:')) {
+            // base64 转 Blob
+            const response = await fetch(img.imageUrl);
+            blob = await response.blob();
+          } else {
+            const response = await fetch(img.imageUrl);
+            blob = await response.blob();
+          }
+          folder.file(filename, blob);
+        } catch (e) {
+          console.error(`获取图片失败: ${img.name}`, e);
+        }
+      }
+      
+      const content = await zip.generateAsync({ type: 'blob' });
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const zipFilename = `${containerName}-${timestamp}.zip`;
+      
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      link.download = zipFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    } catch (e) {
+      console.error('导出压缩包失败:', e);
+      alert('导出失败，请稍后重试');
+    }
+    
+    setIsExporting(false);
+    setContextMenu(null);
+  };
+
+  // 导出选中的所有图片
+  const handleExportSelected = async (asZip: boolean) => {
+    const selectedImages = selectedIds
+      .map(id => items.find(i => i.id === id))
+      .filter((item): item is DesktopImageItem => item?.type === 'image');
+    
+    if (selectedImages.length === 0) {
+      alert('没有选中任何图片');
+      return;
+    }
+    
+    if (asZip) {
+      await handleExportAsZip('批量导出', selectedImages);
+    } else {
+      await handleBatchDownload(selectedImages);
+    }
+  };
+
+  // 计算固定的桌面边界（不允许扩展）
+  const maxGridX = (DESKTOP_COLS - 1) * gridSize; // 最大X坐标（第7列起始位置）
+  const containerHeight = containerRef.current?.clientHeight || 600;
+  const maxGridY = Math.max(0, containerHeight - TOP_OFFSET - ICON_SIZE - 40); // 最大Y坐标
+
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full overflow-auto select-none"
+      className="relative w-full h-full overflow-hidden select-none"
       style={{
         backgroundColor: theme.colors.bgPrimary,
         backgroundImage: `radial-gradient(${theme.colors.border} 1px, transparent 1px)`,
@@ -1004,7 +1190,7 @@ export const Desktop: React.FC<DesktopProps> = ({
       {selectedImageItem && !contextMenu && (() => {
         // 计算浮层显示方向
         const PREVIEW_WIDTH = 320; // 预览卡片宽度
-        const PREVIEW_HEIGHT = 360; // 预览卡片高度
+        const PREVIEW_MAX_HEIGHT = 400; // 预览卡片最大高度
         const cWidth = containerRef.current?.clientWidth || 800;
         const cHeight = containerRef.current?.clientHeight || 600;
         const itemX = horizontalPadding + selectedImageItem.position.x;
@@ -1023,43 +1209,43 @@ export const Desktop: React.FC<DesktopProps> = ({
           // 右侧空间足够
           posStyle = {
             left: itemX + ICON_SIZE + 12,
-            top: Math.max(8, Math.min(itemY - 60, cHeight - PREVIEW_HEIGHT - 8)),
+            top: Math.max(8, Math.min(itemY - 60, cHeight - PREVIEW_MAX_HEIGHT - 8)),
           };
         } else if (spaceLeft >= PREVIEW_WIDTH + 20) {
           // 左侧空间足够
           posStyle = {
             left: itemX - PREVIEW_WIDTH - 12,
-            top: Math.max(8, Math.min(itemY - 60, cHeight - PREVIEW_HEIGHT - 8)),
+            top: Math.max(8, Math.min(itemY - 60, cHeight - PREVIEW_MAX_HEIGHT - 8)),
           };
-        } else if (spaceBottom >= PREVIEW_HEIGHT + 20) {
+        } else if (spaceBottom >= PREVIEW_MAX_HEIGHT + 20) {
           // 下方空间足够
           posStyle = {
             left: Math.max(8, Math.min(itemX - PREVIEW_WIDTH / 2 + ICON_SIZE / 2, cWidth - PREVIEW_WIDTH - 8)),
             top: itemY + ICON_SIZE + 12,
           };
-        } else if (spaceTop >= PREVIEW_HEIGHT + 20) {
+        } else if (spaceTop >= PREVIEW_MAX_HEIGHT + 20) {
           // 上方空间足够
           posStyle = {
             left: Math.max(8, Math.min(itemX - PREVIEW_WIDTH / 2 + ICON_SIZE / 2, cWidth - PREVIEW_WIDTH - 8)),
-            top: itemY - PREVIEW_HEIGHT - 12,
+            top: itemY - PREVIEW_MAX_HEIGHT - 12,
           };
         } else {
           // 默认右侧，但进行边界纠正
           posStyle = {
             left: Math.min(itemX + ICON_SIZE + 12, cWidth - PREVIEW_WIDTH - 8),
-            top: Math.max(8, Math.min(itemY - 60, cHeight - PREVIEW_HEIGHT - 8)),
+            top: Math.max(8, Math.min(itemY - 60, cHeight - PREVIEW_MAX_HEIGHT - 8)),
           };
         }
         
         return (
           <div
             className="absolute z-30"
-            style={posStyle}
+            style={{ ...posStyle, width: PREVIEW_WIDTH }}
             onMouseDown={(e) => e.stopPropagation()}
           >
             {/* 毛玻璃背景卡片 */}
             <div className="bg-black/60 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
-              {/* 放大的图片预览 - 居中 */}
+              {/* 放大的图片预览 - 按实际比例显示 */}
               <div 
                 className="relative cursor-pointer group flex items-center justify-center p-4"
                 onClick={() => onImagePreview?.(selectedImageItem)}
@@ -1067,7 +1253,14 @@ export const Desktop: React.FC<DesktopProps> = ({
                 <img
                   src={selectedImageItem.imageUrl}
                   alt={selectedImageItem.name}
-                  className="w-72 h-72 object-cover rounded-lg"
+                  className="rounded-lg"
+                  style={{
+                    maxWidth: PREVIEW_WIDTH - 32,
+                    maxHeight: 300,
+                    width: 'auto',
+                    height: 'auto',
+                    objectFit: 'contain',
+                  }}
                   draggable={false}
                 />
                 {/* 悬浮放大提示 */}
@@ -1079,16 +1272,7 @@ export const Desktop: React.FC<DesktopProps> = ({
               </div>
               
               {/* 底部操作按钮 */}
-              <div className="px-4 pb-4 flex items-center justify-center gap-2">
-                {/* 预览 */}
-                <button
-                  onClick={() => onImagePreview?.(selectedImageItem)}
-                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-gray-700/80 rounded-lg hover:bg-gray-600 transition-colors"
-                  title="预览大图"
-                >
-                  <ZoomInIcon className="w-4 h-4" />
-                  <span>预览</span>
-                </button>
+              <div className="px-4 pb-4 flex items-center justify-center gap-2 flex-wrap">
                 {/* 下载 */}
                 <button
                   onClick={() => handleDownloadImage(selectedImageItem)}
@@ -1193,6 +1377,71 @@ export const Desktop: React.FC<DesktopProps> = ({
                     💭 解散叠放
                   </button>
                   <div className="h-px bg-white/10 my-1" />
+                  {/* 叠放导出选项 */}
+                  <button
+                    onClick={async () => {
+                      const images = getImagesFromContainer(contextMenu.itemId!);
+                      const container = items.find(i => i.id === contextMenu.itemId);
+                      await handleExportAsZip(container?.name || '叠放', images);
+                    }}
+                    disabled={isExporting}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    style={{ color: theme.colors.textPrimary }}
+                  >
+                    📦 {isExporting ? '导出中...' : '导出压缩包'}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const images = getImagesFromContainer(contextMenu.itemId!);
+                      await handleBatchDownload(images);
+                    }}
+                    disabled={isExporting}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    style={{ color: theme.colors.textPrimary }}
+                  >
+                    ⬇️ {isExporting ? '下载中...' : '批量下载'}
+                  </button>
+                  <div className="h-px bg-white/10 my-1" />
+                </>
+              ) : items.find(i => i.id === contextMenu.itemId)?.type === 'folder' ? (
+                <>
+                  <button
+                    onClick={() => {
+                      const item = items.find(i => i.id === contextMenu.itemId);
+                      if (item) handleItemDoubleClick(item);
+                      setContextMenu(null);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors"
+                    style={{ color: theme.colors.textPrimary }}
+                  >
+                    📂 打开
+                  </button>
+                  <div className="h-px bg-white/10 my-1" />
+                  {/* 文件夹导出选项 */}
+                  <button
+                    onClick={async () => {
+                      const images = getImagesFromContainer(contextMenu.itemId!);
+                      const container = items.find(i => i.id === contextMenu.itemId);
+                      await handleExportAsZip(container?.name || '文件夹', images);
+                    }}
+                    disabled={isExporting}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    style={{ color: theme.colors.textPrimary }}
+                  >
+                    📦 {isExporting ? '导出中...' : '导出压缩包'}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const images = getImagesFromContainer(contextMenu.itemId!);
+                      await handleBatchDownload(images);
+                    }}
+                    disabled={isExporting}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    style={{ color: theme.colors.textPrimary }}
+                  >
+                    ⬇️ {isExporting ? '下载中...' : '批量下载'}
+                  </button>
+                  <div className="h-px bg-white/10 my-1" />
                 </>
               ) : (
                 <>
@@ -1205,7 +1454,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                     className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    {items.find(i => i.id === contextMenu.itemId)?.type === 'folder' ? '📂 打开' : '👁️ 预览'}
+                    👁️ 预览
                   </button>
                 </>
               )}
@@ -1263,6 +1512,31 @@ export const Desktop: React.FC<DesktopProps> = ({
                 >
                   📚 叠放选中图片 ({selectedIds.length})
                 </button>
+              )}
+              {/* 选中图片时的导出选项 */}
+              {selectedIds.some(id => items.find(i => i.id === id)?.type === 'image') && (
+                <>
+                  <button
+                    onClick={async () => {
+                      await handleExportSelected(true);
+                    }}
+                    disabled={isExporting}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    style={{ color: theme.colors.textPrimary }}
+                  >
+                    📦 {isExporting ? '导出中...' : '导出压缩包'}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await handleExportSelected(false);
+                    }}
+                    disabled={isExporting}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    style={{ color: theme.colors.textPrimary }}
+                  >
+                    ⬇️ {isExporting ? '下载中...' : '批量下载'}
+                  </button>
+                </>
               )}
               <div className="h-px bg-white/10 my-1" />
               <button

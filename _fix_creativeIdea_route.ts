@@ -63,7 +63,7 @@ router.post('/', (req: Request, res: Response<ApiResponse<CreativeIdea>>) => {
       isBP: isBP || false,
       smartPlusConfig,
       bpFields,
-      cost: cost || 0, // 企鹅币扣除数量
+      cost: cost || 0, // Pebbling 鹅卵石扣除数量
       order: order || 0,
     });
     

@@ -1,5 +1,5 @@
 /**
- * 企鹅币充值弹窗
+ * Pebbling 鹅卵石充值弹窗
  */
 import React, { useState } from 'react';
 import { post } from '../services/api';
@@ -48,7 +48,7 @@ export const RechargeModal: React.FC<RechargeModalProps> = ({
       if (result.success && result.data) {
         // 充值成功
         onRechargeSuccess?.(result.data.newBalance);
-        alert(`🎉 充值成功！\n\n+${selectedOption.coins} 企鹅币 已到账\n当前余额：${result.data.newBalance} 企鹅币`);
+        alert(`🎉 充值成功！\n\n+${selectedOption.coins} Pebbling 鹅卵石 已到账\n当前余额：${result.data.newBalance} 鹅卵石`);
         setSelectedOption(null);
         onClose();
       } else {
@@ -79,10 +79,10 @@ export const RechargeModal: React.FC<RechargeModalProps> = ({
         <div className="text-center mb-6">
           <h2 className="text-xl font-bold text-white flex items-center justify-center gap-2">
             <span className="text-2xl">🪙</span>
-            企鹅币充值
+            Pebbling 鹅卵石充值
           </h2>
           <p className="text-sm text-gray-400 mt-1">
-            当前余额: <span className="text-yellow-400 font-bold">{currentBalance}</span> 企鹅币
+            当前余额: <span className="text-yellow-400 font-bold">{currentBalance}</span> 鹅卵石
           </p>
         </div>
 
@@ -106,7 +106,7 @@ export const RechargeModal: React.FC<RechargeModalProps> = ({
               <div className="flex flex-col items-center gap-1">
                 <span className="text-2xl">🪙</span>
                 <span className="text-lg font-bold text-white">{option.coins}</span>
-                <span className="text-xs text-gray-400">企鹅币</span>
+                <span className="text-xs text-gray-400">鹅卵石</span>
                 <div className="mt-2 px-3 py-1 bg-gray-800 rounded-full">
                   <span className="text-sm font-bold text-green-400">¥{option.price}</span>
                 </div>
@@ -117,7 +117,7 @@ export const RechargeModal: React.FC<RechargeModalProps> = ({
 
         {/* 充值说明 */}
         <div className="bg-gray-900/50 rounded-lg p-3 mb-4 text-xs text-gray-400 space-y-1">
-          <p>💡 企鹅币可用于：生成图像、图像分析等AI功能</p>
+          <p>💡 Pebbling 鹅卵石可用于：生成图像、图像分析等AI功能</p>
           <p>📌 充值后不可退款，请谨慎选择</p>
           <p>🎁 首次充值可联系客服领取额外奖励~</p>
         </div>

@@ -3,7 +3,7 @@ export interface GeneratedContent {
   text: string | null;
   imageUrl: string | null;
   originalFiles?: File[]; // 保存生成时使用的所有原始图片，用于重新生成（支持多图）
-  coinsDeducted?: number; // 本次扣除的企鹅币
+  coinsDeducted?: number; // 本次扣除的 Pebbling 鹅卵石
   coinsRemaining?: number; // 扣除后的余额
 }
 
@@ -49,7 +49,7 @@ export interface CreativeIdea {
   smartPlusConfig?: SmartPlusConfig;
   bpFields?: BPField[]; // Renamed from bpVariables to support generic fields
   order?: number;
-  cost?: number; // 使用此创意库生成图片需要扣除的企鹅币数量 🪙
+  cost?: number; // 使用此创意库生成图片需要扣除的 Pebbling 鹅卵石数量 🪨
   
   // Deprecated but kept for type compatibility during migration if needed
   bpVariables?: any[]; 
@@ -145,7 +145,7 @@ export interface GenerationHistory {
   creativeTemplateType?: 'smart' | 'smartPlus' | 'bp' | 'none'; // 创意库类型
   bpInputs?: Record<string, string>; // BP 模式的输入值
   smartPlusOverrides?: SmartPlusConfig; // SmartPlus 模式的配置
-  coinsDeducted?: number; // 扣除的企鹅币数量
+  coinsDeducted?: number; // 扣除的 Pebbling 鹅卵石数量
 }
 
 // 价格配置

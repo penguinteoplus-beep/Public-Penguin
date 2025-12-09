@@ -29,7 +29,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
   const [ideaType, setIdeaType] = useState<'standard' | 'bp' | 'smartPlus'>('standard');
   const [smartPlusConfig, setSmartPlusConfig] = useState<SmartPlusConfig>(() => JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
   const [bpFields, setBpFields] = useState<BPField[]>([]);
-  const [cost, setCost] = useState<number>(0); // 企鹅币扣除数量
+  const [cost, setCost] = useState<number>(0); // Pebbling 鹅卵石扣除数量
   
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -248,10 +248,10 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                     ))}
                   </div>
                 </div>
-                {/* 企鹅币扣除设置 */}
+                {/* Pebbling 鹅卵石扣除设置 */}
                 <div>
                   <label htmlFor="idea-cost" className="text-sm font-medium text-gray-300 mb-1 block flex items-center gap-1">
-                    <span>🪙</span> 扣除企鹅币
+                    <span>🪨</span> 扣除鹅卵石
                     <span className="text-[10px] text-gray-500 ml-1">(可选)</span>
                   </label>
                   <div className="flex items-center gap-2">

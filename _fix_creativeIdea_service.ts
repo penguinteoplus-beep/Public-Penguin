@@ -11,7 +11,7 @@ interface CreativeIdeaRow {
   isBP: number;
   smartPlusConfig: string | null;
   bpFields: string | null;
-  cost: number | null; // 企鹅币扣除数量
+  cost: number | null; // Pebbling 鹅卵石扣除数量
   order: number;
   createdAt: number;
   updatedAt: number;
@@ -29,7 +29,7 @@ function rowToCreativeIdea(row: CreativeIdeaRow): CreativeIdea {
     isBP: row.isBP === 1,
     smartPlusConfig: row.smartPlusConfig ? JSON.parse(row.smartPlusConfig) : undefined,
     bpFields: row.bpFields ? JSON.parse(row.bpFields) : undefined,
-    cost: row.cost || undefined, // 企鹅币扣除数量
+    cost: row.cost || undefined, // Pebbling 鹅卵石扣除数量
     order: row.order,
   };
 }
@@ -65,7 +65,7 @@ export function createCreativeIdea(idea: Omit<CreativeIdea, 'id'>): CreativeIdea
       idea.isBP ? 1 : 0,
       idea.smartPlusConfig ? JSON.stringify(idea.smartPlusConfig) : null,
       idea.bpFields ? JSON.stringify(idea.bpFields) : null,
-      idea.cost || 0, // 企鹅币扣除数量，默认0
+      idea.cost || 0, // Pebbling 鹅卵石扣除数量，默认0
       idea.order || 0,
     ]
   );

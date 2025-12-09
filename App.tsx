@@ -336,11 +336,11 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
                 {currentUser.nickname || currentUser.username}
               </span>
               
-              {/* 企鹅币余额 */}
+              {/* Pebbling 鹅卵石余额 */}
               <button 
                 onClick={onRechargeClick}
                 className="flex items-center gap-1 px-2 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-lg hover:bg-yellow-500/20 transition-colors"
-                title="点击充值企鹅币"
+                title="点击充值 Pebbling 鹅卵石"
               >
                 <span className="text-xs">🪙</span>
                 <span className="text-xs font-bold text-yellow-400">{currentUser.coins || 0}</span>
@@ -891,7 +891,7 @@ const App: React.FC = () => {
   const [isRechargeModalOpen, setRechargeModalOpen] = useState(false);
   const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
   
-  // 企鹅币状态 🪙
+  // Pebbling 鹅卵石状态 🪨
   const [priceConfig, setPriceConfig] = useState<PriceConfig>({ generateImage: 10, analyzeImage: 5, chat: 2 });
 
   // 桌面状态
@@ -1748,7 +1748,7 @@ const App: React.FC = () => {
         errorMessage = e.message;
       }
       // 如果是来自后端的余额不足提示，直接显示趣味文案
-      if (errorMessage.includes('🐧') || errorMessage.includes('企鹅币') || errorMessage.includes('余额')) {
+      if (errorMessage.includes('🐧') || errorMessage.includes('Pebbling') || errorMessage.includes('鹅卵石') || errorMessage.includes('余额')) {
         setError(errorMessage);
       } else {
         setError(`生成失败: ${errorMessage}`);

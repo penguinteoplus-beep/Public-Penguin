@@ -8,7 +8,7 @@ export interface User {
   nickname?: string;
   avatar?: string;
   role: 'user' | 'admin';
-  coins: number; // 企鹅币余额 🪙
+  coins: number; // Pebbling 鹅卵石余额 🪨
   createdAt: number;
   updatedAt: number;
 }

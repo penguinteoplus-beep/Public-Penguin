@@ -1,4 +1,4 @@
-// 企鹅币（积分）相关 API
+// Pebbling 鹅卵石（积分）相关 API
 import { get, post } from './index';
 import { PriceConfig } from '../../types';
 

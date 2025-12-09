@@ -13,8 +13,11 @@ interface DesktopProps {
   onItemsChange: (items: DesktopItem[]) => void;
   onImageDoubleClick: (item: DesktopImageItem) => void;
   onFolderDoubleClick: (item: DesktopFolderItem) => void;
+  onStackDoubleClick?: (item: DesktopStackItem) => void; // 叠放双击打开
   openFolderId: string | null;
   onFolderClose: () => void;
+  openStackId: string | null; // 当前打开的叠放 ID
+  onStackClose: () => void; // 关闭叠放
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
   gridSize?: number;
@@ -23,6 +26,10 @@ interface DesktopProps {
   onImagePreview?: (item: DesktopImageItem) => void;
   onImageEditAgain?: (item: DesktopImageItem) => void;
   onImageRegenerate?: (item: DesktopImageItem) => void;
+  // 历史记录（用于自动叠放等功能）
+  history?: GenerationHistory[];
+  // 创意库（用于显示名称）
+  creativeIdeas?: { id: number; title: string }[];
 }
 
 const GRID_SIZE = 100; // 网格大小
@@ -46,8 +53,11 @@ export const Desktop: React.FC<DesktopProps> = ({
   onItemsChange,
   onImageDoubleClick,
   onFolderDoubleClick,
+  onStackDoubleClick,
   openFolderId,
   onFolderClose,
+  openStackId,
+  onStackClose,
   selectedIds,
   onSelectionChange,
   gridSize = GRID_SIZE,
@@ -55,6 +65,8 @@ export const Desktop: React.FC<DesktopProps> = ({
   onImagePreview,
   onImageEditAgain,
   onImageRegenerate,
+  history = [],
+  creativeIdeas = [],
 }) => {
   const { theme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -82,11 +94,16 @@ export const Desktop: React.FC<DesktopProps> = ({
   const [isExporting, setIsExporting] = useState(false); // 导出中状态
   const [showPreview, setShowPreview] = useState(false); // 是否显示预览（空格键控制）
 
-  // 获取当前显示的项目（根据是否在文件夹内）
+  // 获取当前显示的项目（根据是否在文件夹或叠放内）
   const baseItems = openFolderId
     ? items.filter(item => {
         const folder = items.find(i => i.id === openFolderId) as DesktopFolderItem | undefined;
         return folder?.itemIds.includes(item.id);
+      })
+    : openStackId
+    ? items.filter(item => {
+        const stack = items.find(i => i.id === openStackId) as DesktopStackItem | undefined;
+        return stack?.itemIds.includes(item.id);
       })
     : items.filter(item => {
         // 只显示不在任何文件夹或叠放内的项目
@@ -378,6 +395,9 @@ export const Desktop: React.FC<DesktopProps> = ({
   const handleItemDoubleClick = (item: DesktopItem) => {
     if (item.type === 'image') {
       onImageDoubleClick(item as DesktopImageItem);
+    } else if (item.type === 'stack') {
+      // 叠放双击打开，类似文件夹
+      onStackDoubleClick?.(item as DesktopStackItem);
     } else {
       onFolderDoubleClick(item as DesktopFolderItem);
     }
@@ -475,10 +495,30 @@ export const Desktop: React.FC<DesktopProps> = ({
     return () => window.removeEventListener('click', handleClick);
   }, []);
 
-  // 新建文件夹
+  // 新建文件夹 - 将右键菜单坐标转换为相对于网格的坐标
   const handleCreateFolder = () => {
-    const pos = contextMenu ? { x: contextMenu.x - 100, y: contextMenu.y - 100 } : { x: 50, y: 50 };
+    let pos = { x: 0, y: 0 };
+    
+    if (contextMenu && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      // 将屏幕坐标转换为相对于容器的坐标，再减去边距和顶部偏移
+      const relativeX = contextMenu.x - rect.left - horizontalPadding;
+      const relativeY = contextMenu.y - rect.top - TOP_OFFSET;
+      
+      // 确保在可视范围内
+      const maxX = (DESKTOP_COLS - 1) * gridSize;
+      const maxY = (DESKTOP_ROWS - 1) * gridSize;
+      
+      pos = {
+        x: Math.min(maxX, Math.max(0, relativeX)),
+        y: Math.min(maxY, Math.max(0, relativeY)),
+      };
+    }
+    
     const snappedPos = findNearestFreePosition(pos);
+    // 再次确保在可视边界内
+    snappedPos.x = Math.min((DESKTOP_COLS - 1) * gridSize, Math.max(0, snappedPos.x));
+    snappedPos.y = Math.min((DESKTOP_ROWS - 1) * gridSize, Math.max(0, snappedPos.y));
     
     const newFolder: DesktopFolderItem = {
       id: generateId(),
@@ -494,6 +534,72 @@ export const Desktop: React.FC<DesktopProps> = ({
     onItemsChange([...items, newFolder]);
     setContextMenu(null);
   };
+
+  // 自动叠放：按创意库分组图片
+  const handleAutoStackByCreative = useCallback(() => {
+    // 获取所有不在文件夹/叠放内的图片
+    const topLevelImages = items.filter(item => {
+      if (item.type !== 'image') return false;
+      const isInFolder = items.some(
+        other => other.type === 'folder' && (other as DesktopFolderItem).itemIds.includes(item.id)
+      );
+      const isInStack = items.some(
+        other => other.type === 'stack' && (other as DesktopStackItem).itemIds.includes(item.id)
+      );
+      return !isInFolder && !isInStack;
+    }) as DesktopImageItem[];
+    
+    // 按创意库 ID 分组
+    const groupByCreative: Map<string, { name: string; imageIds: string[]; firstPos: DesktopPosition }> = new Map();
+    
+    topLevelImages.forEach(img => {
+      if (!img.historyId) return;
+      const historyItem = history.find(h => h.id === img.historyId);
+      if (!historyItem?.creativeTemplateId) return;
+      
+      const key = `creative_${historyItem.creativeTemplateId}`;
+      if (!groupByCreative.has(key)) {
+        // 查找创意库名称
+        const creative = creativeIdeas.find(c => c.id === historyItem.creativeTemplateId);
+        groupByCreative.set(key, {
+          name: creative?.title || `创意库 ${historyItem.creativeTemplateId}`,
+          imageIds: [img.id],
+          firstPos: img.position,
+        });
+      } else {
+        groupByCreative.get(key)!.imageIds.push(img.id);
+      }
+    });
+    
+    // 只对有2张及以上图片的组创建叠放
+    const groupsToStack = Array.from(groupByCreative.values()).filter(g => g.imageIds.length >= 2);
+    
+    if (groupsToStack.length === 0) {
+      alert('没有找到可以按创意库叠放的图片（需要至少2张同创意库的图片）');
+      return;
+    }
+    
+    // 创建叠放
+    let newItems = [...items];
+    groupsToStack.forEach(group => {
+      const newStack: DesktopStackItem = {
+        id: generateId(),
+        type: 'stack',
+        name: `${group.name} (${group.imageIds.length})`,
+        position: group.firstPos,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        itemIds: group.imageIds,
+        isExpanded: false,
+      };
+      newItems.push(newStack);
+    });
+    
+    onItemsChange(newItems);
+    const stackCount = groupsToStack.length;
+    const imageCount = groupsToStack.reduce((sum, g) => sum + g.imageIds.length, 0);
+    alert(`已创建 ${stackCount} 个叠放，包含 ${imageCount} 张图片`);
+  }, [items, history, creativeIdeas, onItemsChange]);
 
   // 创建叠放（将选中的图片叠放在一起）
   const handleCreateStack = () => {
@@ -607,13 +713,22 @@ export const Desktop: React.FC<DesktopProps> = ({
     setClipboard({ items: selectedItems, action: 'cut' });
   }, [selectedIds, items]);
 
-  // 粘贴项目
+  // 粘贴项目 - 修正坐标转换
   const handlePaste = useCallback(() => {
     if (!clipboard || clipboard.items.length === 0) return;
     
-    const pastePos = contextMenu 
-      ? { x: contextMenu.x - 100, y: contextMenu.y - 100 } 
-      : { x: 50, y: 50 };
+    let pastePos = { x: 0, y: 0 };
+    if (contextMenu && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const relativeX = contextMenu.x - rect.left - horizontalPadding;
+      const relativeY = contextMenu.y - rect.top - TOP_OFFSET;
+      const maxX = (DESKTOP_COLS - 1) * gridSize;
+      const maxY = (DESKTOP_ROWS - 1) * gridSize;
+      pastePos = {
+        x: Math.min(maxX, Math.max(0, relativeX)),
+        y: Math.min(maxY, Math.max(0, relativeY)),
+      };
+    }
     
     let newItems = [...items];
     let offsetX = 0;
@@ -680,6 +795,29 @@ export const Desktop: React.FC<DesktopProps> = ({
     onSelectionChange([]);
     setContextMenu(null);
   }, [openFolderId, selectedIds, items, onItemsChange, onSelectionChange]);
+
+  // 从叠放中移出项目
+  const handleMoveOutOfStack = useCallback(() => {
+    if (!openStackId || selectedIds.length === 0) return;
+    
+    const updatedItems = items.map(item => {
+      if (item.id === openStackId && item.type === 'stack') {
+        const stack = item as DesktopStackItem;
+        const remainingIds = stack.itemIds.filter(id => !selectedIds.includes(id));
+        return {
+          ...stack,
+          itemIds: remainingIds,
+          name: `叠放 (${remainingIds.length})`,
+          updatedAt: Date.now(),
+        };
+      }
+      return item;
+    });
+    
+    onItemsChange(updatedItems);
+    onSelectionChange([]);
+    setContextMenu(null);
+  }, [openStackId, selectedIds, items, onItemsChange, onSelectionChange]);
 
   // 键盘快捷键
   useEffect(() => {
@@ -865,9 +1003,20 @@ export const Desktop: React.FC<DesktopProps> = ({
       const zip = new JSZip();
       const folder = zip.folder(containerName) || zip;
       
+      // 跟踪文件名以避免重复
+      const usedFilenames = new Set<string>();
+      
       for (let i = 0; i < imageItems.length; i++) {
         const img = imageItems[i];
-        const filename = `${img.name.replace(/[\\/:*?"<>|]/g, '_')}.png`;
+        // 生成唯一文件名：如果名称重复，添加索引
+        let baseName = img.name.replace(/[\\/:*?"<>|]/g, '_');
+        let filename = `${baseName}.png`;
+        let counter = 1;
+        while (usedFilenames.has(filename)) {
+          filename = `${baseName}_${counter}.png`;
+          counter++;
+        }
+        usedFilenames.add(filename);
         
         try {
           let blob: Blob;
@@ -982,8 +1131,16 @@ export const Desktop: React.FC<DesktopProps> = ({
         )}
       </div>
       
-      {/* 隐藏文件名按钮 - 右上角 */}
-      <div className="absolute top-[76px] right-6 z-20">
+      {/* 隐藏文件名按钮 和 自动叠放按钮 - 右上角 */}
+      <div className="absolute top-[76px] right-6 z-20 flex items-center gap-2">
+        <button
+          onClick={handleAutoStackByCreative}
+          className="px-3 py-2 text-xs font-medium rounded-xl backdrop-blur-xl border transition-all bg-black/50 border-white/20 text-gray-400 hover:text-white hover:border-white/30 hover:bg-indigo-500/20"
+          title="将同创意库生成的图片自动叠放在一起"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          📚 自动叠放
+        </button>
         <button
           onClick={() => setHideFileNames(!hideFileNames)}
           className={`px-3 py-2 text-xs font-medium rounded-xl backdrop-blur-xl border transition-all ${
@@ -997,11 +1154,11 @@ export const Desktop: React.FC<DesktopProps> = ({
           {hideFileNames ? '👁️ 显示文件名' : '👁️‍🗨️ 隐藏文件名'}
         </button>
       </div>
-      {/* 面包屑导航（在文件夹内时显示） */}
-      {openFolderId && (
+      {/* 面包屑导航（在文件夹或叠放内时显示） */}
+      {(openFolderId || openStackId) && (
         <div className="absolute top-[76px] left-6 z-20 flex items-center gap-2 px-4 py-2 rounded-xl bg-black/40 backdrop-blur-xl border border-white/10">
           <button
-            onClick={onFolderClose}
+            onClick={openFolderId ? onFolderClose : onStackClose}
             className="text-sm text-gray-300 hover:text-white transition-colors flex items-center gap-1"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1010,8 +1167,12 @@ export const Desktop: React.FC<DesktopProps> = ({
             返回桌面
           </button>
           <span className="text-gray-500">/</span>
-          <span className="text-sm font-medium text-white">
-            {items.find(i => i.id === openFolderId)?.name || '文件夹'}
+          <span className="text-sm font-medium text-white flex items-center gap-1">
+            {openFolderId ? '📁' : '📚'}
+            {openFolderId 
+              ? (items.find(i => i.id === openFolderId)?.name || '文件夹')
+              : (items.find(i => i.id === openStackId)?.name || '叠放')
+            }
           </span>
         </div>
       )}
@@ -1488,6 +1649,16 @@ export const Desktop: React.FC<DesktopProps> = ({
                   style={{ color: theme.colors.textPrimary }}
                 >
                   📤 移出文件夹
+                </button>
+              )}
+              {/* 在叠放内时显示移出选项 */}
+              {openStackId && (
+                <button
+                  onClick={handleMoveOutOfStack}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2"
+                  style={{ color: theme.colors.textPrimary }}
+                >
+                  📤 移出叠放
                 </button>
               )}
               {/* 选中多个图片时可以叠放 */}

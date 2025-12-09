@@ -100,7 +100,7 @@ interface CanvasProps {
   onHistorySelect: (item: GenerationHistory) => void;
   onHistoryDelete: (id: number) => void;
   onHistoryClear: () => void;
-  // 桌面模式相关
+  // 框面模式相关
   desktopItems: DesktopItem[];
   onDesktopItemsChange: (items: DesktopItem[]) => void;
   onDesktopImageDoubleClick: (item: DesktopImageItem) => void;
@@ -109,6 +109,9 @@ interface CanvasProps {
   openFolderId: string | null;
   onFolderOpen: (id: string) => void;
   onFolderClose: () => void;
+  openStackId: string | null; // 叠放打开状态
+  onStackOpen: (id: string) => void;
+  onStackClose: () => void;
   onRenameItem: (id: string, newName: string) => void;
   // 图片操作回调
   onDesktopImagePreview?: (item: DesktopImageItem) => void;
@@ -715,6 +718,9 @@ const Canvas: React.FC<CanvasProps> = ({
   openFolderId,
   onFolderOpen,
   onFolderClose,
+  openStackId,
+  onStackOpen,
+  onStackClose,
   onRenameItem,
   onDesktopImagePreview,
   onDesktopImageEditAgain,
@@ -788,14 +794,19 @@ const Canvas: React.FC<CanvasProps> = ({
             onItemsChange={onDesktopItemsChange}
             onImageDoubleClick={onDesktopImageDoubleClick}
             onFolderDoubleClick={(folder) => onFolderOpen(folder.id)}
+            onStackDoubleClick={(stack) => onStackOpen(stack.id)}
             openFolderId={openFolderId}
             onFolderClose={onFolderClose}
+            openStackId={openStackId}
+            onStackClose={onStackClose}
             selectedIds={desktopSelectedIds}
             onSelectionChange={onDesktopSelectionChange}
             onRenameItem={onRenameItem}
             onImagePreview={onDesktopImagePreview}
             onImageEditAgain={onDesktopImageEditAgain}
             onImageRegenerate={onDesktopImageRegenerate}
+            history={history}
+            creativeIdeas={creativeIdeas}
           />
           
           {/* 生成结果浮层 */}
@@ -898,6 +909,7 @@ const App: React.FC = () => {
   const [desktopItems, setDesktopItems] = useState<DesktopItem[]>([]);
   const [desktopSelectedIds, setDesktopSelectedIds] = useState<string[]>([]);
   const [openFolderId, setOpenFolderId] = useState<string | null>(null);
+  const [openStackId, setOpenStackId] = useState<string | null>(null); // 叠放打开状态
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importIdeasInputRef = useRef<HTMLInputElement>(null);
@@ -2005,29 +2017,66 @@ const App: React.FC = () => {
     // 恢复提示词
     setPrompt(item.prompt);
     
-    // 尝试恢复原始输入图片（如果有历史记录中的输入图片）
+    // 尝试恢复原始输入图片和创意库配置（如果有历史记录）
     if (item.historyId) {
       const historyItem = generationHistory.find(h => h.id === item.historyId);
-      if (historyItem?.inputImageData && historyItem?.inputImageType) {
-        try {
-          const byteCharacters = atob(historyItem.inputImageData);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
+      if (historyItem) {
+        // 恢复输入图片
+        if (historyItem.inputImageData && historyItem.inputImageType) {
+          try {
+            const byteCharacters = atob(historyItem.inputImageData);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: historyItem.inputImageType });
+            const restoredFile = new File([blob], historyItem.inputImageName || 'restored-input.png', { type: historyItem.inputImageType });
+            
+            setFiles([restoredFile]);
+            setActiveFileIndex(0);
+          } catch (e) {
+            console.warn('恢复输入图片失败:', e);
+            setFiles([]);
+            setActiveFileIndex(null);
           }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], { type: historyItem.inputImageType });
-          const restoredFile = new File([blob], historyItem.inputImageName || 'restored-input.png', { type: historyItem.inputImageType });
-          
-          setFiles([restoredFile]);
-          setActiveFileIndex(0);
-        } catch (e) {
-          console.warn('恢复输入图片失败:', e);
+        } else {
+          // 没有输入图片
           setFiles([]);
           setActiveFileIndex(null);
         }
+        
+        // 恢复创意库配置
+        setActiveSmartTemplate(null);
+        setActiveSmartPlusTemplate(null);
+        setActiveBPTemplate(null);
+        setActiveCreativeIdea(null);
+        setBpInputs({});
+        setSmartPlusOverrides(JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
+        
+        if (historyItem.creativeTemplateType && historyItem.creativeTemplateType !== 'none' && historyItem.creativeTemplateId) {
+          const template = creativeIdeas.find(idea => idea.id === historyItem.creativeTemplateId);
+          if (template) {
+            // 设置当前使用的创意库（用于扣费）
+            setActiveCreativeIdea(template);
+            
+            if (historyItem.creativeTemplateType === 'bp') {
+              setActiveBPTemplate(template);
+              if (historyItem.bpInputs) {
+                setBpInputs(historyItem.bpInputs);
+              }
+            } else if (historyItem.creativeTemplateType === 'smartPlus') {
+              setActiveSmartPlusTemplate(template);
+              if (historyItem.smartPlusOverrides) {
+                setSmartPlusOverrides(historyItem.smartPlusOverrides);
+              }
+            } else if (historyItem.creativeTemplateType === 'smart') {
+              setActiveSmartTemplate(template);
+            }
+          }
+        }
       } else {
-        // 没有输入图片
+        // 找不到历史记录，清空输入
         setFiles([]);
         setActiveFileIndex(null);
       }
@@ -2044,7 +2093,7 @@ const App: React.FC = () => {
     
     // 取消桌面选中，让用户注意力回到编辑区
     setDesktopSelectedIds([]);
-  }, [generationHistory]);
+  }, [generationHistory, creativeIdeas]);
 
   // 加载桌面数据（并从历史记录恢复空的 imageUrl）
   useEffect(() => {
@@ -2155,6 +2204,9 @@ const App: React.FC = () => {
           openFolderId={openFolderId}
           onFolderOpen={setOpenFolderId}
           onFolderClose={() => setOpenFolderId(null)}
+          openStackId={openStackId}
+          onStackOpen={setOpenStackId}
+          onStackClose={() => setOpenStackId(null)}
           onRenameItem={handleRenameItem}
           onDesktopImagePreview={handleDesktopImagePreview}
           onDesktopImageEditAgain={handleDesktopImageEditAgain}

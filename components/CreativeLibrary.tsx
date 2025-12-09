@@ -7,7 +7,6 @@ import { LibraryIcon } from './icons/LibraryIcon';
 import { EditIcon } from './icons/EditIcon';
 import { DownloadIcon } from './icons/DownloadIcon';
 import { UploadIcon } from './icons/UploadIcon';
-import { SearchIcon } from './icons/SearchIcon';
 
 
 interface CreativeLibraryProps {
@@ -140,7 +139,7 @@ export const CreativeLibrary: React.FC<CreativeLibraryProps> = ({ ideas, onBack,
         </div>
       </div>
       
-      <main className="flex-grow overflow-y-auto py-2 pr-2 -mr-2">
+      <main className="flex-grow overflow-y-auto py-2 pr-2 -mr-2 custom-scrollbar">
         {filteredIdeas.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
             {filteredIdeas.map(idea => (
@@ -185,21 +184,30 @@ export const CreativeLibrary: React.FC<CreativeLibraryProps> = ({ ideas, onBack,
                         <XCircleIcon className="w-4 h-4" />
                     </button>
                   </div>
-                   <div className="absolute top-2 left-2 flex gap-1">
-                      {idea.isBP && (
-                          <div className="px-2 py-0.5 bg-yellow-600/80 text-white text-xs font-bold rounded-full backdrop-blur-sm pointer-events-none shadow-lg shadow-yellow-500/20">
-                              BP
-                          </div>
-                      )}
-                      {idea.isSmartPlus && (
-                          <div className="px-2 py-0.5 bg-teal-600/80 text-white text-xs font-bold rounded-full backdrop-blur-sm pointer-events-none shadow-lg shadow-teal-500/20">
-                              PLUS
-                          </div>
-                      )}
-                      {idea.isSmart && !idea.isBP && (
-                           <div className="px-2 py-0.5 bg-purple-600/80 text-white text-xs font-bold rounded-full backdrop-blur-sm pointer-events-none">
-                              SMART
-                          </div>
+                   <div className="absolute top-2 left-2 flex flex-col gap-1">
+                      <div className="flex gap-1">
+                        {idea.isBP && (
+                            <div className="px-2 py-0.5 bg-yellow-600/80 text-white text-xs font-bold rounded-full backdrop-blur-sm pointer-events-none shadow-lg shadow-yellow-500/20">
+                                BP
+                            </div>
+                        )}
+                        {idea.isSmartPlus && (
+                            <div className="px-2 py-0.5 bg-teal-600/80 text-white text-xs font-bold rounded-full backdrop-blur-sm pointer-events-none shadow-lg shadow-teal-500/20">
+                                PLUS
+                            </div>
+                        )}
+                        {idea.isSmart && !idea.isBP && (
+                             <div className="px-2 py-0.5 bg-purple-600/80 text-white text-xs font-bold rounded-full backdrop-blur-sm pointer-events-none">
+                                SMART
+                            </div>
+                        )}
+                      </div>
+                      {/* 价格显示 */}
+                      {idea.cost !== undefined && idea.cost > 0 && (
+                        <div className="px-2 py-0.5 bg-yellow-500/90 text-black text-[10px] font-bold rounded-full backdrop-blur-sm pointer-events-none flex items-center gap-0.5">
+                          <span>🪨</span>
+                          <span>{idea.cost}</span>
+                        </div>
                       )}
                     </div>
               </div>

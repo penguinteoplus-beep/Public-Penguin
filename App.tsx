@@ -73,6 +73,7 @@ interface RightPanelProps {
 
 interface CanvasProps {
   view: 'editor' | 'library';
+  setView: (view: 'editor' | 'library') => void;
   files: File[];
   onUploadClick: () => void;
   creativeIdeas: CreativeIdea[];
@@ -358,6 +359,17 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
         </div>
       </div>
       
+      {/* 公告区域 - 登录下方 */}
+      <div className="mx-4 mt-3 px-4 py-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
+        <div className="flex items-start gap-2">
+          <span className="text-base">📢</span>
+          <div className="text-xs text-indigo-200">
+            <p className="font-medium text-indigo-100">欢迎使用企鹅艾洛魔法世界！</p>
+            <p className="mt-1 opacity-80">单击图片查看预览，拖拽整理位置。</p>
+          </div>
+        </div>
+      </div>
+      
       {/* 资源素材区域 */}
       <div className="flex-grow p-4 flex flex-col min-h-0 overflow-hidden">
         <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1 mb-3">资源素材</h2>
@@ -371,6 +383,13 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
             onTriggerUpload={onTriggerUpload}
           />
         </div>
+      </div>
+      
+      {/* 免责声明 - 底部 */}
+      <div className="mx-4 mb-4 px-4 py-3 rounded-xl bg-black/30 border border-white/5">
+        <p className="text-[10px] text-gray-500 leading-relaxed">
+          ⚠️ 免责声明：本站内容由 AI 模型生成，仅供学习与测试。用户请勿生成或上传色情、政治等违规内容，违者将封禁账号并上报。
+        </p>
       </div>
   </aside>
   );
@@ -568,7 +587,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     : "描述你想要生成的画面..."
                 }
                 readOnly={!!activeBPTemplate} // BP mode: read only until generated
-                className={`w-full h-40 p-4 pr-12 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 resize-none text-sm text-gray-200 shadow-inner placeholder-gray-600 ${
+                className={`w-full h-40 p-4 pr-12 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 resize-none text-sm text-gray-200 shadow-inner placeholder-gray-600 custom-scrollbar ${
                     activeBPTemplate ? 'focus:ring-yellow-500/50 focus:border-yellow-500/50' : 'focus:ring-indigo-500/50 focus:border-indigo-500/50'
                 }`}
               />
@@ -652,68 +671,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     </div>
                  </div>
              </div>
-
-            {/* Creative Library Card */}
-            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-5 border border-white/10">
-                <div className="flex items-center justify-between mb-4">
-                     <div className="flex items-center gap-2 text-gray-400">
-                        <LibraryIcon className="w-4 h-4"/>
-                        <h3 className="text-xs font-bold uppercase tracking-wider">创意库</h3>
-                     </div>
-                     <button
-                        onClick={() => setView('library')}
-                        className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors"
-                    >
-                        查看全部
-                    </button>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  {creativeIdeas.length > 0 ? creativeIdeas.slice(0, 3).map(idea => (
-                    <div 
-                      key={idea.id}
-                      onClick={() => handleUseCreativeIdea(idea)}
-                      className="group flex flex-col items-center gap-2 cursor-pointer"
-                      title={idea.title}
-                    >
-                      <div className="w-full aspect-square bg-black/40 rounded-xl border border-white/10 overflow-hidden transition-all duration-300 group-hover:border-indigo-500/50 group-hover:shadow-lg group-hover:shadow-indigo-500/20 relative">
-                        <img src={idea.imageUrl} alt={idea.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"/>
-                         <div className="absolute top-1 left-1 flex flex-col gap-1">
-                            {idea.isSmart && (
-                                <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]"></span>
-                            )}
-                             {idea.isSmartPlus && (
-                                <span className="w-2 h-2 rounded-full bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.8)]"></span>
-                            )}
-                             {idea.isBP && (
-                                <span className="w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.8)]"></span>
-                            )}
-                        </div>
-                        {/* 扣币数量显示 */}
-                        {idea.cost && idea.cost > 0 && (
-                          <div className="absolute bottom-1 right-1 flex items-center gap-0.5 px-1.5 py-0.5 bg-black/60 backdrop-blur-sm rounded text-[9px] text-yellow-400 font-medium">
-                            <span>🪙</span>{idea.cost}
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-gray-400 font-medium truncate w-full text-center group-hover:text-gray-200 transition-colors">
-                        {idea.title}
-                      </p>
-                    </div>
-                  )) : (
-                    <p className="text-xs text-center text-gray-600 py-6 col-span-3 italic">
-                      空空如也
-                    </p>
-                  )}
-                  <button
-                        onClick={() => setAddIdeaModalOpen(true)}
-                        className="aspect-square rounded-xl border border-dashed border-gray-700 hover:border-indigo-500/50 hover:bg-indigo-500/10 flex flex-col items-center justify-center gap-1 transition-all group"
-                    >
-                        <PlusCircleIcon className="w-5 h-5 text-gray-600 group-hover:text-indigo-400"/>
-                        <span className="text-[10px] text-gray-600 group-hover:text-indigo-400">添加</span>
-                  </button>
-                </div>
-            </div>
         </div>
      </div>
   </aside>
@@ -722,6 +679,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
 const Canvas: React.FC<CanvasProps> = ({
   view,
+  setView,
   files,
   onUploadClick,
   creativeIdeas,
@@ -768,8 +726,43 @@ const Canvas: React.FC<CanvasProps> = ({
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/10 via-gray-950 to-gray-950 pointer-events-none"></div>
       
+      {/* 顶部切换标签 */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 p-1 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-lg">
+        <button
+          onClick={() => setView('editor')}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${
+            view === 'editor'
+              ? 'bg-indigo-500/80 text-white shadow-lg shadow-indigo-500/30'
+              : 'text-gray-400 hover:text-white hover:bg-white/10'
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          桌面
+        </button>
+        <button
+          onClick={() => setView('library')}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${
+            view === 'library'
+              ? 'bg-purple-500/80 text-white shadow-lg shadow-purple-500/30'
+              : 'text-gray-400 hover:text-white hover:bg-white/10'
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          创意库
+          {creativeIdeas.length > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 text-[10px] rounded-full bg-white/20">
+              {creativeIdeas.length}
+            </span>
+          )}
+        </button>
+      </div>
+      
       {view === 'library' ? (
-        <div className="relative z-10 w-full flex-1 p-8 flex flex-col overflow-hidden">
+        <div className="relative z-10 w-full flex-1 p-8 pt-16 flex flex-col overflow-hidden">
           <CreativeLibrary
             ideas={creativeIdeas}
             onBack={onBack}
@@ -2054,6 +2047,7 @@ const App: React.FC = () => {
       <div className="relative flex-1 flex min-w-0">
         <Canvas 
           view={view}
+          setView={setView}
           files={files}
           onUploadClick={() => fileInputRef.current?.click()}
           creativeIdeas={creativeIdeas}

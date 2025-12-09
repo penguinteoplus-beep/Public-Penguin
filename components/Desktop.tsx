@@ -28,8 +28,9 @@ interface DesktopProps {
 const GRID_SIZE = 100; // 网格大小
 const ICON_SIZE = 80; // 图标大小
 const DRAG_THRESHOLD = 5; // 拖拽阈值，超过此距离才认为是拖拽
-export const TOP_OFFSET = 100; // 顶部偏移（公告+搜索区域高度）
+export const TOP_OFFSET = 140; // 顶部偏移（切换标签+搜索框的空间）
 export const DESKTOP_COLS = 7; // 固定7列
+export const DESKTOP_ROWS = 5; // 固定5行
 
 // 生成唯一ID
 const generateId = () => Math.random().toString(36).substring(2, 15);
@@ -922,10 +923,9 @@ export const Desktop: React.FC<DesktopProps> = ({
     }
   };
 
-  // 计算固定的桌面边界（不允许扩展）
+  // 计算固定的桌面边界（不允许扩展）- 7列5行
   const maxGridX = (DESKTOP_COLS - 1) * gridSize; // 最大X坐标（第7列起始位置）
-  const containerHeight = containerRef.current?.clientHeight || 600;
-  const maxGridY = Math.max(0, containerHeight - TOP_OFFSET - ICON_SIZE - 40); // 最大Y坐标
+  const maxGridY = (DESKTOP_ROWS - 1) * gridSize; // 最大Y坐标（第5行起始位置）
 
   return (
     <div
@@ -937,35 +937,21 @@ export const Desktop: React.FC<DesktopProps> = ({
         backgroundSize: `${gridSize}px ${gridSize}px`,
         WebkitUserSelect: 'none',
         userSelect: 'none',
-        padding: '16px', // 边距优化
+        padding: '24px', // 边距扩大
       }}
       onMouseDown={handleContainerMouseDown}
       onContextMenu={(e) => handleContextMenu(e)}
       onDragStart={(e) => e.preventDefault()}
     >
-      {/* 搜索框和操作按钮 */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-        {/* 隐藏文件名按钮 */}
-        <button
-          onClick={() => setHideFileNames(!hideFileNames)}
-          className={`px-3 py-2 text-xs font-medium rounded-xl backdrop-blur-xl border transition-all ${
-            hideFileNames
-              ? 'bg-indigo-500/30 border-indigo-500/50 text-indigo-200'
-              : 'bg-black/50 border-white/20 text-gray-400 hover:text-white hover:border-white/30'
-          }`}
-          title={hideFileNames ? '显示文件名' : '隐藏文件名'}
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          {hideFileNames ? '👁️ 显示文件名' : '👁️‍🗨️ 隐藏文件名'}
-        </button>
-        {/* 搜索框 */}
+      {/* 搜索框 - 居中，切换标签下方 */}
+      <div className="absolute top-[70px] left-1/2 -translate-x-1/2 z-20">
         <div className="relative">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索图片或文件夹..."
-            className="w-64 px-4 py-2 pl-10 text-sm bg-black/50 backdrop-blur-xl border border-white/20 rounded-xl text-white placeholder-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+            className="w-72 px-4 py-2.5 pl-10 text-sm bg-black/50 backdrop-blur-xl border border-white/20 rounded-xl text-white placeholder-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
             onMouseDown={(e) => e.stopPropagation()}
           />
           <svg 
@@ -990,29 +976,30 @@ export const Desktop: React.FC<DesktopProps> = ({
         </div>
         {/* 搜索结果提示 */}
         {searchQuery && (
-          <div className="absolute top-full right-0 mt-2 text-xs text-gray-400 text-right">
+          <div className="text-center mt-2 text-xs text-gray-400">
             找到 {currentItems.length} 个结果
           </div>
         )}
       </div>
-      {/* 公告区域 - 左上角（不在文件夹内时显示） */}
-      {!openFolderId && (
-        <div className="absolute top-4 left-4 z-20 max-w-sm">
-          <div className="px-4 py-3 rounded-xl bg-indigo-500/20 backdrop-blur-xl border border-indigo-500/30">
-            <div className="flex items-start gap-2">
-              <span className="text-lg">📢</span>
-              <div className="text-xs text-indigo-200">
-                {/* 公告内容可在此编辑 */}
-                <p className="font-medium text-indigo-100">欢迎使用企鹅艾洛魔法世界！</p>
-                <p className="mt-1 opacity-80">单击图片查看预览，拖拽整理位置，右上角可搜索。</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      
+      {/* 隐藏文件名按钮 - 右上角 */}
+      <div className="absolute top-[76px] right-6 z-20">
+        <button
+          onClick={() => setHideFileNames(!hideFileNames)}
+          className={`px-3 py-2 text-xs font-medium rounded-xl backdrop-blur-xl border transition-all ${
+            hideFileNames
+              ? 'bg-indigo-500/30 border-indigo-500/50 text-indigo-200'
+              : 'bg-black/50 border-white/20 text-gray-400 hover:text-white hover:border-white/30'
+          }`}
+          title={hideFileNames ? '显示文件名' : '隐藏文件名'}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {hideFileNames ? '👁️ 显示文件名' : '👁️‍🗨️ 隐藏文件名'}
+        </button>
+      </div>
       {/* 面包屑导航（在文件夹内时显示） */}
       {openFolderId && (
-        <div className="absolute top-4 left-4 z-20 flex items-center gap-2 px-4 py-2 rounded-xl bg-black/40 backdrop-blur-xl border border-white/10">
+        <div className="absolute top-[76px] left-6 z-20 flex items-center gap-2 px-4 py-2 rounded-xl bg-black/40 backdrop-blur-xl border border-white/10">
           <button
             onClick={onFolderClose}
             className="text-sm text-gray-300 hover:text-white transition-colors flex items-center gap-1"
@@ -1550,14 +1537,6 @@ export const Desktop: React.FC<DesktopProps> = ({
           )}
         </div>
       )}
-      {/* 免责声明 - 底部左侧 */}
-      <div className="absolute bottom-4 left-4 z-10">
-        <div className="px-3 py-2 rounded-lg bg-black/40 backdrop-blur-sm border border-white/10">
-          <p className="text-[10px] text-gray-400 leading-relaxed max-w-md">
-            ⚠️ 免责声明：本站内容由 AI 模型生成，仅供学习与测试。用户请勿生成或上传色情、政治等违规内容，违者将封禁账号并上报。
-          </p>
-        </div>
-      </div>
     </div>
   );
 };

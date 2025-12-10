@@ -530,6 +530,11 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const hasActiveTemplate = activeSmartTemplate || activeSmartPlusTemplate || activeBPTemplate;
   const activeTemplateName = activeBPTemplate?.title || activeSmartPlusTemplate?.title || activeSmartTemplate?.title;
   
+  // 获取当前模板的权限设置
+  const activeTemplate = activeBPTemplate || activeSmartPlusTemplate || activeSmartTemplate;
+  const canViewPrompt = activeTemplate?.allowViewPrompt !== false; // 默认true
+  const canEditPrompt = activeTemplate?.allowEditPrompt !== false; // 默认true
+  
   return (
   <aside className="w-[380px] bg-black/40 backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-l border-white/10 z-20">
      <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
@@ -579,41 +584,57 @@ const RightPanel: React.FC<RightPanelProps> = ({
                />
            )}
 
-           <div className="relative group">
-            <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder={
-                  activeBPTemplate
-                    ? "生成的提示词将显示在这里..."
-                    : activeSmartTemplate
-                    ? `"${activeSmartTemplate.title}" 的关键词...\n例如: '钢铁侠'`
-                    : activeSmartPlusTemplate
-                    ? `(可选) 场景关键词...\n例如: '微笑着, 霓虹灯光'`
-                    : "描述你想要生成的画面..."
-                }
-                readOnly={!!activeBPTemplate} // BP mode: read only until generated
-                className={`w-full h-40 p-4 pr-12 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 resize-none text-sm text-gray-200 shadow-inner placeholder-gray-600 custom-scrollbar ${
-                    activeBPTemplate ? 'focus:ring-yellow-500/50 focus:border-yellow-500/50' : 'focus:ring-indigo-500/50 focus:border-indigo-500/50'
-                }`}
-              />
-              <button
-                onClick={handleGenerateSmartPrompt}
-                disabled={!canGenerateSmartPrompt}
-                className={`absolute top-3 right-3 p-2 text-white rounded-xl shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95 ${
-                    activeBPTemplate 
-                    ? 'bg-gradient-to-br from-yellow-500 to-orange-600 hover:shadow-yellow-500/30' 
-                    : 'bg-gradient-to-br from-indigo-500 to-purple-600 hover:shadow-indigo-500/30'
-                }`}
-                title={activeBPTemplate ? "运行智能体 & 编译 Prompt" : "生成/更新提示词"}
-              >
-                  {smartPromptGenStatus === ApiStatus.Loading ? (
-                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  ) : (
-                    <PenguinIcon className="w-4 h-4" />
-                  )}
-              </button>
-           </div>
+           {/* 提示词输入区域 - 根据权限显示 */}
+           {canViewPrompt ? (
+             <div className="relative group">
+              <textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder={
+                    activeBPTemplate
+                      ? "生成的提示词将显示在这里..."
+                      : activeSmartTemplate
+                      ? `"${activeSmartTemplate.title}" 的关键词...\n例如: '钢铁侠'`
+                      : activeSmartPlusTemplate
+                      ? `(可选) 场景关键词...\n例如: '微笑着, 霓虹灯光'`
+                      : "描述你想要生成的画面..."
+                  }
+                  readOnly={!!activeBPTemplate || !canEditPrompt} // BP模式或不允许编辑时只读
+                  className={`w-full h-40 p-4 pr-12 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 resize-none text-sm text-gray-200 shadow-inner placeholder-gray-600 custom-scrollbar ${
+                      activeBPTemplate ? 'focus:ring-yellow-500/50 focus:border-yellow-500/50' : 'focus:ring-indigo-500/50 focus:border-indigo-500/50'
+                  } ${!canEditPrompt ? 'cursor-not-allowed opacity-75' : ''}`}
+                />
+                <button
+                  onClick={handleGenerateSmartPrompt}
+                  disabled={!canGenerateSmartPrompt}
+                  className={`absolute top-3 right-3 p-2 text-white rounded-xl shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95 ${
+                      activeBPTemplate 
+                      ? 'bg-gradient-to-br from-yellow-500 to-orange-600 hover:shadow-yellow-500/30' 
+                      : 'bg-gradient-to-br from-indigo-500 to-purple-600 hover:shadow-indigo-500/30'
+                  }`}
+                  title={activeBPTemplate ? "运行智能体 & 编译 Prompt" : "生成/更新提示词"}
+                >
+                    {smartPromptGenStatus === ApiStatus.Loading ? (
+                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    ) : (
+                      <PenguinIcon className="w-4 h-4" />
+                    )}
+                </button>
+             </div>
+           ) : (
+             /* 不允许查看提示词时显示提示信息 */
+             <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl">
+               <div className="flex items-center gap-2 text-orange-300 mb-2">
+                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                 </svg>
+                 <span className="text-sm font-medium">提示词已加密</span>
+               </div>
+               <p className="text-xs text-gray-400">
+                 此创意库不允许查看提示词内容。填写上方输入框后，点击生成即可。
+               </p>
+             </div>
+           )}
         </div>
         
         {activeSmartPlusTemplate && (
@@ -1749,24 +1770,84 @@ const App: React.FC = () => {
     }, []);
 
   const handleGenerateClick = useCallback(async () => {
-    // 检查API配置：要么有Gemini Key，要么启用了第三方API
-    const hasValidApi = apiKey || (thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey);
+    // 检查API配置
+    // 优先级：
+    // 1. 已登录 + 启用第三方API → 使用云端（不需要本地key）
+    // 2. 未登录 + 启用第三方API + 有本地key → 使用本地第三方
+    // 3. 有 Gemini key → 使用本地Gemini
+    // 4. 都没有 → 提示配置
+    const isCloud = isLoggedIn();
+    const hasValidApi = 
+      (isCloud && thirdPartyApiConfig.enabled) ||  // 云端模式
+      (!isCloud && thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey) ||  // 本地第三方
+      apiKey;  // 本地Gemini
+    
     if (!hasValidApi) {
-      setError('请先配置 API Key（Gemini 或第三方API）');
-      setStatus(ApiStatus.Error);
-      return;
-    }
-    if (!prompt) {
-      setError('请输入提示词');
+      if (isCloud) {
+        setError('请在设置中启用云端服务');
+      } else {
+        setError('请先配置 API Key（第三方API 或 Gemini）或登录使用云服务');
+      }
       setStatus(ApiStatus.Error);
       return;
     }
     
-    // Ensure prompt is generated if template is active but prompt box is empty
-    if ((activeSmartTemplate || activeSmartPlusTemplate || activeBPTemplate) && !prompt.trim()) {
-         setError(`请先点击企鹅按钮生成/填入提示词`);
-         setStatus(ApiStatus.Error);
-         return;
+    // 获取当前模板的权限设置
+    const activeTemplate = activeBPTemplate || activeSmartPlusTemplate || activeSmartTemplate;
+    const canViewPrompt = activeTemplate?.allowViewPrompt !== false;
+    
+    let finalPrompt = prompt;
+    
+    // 如果不允许查看提示词，需要先自动生成提示词
+    if (!canViewPrompt && activeTemplate) {
+      setStatus(ApiStatus.Loading);
+      setError(null);
+      
+      try {
+        console.log('[Generate] 不允许查看提示词，自动生成中...');
+        
+        if (activeBPTemplate) {
+          // BP 模式
+          const activeFile = files.length > 0 ? files[0] : null;
+          finalPrompt = await processBPTemplate(activeFile, activeBPTemplate, bpInputs);
+        } else if (activeSmartPlusTemplate || activeSmartTemplate) {
+          // Smart/Smart+ 模式
+          const activeFile = files.length > 0 ? files[0] : null;
+          if (!activeFile) {
+            setError('Smart/Smart+模式需要上传图片');
+            setStatus(ApiStatus.Error);
+            return;
+          }
+          finalPrompt = await generateCreativePromptFromImage({
+            file: activeFile,
+            idea: activeTemplate,
+            keyword: prompt,
+            smartPlusConfig: activeTemplate.isSmartPlus ? smartPlusOverrides : undefined,
+          });
+        }
+        
+        console.log('[Generate] 提示词已生成，开始生图');
+      } catch (e: unknown) {
+        const errorMessage = e instanceof Error ? e.message : '提示词生成失败';
+        console.error('[Generate] 提示词生成失败');
+        setError(`生成失败: ${errorMessage}`);
+        setStatus(ApiStatus.Error);
+        return;
+      }
+    } else {
+      // 允许查看提示词的正常流程
+      if (!prompt) {
+        setError('请输入提示词');
+        setStatus(ApiStatus.Error);
+        return;
+      }
+      
+      // Ensure prompt is generated if template is active but prompt box is empty
+      if ((activeSmartTemplate || activeSmartPlusTemplate || activeBPTemplate) && !prompt.trim()) {
+           setError(`请先点击企鹅按钮生成/填入提示词`);
+           setStatus(ApiStatus.Error);
+           return;
+      }
     }
     
     setStatus(ApiStatus.Loading);
@@ -1777,13 +1858,19 @@ const App: React.FC = () => {
       // 获取当前创意库的扣费金额（优先用 activeCreativeIdea，它保存了所有类型的创意库）
       const creativeIdeaCost = activeCreativeIdea?.cost;
       
-      // 传递所有上传的文件（支持多图编辑）
-      const result = await editImageWithGemini(files, prompt, { aspectRatio, imageSize }, creativeIdeaCost);
+      // 传递所有上传的文件（支持多图编辑），使用 finalPrompt
+      const result = await editImageWithGemini(files, finalPrompt, { aspectRatio, imageSize }, creativeIdeaCost);
       // 保存生成时使用的所有原始图片，用于重新生成
       setGeneratedContent({ ...result, originalFiles: [...files] });
       setStatus(ApiStatus.Success);
       
+      // 日志输出 - 不打印提示词内容
+      console.log('[Generate] 生成成功');
+      
       // 保存到历史记录（包含原始输入图片和创意库信息）
+      // 如果不允许查看提示词，保存时用占位文本
+      const promptToSave = canViewPrompt ? finalPrompt : '[加密提示词]';
+      const promptForDesktop = canViewPrompt ? finalPrompt : '创意库生成';
       if (result.imageUrl) {
         // 确定当前使用的创意库类型
         let templateType: 'smart' | 'smartPlus' | 'bp' | 'none' = 'none';
@@ -1799,7 +1886,7 @@ const App: React.FC = () => {
           templateId = activeSmartTemplate.id;
         }
         
-        await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled, files.length > 0 ? files[0] : null, {
+        await saveToHistory(result.imageUrl, promptToSave, thirdPartyApiConfig.enabled, files.length > 0 ? files[0] : null, {
           templateId,
           templateType,
           bpInputs: templateType === 'bp' ? { ...bpInputs } : undefined,
@@ -1810,12 +1897,12 @@ const App: React.FC = () => {
           const desktopItem: DesktopImageItem = {
             id: `img-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
             type: 'image',
-            name: prompt.slice(0, 15) + (prompt.length > 15 ? '...' : ''),
+            name: promptForDesktop.slice(0, 15) + (promptForDesktop.length > 15 ? '...' : ''),
             position: freePos,
             createdAt: Date.now(),
             updatedAt: Date.now(),
             imageUrl: result.imageUrl!,
-            prompt: prompt,
+            prompt: promptToSave,
             model: thirdPartyApiConfig.enabled ? 'nano-banana-2' : 'Gemini',
             isThirdParty: thirdPartyApiConfig.enabled,
             historyId: savedHistoryId, // 关联历史记录，用于重新生成时恢复原始输入图片
@@ -1844,10 +1931,10 @@ const App: React.FC = () => {
       } else {
         setError(`生成失败: ${errorMessage}`);
       }
-      console.error(errorMessage);
+      console.error('[Generate] 生成失败');
       setStatus(ApiStatus.Error);
     }
-  }, [files, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, autoSave, downloadImage, aspectRatio, imageSize, currentUser, activeCreativeIdea, findNextFreePosition, handleAddToDesktop]);
+  }, [files, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, autoSave, downloadImage, aspectRatio, imageSize, currentUser, activeCreativeIdea, findNextFreePosition, handleAddToDesktop, bpInputs, smartPlusOverrides]);
 
   // 卸载创意库：清空所有模板设置
   const handleClearTemplate = useCallback(() => {
@@ -1880,8 +1967,11 @@ const App: React.FC = () => {
     };
   }, [handleGenerateClick, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, handleClearTemplate]);
 
-  // 修改canGenerate条件，只需要有prompt即可（文生图不需要图片）
-  const canGenerate = prompt.trim().length > 0 && status !== ApiStatus.Loading;
+  // 修改canGenerate条件
+  // 如果不允许查看提示词，则只要有模板就可以生成
+  const activeTemplateForCheck = activeBPTemplate || activeSmartPlusTemplate || activeSmartTemplate;
+  const canViewPromptForCheck = activeTemplateForCheck?.allowViewPrompt !== false;
+  const canGenerate = (canViewPromptForCheck ? prompt.trim().length > 0 : !!activeTemplateForCheck) && status !== ApiStatus.Loading;
   
   const isSmartReady = !!activeSmartTemplate && prompt.trim().length > 0;
   const isSmartPlusReady = !!activeSmartPlusTemplate;

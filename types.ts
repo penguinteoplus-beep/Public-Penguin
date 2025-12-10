@@ -61,6 +61,10 @@ export interface CreativeIdea {
   suggestedAspectRatio?: AspectRatioType;
   suggestedResolution?: ImageSizeType;
   
+  // 权限控制（用于分享场景）
+  allowViewPrompt?: boolean;   // 是否允许查看提示词，默认true
+  allowEditPrompt?: boolean;   // 是否允许编辑提示词，默认true
+  
   // Deprecated but kept for type compatibility during migration if needed
   bpVariables?: any[]; 
 }

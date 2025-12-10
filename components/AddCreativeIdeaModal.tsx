@@ -33,6 +33,10 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
   const [suggestedAspectRatio, setSuggestedAspectRatio] = useState<AspectRatioType | ''>('');
   const [suggestedResolution, setSuggestedResolution] = useState<ImageSizeType | ''>('');
   
+  // 权限控制
+  const [allowViewPrompt, setAllowViewPrompt] = useState<boolean>(true);
+  const [allowEditPrompt, setAllowEditPrompt] = useState<boolean>(true);
+  
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +50,8 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
     setCost(0);
     setSuggestedAspectRatio('');
     setSuggestedResolution('');
+    setAllowViewPrompt(true);
+    setAllowEditPrompt(true);
     setFile(null);
     setPreviewUrl(null); 
     setError(null);
@@ -66,6 +72,8 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
         setCost(ideaToEdit.cost || 0);
         setSuggestedAspectRatio(ideaToEdit.suggestedAspectRatio || '');
         setSuggestedResolution(ideaToEdit.suggestedResolution || '');
+        setAllowViewPrompt(ideaToEdit.allowViewPrompt !== false); // 默认true
+        setAllowEditPrompt(ideaToEdit.allowEditPrompt !== false); // 默认true
         if (ideaToEdit.isBP) {
             setIdeaType('bp');
             // Migration for old bpVariables if needed, though assumed bpFields is used now
@@ -186,6 +194,9 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
           isBP: ideaType === 'bp',
           smartPlusConfig: ideaType === 'smartPlus' ? smartPlusConfig : undefined,
           bpFields: ideaType === 'bp' ? bpFields : undefined,
+          // 权限设置（仅BP/SmartPlus模式有效）
+          allowViewPrompt: (ideaType === 'bp' || ideaType === 'smartPlus') ? allowViewPrompt : true,
+          allowEditPrompt: (ideaType === 'bp' || ideaType === 'smartPlus') ? allowEditPrompt : true,
         };
         
         console.log('[CreativeIdea] 保存:', { ratio: ideaData.suggestedAspectRatio, res: ideaData.suggestedResolution });
@@ -330,6 +341,63 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
             </div>
           </div>
         </div>
+        
+        {/* 权限设置 - 仅BP/SmartPlus模式显示 */}
+        {(ideaType === 'bp' || ideaType === 'smartPlus') && (
+          <div className="p-4 bg-gray-900/50 rounded-lg border border-orange-700/30">
+            <h3 className="text-sm font-semibold text-orange-300 mb-3 flex items-center gap-2">
+              <span>🔐</span> 分享权限设置
+              <span className="text-[10px] text-gray-500 font-normal">(分享给他人时的权限)</span>
+            </h3>
+            <div className="space-y-3">
+              {/* 允许查看提示词 */}
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-300 group-hover:text-white transition-colors">允许查看提示词</span>
+                  <span className="text-[10px] text-gray-500">关闭后他人只能使用，无法查看提示词内容</span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={allowViewPrompt}
+                    onChange={(e) => {
+                      setAllowViewPrompt(e.target.checked);
+                      if (!e.target.checked) setAllowEditPrompt(false); // 不能查看就不能编辑
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-10 h-5 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
+                </div>
+              </label>
+              
+              {/* 允许编辑提示词 */}
+              <label className={`flex items-center justify-between cursor-pointer group ${!allowViewPrompt ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-300 group-hover:text-white transition-colors">允许编辑提示词</span>
+                  <span className="text-[10px] text-gray-500">关闭后他人可以查看但不能修改</span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={allowEditPrompt}
+                    onChange={(e) => setAllowEditPrompt(e.target.checked)}
+                    disabled={!allowViewPrompt}
+                    className="sr-only peer"
+                  />
+                  <div className="w-10 h-5 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
+                </div>
+              </label>
+            </div>
+            
+            {!allowViewPrompt && (
+              <div className="mt-3 p-2 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                <p className="text-[11px] text-orange-300">
+                  ⚠️ 不允许查看提示词时，用户只能看到输入框，生成时系统会自动处理提示词。
+                </p>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* BP Field Manager */}
         {ideaType === 'bp' && (

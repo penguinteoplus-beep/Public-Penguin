@@ -1,0 +1,140 @@
+/* ReactFlow 画布样式增强 */
+
+/* 连接点样式 - 增强吸附感 */
+.react-flow__handle {
+  transition: all 0.15s ease-out !important;
+}
+
+.react-flow__handle:hover {
+  transform: scale(1.4) !important;
+  box-shadow: 0 0 12px currentColor !important;
+}
+
+/* 连接中的连接点高亮 */
+.react-flow__handle.connecting {
+  animation: pulse-glow 0.8s ease-in-out infinite !important;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 8px currentColor;
+    transform: scale(1.2);
+  }
+  50% {
+    box-shadow: 0 0 16px currentColor;
+    transform: scale(1.5);
+  }
+}
+
+/* 有效连接目标高亮 */
+.react-flow__handle.valid {
+  background-color: #22c55e !important;
+  box-shadow: 0 0 16px #22c55e !important;
+  transform: scale(1.5) !important;
+}
+
+/* 连接线拖拽时的样式 */
+.react-flow__connection-line {
+  stroke-width: 3 !important;
+}
+
+/* 边的交互效果 */
+.react-flow__edge {
+  cursor: pointer;
+}
+
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke-width: 4 !important;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+/* 选中的边 */
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke-width: 4 !important;
+  stroke: #f43f5e !important;
+}
+
+/* 节点选中效果 */
+.react-flow__node.selected {
+  z-index: 10 !important;
+}
+
+/* MiniMap 样式 */
+.react-flow__minimap {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+/* Controls 样式 */
+.react-flow__controls {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+.react-flow__controls-button {
+  background-color: rgba(30, 30, 40, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  transition: all 0.15s ease !important;
+}
+
+.react-flow__controls-button:hover {
+  background-color: rgba(60, 60, 80, 0.9) !important;
+  color: white !important;
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor !important;
+}
+
+/* 背景网格 */
+.react-flow__background {
+  opacity: 0.8;
+}
+
+/* 节点拖拽时的效果 */
+.react-flow__node.dragging {
+  cursor: grabbing !important;
+  z-index: 100 !important;
+}
+
+/* 边删除按钮样式增强 */
+.react-flow__edgelabel-renderer button {
+  opacity: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-flow__edge:hover + .react-flow__edgelabel-renderer button,
+.react-flow__edgelabel-renderer:hover button {
+  opacity: 1 !important;
+}
+
+/* 连接线动画 */
+.react-flow__edge-path {
+  transition: stroke-width 0.15s ease, stroke 0.15s ease !important;
+}
+
+/* 吸附提示 */
+.react-flow__handle[data-handlepos="left"]::before,
+.react-flow__handle[data-handlepos="right"]::before {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: transparent;
+  pointer-events: all;
+}
+
+/* 增大连接点的可点击区域 */
+.react-flow__handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  pointer-events: all;
+}

@@ -38,16 +38,21 @@ const getRandomFunnyError = () => {
 const LoadingSpinner: React.FC<{ prompt?: string; imageSize?: string }> = ({ prompt = '', imageSize = '2K' }) => {
   // 使用 useMemo 确保故事在组件生命周期内保持不变
   const story = useMemo(() => {
-    if (prompt) {
-      return getMatchedStory(prompt, imageSize);
-    }
-    return null;
+    // 只要 prompt 存在（哪怕是空字符串），都尝试匹配故事主题
+    // 如果没有匹配到，会使用默认主题 'magic'
+    const result = getMatchedStory(prompt || '', imageSize);
+    console.log('[Story] 匹配结果:', { 
+      prompt: prompt?.slice(0, 50), 
+      theme: result.theme.name, 
+      messagesCount: result.messages.length 
+    });
+    return result;
   }, [prompt, imageSize]);
 
-  const messages = story?.messages || defaultLoadingMessages;
-  const interval = story?.interval || 2500;
-  const themeEmoji = story?.theme?.emoji || '✨';
-  const themeName = story?.theme?.name || '创作中';
+  const messages = story.messages;
+  const interval = story.interval;
+  const themeEmoji = story.theme.emoji;
+  const themeName = story.theme.name;
 
   const [messageIndex, setMessageIndex] = useState(0);
 
@@ -62,12 +67,10 @@ const LoadingSpinner: React.FC<{ prompt?: string; imageSize?: string }> = ({ pro
   return (
     <div className="flex flex-col items-center justify-center gap-4 text-center max-w-sm">
       {/* 主题标识 */}
-      {story && (
-        <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-          <span>{themeEmoji}</span>
-          <span>{themeName}主题故事</span>
-        </div>
-      )}
+      <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+        <span>{themeEmoji}</span>
+        <span>{themeName}主题故事</span>
+      </div>
       <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-indigo-400"></div>
       <p className="text-lg text-gray-300 font-semibold mt-2">AI 正在思考...</p>
       <p className="text-sm text-gray-400 transition-all duration-500 leading-relaxed px-2 min-h-[3rem]">

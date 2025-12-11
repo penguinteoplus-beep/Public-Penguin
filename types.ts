@@ -33,8 +33,8 @@ export interface BPField {
   name: string; // Variable name without prefix. e.g. "role" for /role or {role}
   label: string; // Display label
   agentConfig?: {
-      instruction: string; // The rule/prompt for the agent
-      model: BPAgentModel;
+    instruction: string; // The rule/prompt for the agent
+    model: BPAgentModel;
   }
 }
 
@@ -52,21 +52,39 @@ export interface CreativeIdea {
   isSmart?: boolean;
   isSmartPlus?: boolean;
   isBP?: boolean;
+  isRunningHub?: boolean; // 新增：RunningHub 工作流
   smartPlusConfig?: SmartPlusConfig;
   bpFields?: BPField[]; // Renamed from bpVariables to support generic fields
+  runningHubConfig?: RunningHubConfig; // 新增：RunningHub 配置
   order?: number;
   cost?: number; // 使用此创意库生成图片需要扣除的 Pebbling 鹅卵石数量 🪨
-  
+
   // 建议的宽高比和分辨率
   suggestedAspectRatio?: AspectRatioType;
   suggestedResolution?: ImageSizeType;
-  
-  // 权限控制（用于分享场景）
-  allowViewPrompt?: boolean;   // 是否允许查看提示词，默认true
-  allowEditPrompt?: boolean;   // 是否允许编辑提示词，默认true
-  
+
   // Deprecated but kept for type compatibility during migration if needed
-  bpVariables?: any[]; 
+  bpVariables?: any[];
+}
+
+// RunningHub 配置
+export interface RunningHubConfig {
+  workflowId: string;           // RunningHub 工作流 ID 或 AI 应用 ID (webappId)
+  isAIApp?: boolean;            // 是否为 AI 应用 (使用 webappId)
+  inputFields: RHInputField[];  // 用户输入字段定义
+}
+
+// RunningHub 输入字段
+export interface RHInputField {
+  id: string;
+  type: 'text' | 'image' | 'select' | 'number';
+  label: string;                // 显示标签
+  placeholder?: string;         // 占位符
+  required: boolean;
+  nodeId: string;               // 对应的节点 ID
+  fieldName: string;            // 对应的字段名
+  options?: string[];           // select 类型的选项
+  defaultValue?: string;        // 默认值
 }
 
 export interface PromptPreset {

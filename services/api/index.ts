@@ -1,5 +1,6 @@
 // API 基础配置和请求封装
-const API_BASE = 'http://localhost:3000/api';
+// 使用相对路径，自动适配当前域名
+const API_BASE = '/api';
 
 // Token 存储
 let authToken: string | null = localStorage.getItem('auth_token');

@@ -9,7 +9,6 @@ import { AddCreativeIdeaModal } from './components/AddCreativeIdeaModal';
 import { SettingsModal } from './components/SettingsModal';
 import { CreativeLibrary } from './components/CreativeLibrary';
 import { WelcomeScreen } from './components/WelcomeScreen';
-import { RunningHubGenerator } from './components/RunningHubGenerator';
 import { LibraryIcon } from './components/icons/LibraryIcon';
 import { SettingsIcon } from './components/icons/SettingsIcon';
 import { PlusCircleIcon } from './components/icons/PlusCircleIcon';
@@ -28,13 +27,7 @@ import { PriceConfig } from './types';
 import { ThemeProvider, useTheme, SnowfallEffect } from './contexts/ThemeContext';
 import { Desktop, createDesktopItemFromHistory, TOP_OFFSET, DESKTOP_COLS } from './components/Desktop';
 import { HistoryDock } from './components/HistoryDock';
-<<<<<<< HEAD
-import { DEFAULT_RUNNINGHUB_IDEAS } from './constants/defaultRunningHubIdeas';
-import { RunningHubProgress } from './components/RunningHubProgress';
-import { RunningHubTaskProvider, useRunningHubTasks } from './contexts/RunningHubTaskContext';
-=======
 import { Canvas as FlowCanvas } from './components/Canvas';
->>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
 
 
 interface LeftPanelProps {
@@ -188,20 +181,20 @@ const deleteFromDB = async (id: number) => {
 };
 
 const importToDB = async (ideas: CreativeIdea[]) => {
-  const db = await openDB();
-  return new Promise<void>((resolve, reject) => {
-    if (ideas.length === 0) return resolve();
-    const transaction = db.transaction(STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(new Error("Import transaction failed."));
-    ideas.forEach(idea => {
-      if (idea.order === undefined) {
-        idea.order = idea.id;
-      }
-      store.put(idea);
+    const db = await openDB();
+    return new Promise<void>((resolve, reject) => {
+        if (ideas.length === 0) return resolve();
+        const transaction = db.transaction(STORE_NAME, 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(new Error("Import transaction failed."));
+        ideas.forEach(idea => {
+            if (idea.order === undefined) {
+                idea.order = idea.id;
+            }
+            store.put(idea);
+        });
     });
-  });
 };
 
 // --- History IndexedDB Operations ---
@@ -267,7 +260,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
   currentApiMode,
 }) => {
   const { theme } = useTheme();
-
+  
   // 根据模式获取显示信息
   const getModeDisplay = () => {
     switch (currentApiMode) {
@@ -291,11 +284,11 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
         };
     }
   };
-
+  
   const modeDisplay = getModeDisplay();
-
+  
   return (
-    <aside className="w-[280px] backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-r z-20" style={{ backgroundColor: theme.colors.bgPanel, borderColor: theme.colors.border }}>
+  <aside className="w-[280px] backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-r z-20" style={{ backgroundColor: theme.colors.bgPanel, borderColor: theme.colors.border }}>
       {/* 顶部导航栏 */}
       <div className="p-4 border-b border-white/10 flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -307,7 +300,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
               </h1>
             </div>
           </div>
-
+          
           {/* 设置按钮 */}
           <button
             onClick={onSettingsClick}
@@ -317,15 +310,15 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
             <SettingsIcon className="w-4 h-4" />
           </button>
         </div>
-
+        
         {/* API 状态指示器 - 单独一行 */}
-        <div
+        <div 
           className={`mt-3 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2 ${modeDisplay.bgClass}`}
         >
           <span className="text-base">{modeDisplay.icon}</span>
           <span>{modeDisplay.text}</span>
         </div>
-
+        
         {/* 用户信息栏 */}
         <div className="mt-3 flex items-center justify-between">
           {currentUser ? (
@@ -349,14 +342,14 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
                   </button>
                 </div>
               </div>
-
+              
               {/* 用户名 */}
               <span className="text-xs text-gray-300 truncate flex-1">
                 {currentUser.nickname || currentUser.username}
               </span>
-
+              
               {/* Pebbling 鹅卵石余额 */}
-              <button
+              <button 
                 onClick={onRechargeClick}
                 className="flex items-center gap-1 px-2 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-lg hover:bg-yellow-500/20 transition-colors"
                 title="点击充值 Pebbling 鹅卵石"
@@ -376,7 +369,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
           )}
         </div>
       </div>
-
+      
       {/* 公告区域 - 登录下方 */}
       <div className="mx-4 mt-3 px-4 py-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
         <div className="flex items-start gap-2">
@@ -387,12 +380,12 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
           </div>
         </div>
       </div>
-
+      
       {/* 资源素材区域 */}
       <div className="flex-grow p-4 flex flex-col min-h-0 overflow-hidden">
         <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1 mb-3">资源素材</h2>
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          <ImageUploader
+          <ImageUploader 
             files={files}
             activeFileIndex={activeFileIndex}
             onFileChange={onFileSelection}
@@ -402,120 +395,117 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
           />
         </div>
       </div>
-
-      {/* RunningHub 后台任务进度 */}
-      <RunningHubProgress />
-
+      
       {/* 免责声明 - 底部 */}
       <div className="mx-4 mb-4 px-4 py-3 rounded-xl bg-black/30 border border-white/5">
         <p className="text-[10px] text-gray-500 leading-relaxed">
           ⚠️ 免责声明：本站内容由 AI 模型生成，仅供学习与测试。用户请勿生成或上传色情、政治等违规内容，违者将封禁账号并上报。
         </p>
       </div>
-    </aside>
+  </aside>
   );
 };
 
 const SmartPlusDirector: React.FC<{
-  config: SmartPlusConfig;
-  onConfigChange: (config: SmartPlusConfig) => void;
-  templateConfig?: SmartPlusConfig;
+    config: SmartPlusConfig;
+    onConfigChange: (config: SmartPlusConfig) => void;
+    templateConfig?: SmartPlusConfig;
 }> = ({ config, onConfigChange, templateConfig }) => {
-  const handleConfigChange = (
-    id: number,
-    field: 'enabled' | 'features',
-    value: boolean | string
-  ) => {
-    onConfigChange(
-      config.map(item =>
-        item.id === id ? { ...item, [field]: value } : item
-      )
-    );
-  };
+    const handleConfigChange = (
+        id: number,
+        field: 'enabled' | 'features',
+        value: boolean | string
+    ) => {
+        onConfigChange(
+            config.map(item =>
+                item.id === id ? { ...item, [field]: value } : item
+            )
+        );
+    };
 
-  const visibleComponents = config.filter(component => {
-    const templateComponent = templateConfig?.find(t => t.id === component.id);
-    return templateComponent?.enabled;
-  });
+    const visibleComponents = config.filter(component => {
+        const templateComponent = templateConfig?.find(t => t.id === component.id);
+        return templateComponent?.enabled;
+    });
 
-  if (visibleComponents.length === 0) {
-    return null;
-  }
+    if (visibleComponents.length === 0) {
+        return null;
+    }
 
-  return (
-    <div className="flex flex-col gap-3 p-4 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md">
-      <h3 className="text-sm font-bold text-teal-400 uppercase tracking-wider mb-1">导演模式</h3>
-      {visibleComponents.map(component => (
-        <div key={component.id} className="flex items-start gap-3 group">
-          <label className="relative inline-flex items-center cursor-pointer pt-1" htmlFor={`smart-plus-override-${component.id}`}>
-            <input
-              type="checkbox"
-              id={`smart-plus-override-${component.id}`}
-              className="sr-only peer"
-              checked={component.enabled}
-              onChange={(e) => handleConfigChange(component.id, 'enabled', e.target.checked)}
-            />
-            <div className="w-8 h-4 bg-gray-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-teal-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-teal-500 transition-colors"></div>
-          </label>
-          <div className="flex-grow">
-            <label htmlFor={`smart-plus-override-${component.id}-features`} className="text-xs font-medium text-gray-400 group-hover:text-gray-300 transition-colors mb-1 block">
-              {component.label}
-            </label>
-            <textarea
-              id={`smart-plus-override-${component.id}-features`}
-              value={component.features}
-              onChange={(e) => handleConfigChange(component.id, 'features', e.target.value)}
-              className="w-full text-xs p-2 bg-black/40 border border-white/10 rounded-lg focus:ring-1 focus:ring-teal-500 focus:border-teal-500 disabled:opacity-50 disabled:cursor-not-allowed resize-none transition-all text-gray-300 placeholder-gray-600"
-              placeholder={component.enabled ? '描述特征...' : '自动创意'}
-              disabled={!component.enabled}
-              rows={2}
-            />
-          </div>
+    return (
+        <div className="flex flex-col gap-3 p-4 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md">
+            <h3 className="text-sm font-bold text-teal-400 uppercase tracking-wider mb-1">导演模式</h3>
+            {visibleComponents.map(component => (
+                <div key={component.id} className="flex items-start gap-3 group">
+                    <label className="relative inline-flex items-center cursor-pointer pt-1" htmlFor={`smart-plus-override-${component.id}`}>
+                        <input
+                            type="checkbox"
+                            id={`smart-plus-override-${component.id}`}
+                            className="sr-only peer"
+                            checked={component.enabled}
+                            onChange={(e) => handleConfigChange(component.id, 'enabled', e.target.checked)}
+                        />
+                         <div className="w-8 h-4 bg-gray-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-teal-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-teal-500 transition-colors"></div>
+                    </label>
+                    <div className="flex-grow">
+                        <label htmlFor={`smart-plus-override-${component.id}-features`} className="text-xs font-medium text-gray-400 group-hover:text-gray-300 transition-colors mb-1 block">
+                            {component.label}
+                        </label>
+                        <textarea
+                            id={`smart-plus-override-${component.id}-features`}
+                            value={component.features}
+                            onChange={(e) => handleConfigChange(component.id, 'features', e.target.value)}
+                            className="w-full text-xs p-2 bg-black/40 border border-white/10 rounded-lg focus:ring-1 focus:ring-teal-500 focus:border-teal-500 disabled:opacity-50 disabled:cursor-not-allowed resize-none transition-all text-gray-300 placeholder-gray-600"
+                            placeholder={component.enabled ? '描述特征...' : '自动创意'}
+                            disabled={!component.enabled}
+                            rows={2}
+                        />
+                    </div>
+                </div>
+            ))}
         </div>
-      ))}
-    </div>
-  );
+    );
 };
 
 const BPModePanel: React.FC<{
-  template: CreativeIdea;
-  inputs: Record<string, string>;
-  onInputChange: (id: string, value: string) => void;
+    template: CreativeIdea;
+    inputs: Record<string, string>;
+    onInputChange: (id: string, value: string) => void;
 }> = ({ template, inputs, onInputChange }) => {
-  // Only show manual inputs (type === 'input')
-  const manualFields = template.bpFields?.filter(f => f.type === 'input') || [];
-  const agentFields = template.bpFields?.filter(f => f.type === 'agent') || [];
+    // Only show manual inputs (type === 'input')
+    const manualFields = template.bpFields?.filter(f => f.type === 'input') || [];
+    const agentFields = template.bpFields?.filter(f => f.type === 'agent') || [];
 
-  if (manualFields.length === 0 && agentFields.length === 0) return null;
+    if (manualFields.length === 0 && agentFields.length === 0) return null;
 
-  return (
-    <div className="flex flex-col gap-3 p-4 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md mb-4">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-bold text-yellow-400 uppercase tracking-wider">BP 模式</h3>
-        <span className="text-[10px] text-gray-500 flex items-center gap-1">
-          {agentFields.length > 0 && <span className="flex items-center gap-1"><LightbulbIcon className="w-3 h-3 text-indigo-400" /> {agentFields.length} 智能体</span>}
-        </span>
-      </div>
-
-      {manualFields.length > 0 ? manualFields.map(v => (
-        <div key={v.id}>
-          <label className="text-xs font-medium text-gray-400 mb-1 flex justify-between">
-            <span>{v.label}</span>
-            <span className="text-[10px] text-yellow-600 font-mono">/{v.name}</span>
-          </label>
-          <input
-            type="text"
-            value={inputs[v.id] || ''}
-            onChange={(e) => onInputChange(v.id, e.target.value)}
-            className="w-full text-sm p-2 bg-black/40 border border-white/10 rounded-lg focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 text-gray-200 placeholder-gray-700 transition-colors"
-            placeholder={`输入 ${v.label}...`}
-          />
+    return (
+        <div className="flex flex-col gap-3 p-4 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md mb-4">
+             <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-bold text-yellow-400 uppercase tracking-wider">BP 模式</h3>
+                <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                    {agentFields.length > 0 && <span className="flex items-center gap-1"><LightbulbIcon className="w-3 h-3 text-indigo-400"/> {agentFields.length} 智能体</span>}
+                </span>
+             </div>
+             
+             {manualFields.length > 0 ? manualFields.map(v => (
+                 <div key={v.id}>
+                     <label className="text-xs font-medium text-gray-400 mb-1 flex justify-between">
+                        <span>{v.label}</span>
+                        <span className="text-[10px] text-yellow-600 font-mono">/{v.name}</span>
+                     </label>
+                     <input 
+                        type="text"
+                        value={inputs[v.id] || ''}
+                        onChange={(e) => onInputChange(v.id, e.target.value)}
+                        className="w-full text-sm p-2 bg-black/40 border border-white/10 rounded-lg focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 text-gray-200 placeholder-gray-700 transition-colors"
+                        placeholder={`输入 ${v.label}...`}
+                     />
+                 </div>
+             )) : (
+                 <p className="text-xs text-gray-500 italic">此模板仅包含智能体，点击企鹅按钮自动运行。</p>
+             )}
         </div>
-      )) : (
-        <p className="text-xs text-gray-500 italic">此模板仅包含智能体，点击企鹅按钮自动运行。</p>
-      )}
-    </div>
-  );
+    );
 }
 
 const RightPanel: React.FC<RightPanelProps> = ({
@@ -544,82 +534,61 @@ const RightPanel: React.FC<RightPanelProps> = ({
 }) => {
   const hasActiveTemplate = activeSmartTemplate || activeSmartPlusTemplate || activeBPTemplate;
   const activeTemplateName = activeBPTemplate?.title || activeSmartPlusTemplate?.title || activeSmartTemplate?.title;
-<<<<<<< HEAD
-
-=======
   
   // 获取当前模板的权限设置
   const activeTemplate = activeBPTemplate || activeSmartPlusTemplate || activeSmartTemplate;
   const canViewPrompt = activeTemplate?.allowViewPrompt !== false; // 默认true
   const canEditPrompt = activeTemplate?.allowEditPrompt !== false; // 默认true
   
->>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
   return (
-    <aside className="w-[380px] bg-black/40 backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-l border-white/10 z-20">
-      <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+  <aside className="w-[380px] bg-black/40 backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-l border-white/10 z-20">
+     <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
         {/* Prompt Section */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-              {hasActiveTemplate ? '关键词' : '提示词'}
-            </h2>
-            <div className="flex items-center gap-2">
-              {/* 当前模板标识 + 卸载按钮 */}
-              {hasActiveTemplate && (
-                <div className="flex items-center gap-1">
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full border ${activeBPTemplate
-                    ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
-                    : activeSmartPlusTemplate
-                      ? 'bg-teal-500/20 text-teal-300 border-teal-500/30'
-                      : 'bg-purple-500/20 text-purple-300 border-purple-500/30'
-                    }`}>
-                    {activeTemplateName}
-                  </span>
-                  <button
-                    onClick={onClearTemplate}
-                    className="text-gray-500 hover:text-red-400 transition-colors p-0.5 rounded hover:bg-red-500/10"
-                    title="卸载创意库 (Esc)"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              )}
-              {isThirdPartyApiEnabled ? (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30">Nano-banana-2</span>
-              ) : (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Gemini 3 Pro</span>
-              )}
-            </div>
+             <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                {hasActiveTemplate ? '关键词' : '提示词'}
+             </h2>
+             <div className="flex items-center gap-2">
+               {/* 当前模板标识 + 卸载按钮 */}
+               {hasActiveTemplate && (
+                 <div className="flex items-center gap-1">
+                   <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                     activeBPTemplate 
+                       ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
+                       : activeSmartPlusTemplate
+                       ? 'bg-teal-500/20 text-teal-300 border-teal-500/30'
+                       : 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                   }`}>
+                     {activeTemplateName}
+                   </span>
+                   <button
+                     onClick={onClearTemplate}
+                     className="text-gray-500 hover:text-red-400 transition-colors p-0.5 rounded hover:bg-red-500/10"
+                     title="卸载创意库 (Esc)"
+                   >
+                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                     </svg>
+                   </button>
+                 </div>
+               )}
+               {isThirdPartyApiEnabled ? (
+                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30">Nano-banana-2</span>
+               ) : (
+                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Gemini 3 Pro</span>
+               )}
+             </div>
           </div>
+          
+           {activeBPTemplate && (
+               <BPModePanel 
+                    template={activeBPTemplate}
+                    inputs={bpInputs}
+                    onInputChange={setBpInput}
+               />
+           )}
 
-<<<<<<< HEAD
-          {activeBPTemplate && (
-            <BPModePanel
-              template={activeBPTemplate}
-              inputs={bpInputs}
-              onInputChange={setBpInput}
-            />
-          )}
-
-          <div className="relative group">
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder={
-                activeBPTemplate
-                  ? "生成的提示词将显示在这里..."
-                  : activeSmartTemplate
-                    ? `"${activeSmartTemplate.title}" 的关键词...\n例如: '钢铁侠'`
-                    : activeSmartPlusTemplate
-                      ? `(可选) 场景关键词...\n例如: '微笑着, 霓虹灯光'`
-                      : "描述你想要生成的画面..."
-              }
-              readOnly={!!activeBPTemplate} // BP mode: read only until generated
-              className={`w-full h-40 p-4 pr-12 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 resize-none text-sm text-gray-200 shadow-inner placeholder-gray-600 custom-scrollbar ${activeBPTemplate ? 'focus:ring-yellow-500/50 focus:border-yellow-500/50' : 'focus:ring-indigo-500/50 focus:border-indigo-500/50'
-                }`}
-=======
            {/* 提示词输入区域 - 根据权限显示 */}
            {canViewPrompt ? (
              <div className="relative group">
@@ -678,89 +647,66 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 config={smartPlusOverrides} 
                 onConfigChange={setSmartPlusOverrides}
                 templateConfig={activeSmartPlusTemplate.smartPlusConfig}
->>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
             />
-            <button
-              onClick={handleGenerateSmartPrompt}
-              disabled={!canGenerateSmartPrompt}
-              className={`absolute top-3 right-3 p-2 text-white rounded-xl shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95 ${activeBPTemplate
-                ? 'bg-gradient-to-br from-yellow-500 to-orange-600 hover:shadow-yellow-500/30'
-                : 'bg-gradient-to-br from-indigo-500 to-purple-600 hover:shadow-indigo-500/30'
-                }`}
-              title={activeBPTemplate ? "运行智能体 & 编译 Prompt" : "生成/更新提示词"}
-            >
-              {smartPromptGenStatus === ApiStatus.Loading ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : (
-                <PenguinIcon className="w-4 h-4" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {activeSmartPlusTemplate && (
-          <SmartPlusDirector
-            config={smartPlusOverrides}
-            onConfigChange={setSmartPlusOverrides}
-            templateConfig={activeSmartPlusTemplate.smartPlusConfig}
-          />
         )}
 
         <div className="space-y-4 pt-4 border-t border-white/10">
-          {/* Model Config Card */}
-          <div className="bg-white/5 backdrop-blur-md rounded-2xl p-5 border border-white/10">
-            <div className="flex items-center gap-2 mb-4 text-gray-400">
-              <ImageIcon className="w-4 h-4" />
-              <h3 className="text-xs font-bold uppercase tracking-wider">模型参数</h3>
-            </div>
-
-            <div className="space-y-5">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-[10px] font-semibold text-gray-500 uppercase">画面比例</span>
-                  <span className="text-[10px] text-indigo-400 font-mono">{aspectRatio}</span>
-                </div>
-                <div className="grid grid-cols-6 gap-1.5">
-                  {['Auto', '1:1', '3:4', '4:3', '9:16', '16:9', '2:3', '3:2', '4:5', '5:4', '21:9'].map(ratio => (
-                    <button
-                      key={ratio}
-                      onClick={() => setAspectRatio(ratio)}
-                      className={`py-1.5 text-[10px] font-semibold rounded-lg border transition-all ${aspectRatio === ratio
-                        ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-900/50'
-                        : 'bg-black/20 border-white/10 text-gray-400 hover:bg-white/10 hover:text-gray-200'
-                        }`}
-                    >
-                      {ratio}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-[10px] font-semibold text-gray-500 uppercase">分辨率</span>
-                  <span className="text-[10px] text-teal-400 font-mono">{imageSize}</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {['1K', '2K', '4K'].map(size => (
-                    <button
-                      key={size}
-                      onClick={() => setImageSize(size)}
-                      className={`py-1.5 text-[10px] font-semibold rounded-lg border transition-all ${imageSize === size
-                        ? 'bg-teal-600 border-teal-500 text-white shadow-lg shadow-teal-900/50'
-                        : 'bg-black/20 border-white/10 text-gray-400 hover:bg-white/10 hover:text-gray-200'
-                        }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+             {/* Model Config Card */}
+             <div className="bg-white/5 backdrop-blur-md rounded-2xl p-5 border border-white/10">
+                 <div className="flex items-center gap-2 mb-4 text-gray-400">
+                    <ImageIcon className="w-4 h-4"/>
+                    <h3 className="text-xs font-bold uppercase tracking-wider">模型参数</h3>
+                 </div>
+                 
+                 <div className="space-y-5">
+                    <div>
+                        <div className="flex justify-between mb-2">
+                             <span className="text-[10px] font-semibold text-gray-500 uppercase">画面比例</span>
+                             <span className="text-[10px] text-indigo-400 font-mono">{aspectRatio}</span>
+                        </div>
+                        <div className="grid grid-cols-6 gap-1.5">
+                            {['Auto', '1:1', '3:4', '4:3', '9:16', '16:9', '2:3', '3:2', '4:5', '5:4', '21:9'].map(ratio => (
+                                <button
+                                    key={ratio}
+                                    onClick={() => setAspectRatio(ratio)}
+                                    className={`py-1.5 text-[10px] font-semibold rounded-lg border transition-all ${
+                                        aspectRatio === ratio
+                                            ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-900/50'
+                                            : 'bg-black/20 border-white/10 text-gray-400 hover:bg-white/10 hover:text-gray-200'
+                                    }`}
+                                >
+                                    {ratio}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div>
+                        <div className="flex justify-between mb-2">
+                             <span className="text-[10px] font-semibold text-gray-500 uppercase">分辨率</span>
+                             <span className="text-[10px] text-teal-400 font-mono">{imageSize}</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                             {['1K', '2K', '4K'].map(size => (
+                                <button
+                                    key={size}
+                                    onClick={() => setImageSize(size)}
+                                    className={`py-1.5 text-[10px] font-semibold rounded-lg border transition-all ${
+                                        imageSize === size
+                                            ? 'bg-teal-600 border-teal-500 text-white shadow-lg shadow-teal-900/50'
+                                            : 'bg-black/20 border-white/10 text-gray-400 hover:bg-white/10 hover:text-gray-200'
+                                    }`}
+                                >
+                                    {size}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                 </div>
+             </div>
         </div>
-      </div>
-    </aside>
-  );
+     </div>
+  </aside>
+);
 };
 
 const Canvas: React.FC<CanvasProps> = ({
@@ -810,24 +756,25 @@ const Canvas: React.FC<CanvasProps> = ({
   onCanvasClick,
 }) => {
   const { theme } = useTheme();
-
+  
   return (
-    <main
-      className="flex-1 flex flex-col min-w-0 relative overflow-hidden select-none"
-      style={{ backgroundColor: theme.colors.bgPrimary }}
-      onDragStart={(e) => e.preventDefault()}
-    >
+   <main 
+     className="flex-1 flex flex-col min-w-0 relative overflow-hidden select-none" 
+     style={{ backgroundColor: theme.colors.bgPrimary }}
+     onDragStart={(e) => e.preventDefault()}
+   >
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/10 via-gray-950 to-gray-950 pointer-events-none"></div>
-
+      
       {/* 顶部切换标签 */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 p-1 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-lg">
         <button
           onClick={() => setView('editor')}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${view === 'editor'
-            ? 'bg-indigo-500/80 text-white shadow-lg shadow-indigo-500/30'
-            : 'text-gray-400 hover:text-white hover:bg-white/10'
-            }`}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${
+            view === 'editor'
+              ? 'bg-indigo-500/80 text-white shadow-lg shadow-indigo-500/30'
+              : 'text-gray-400 hover:text-white hover:bg-white/10'
+          }`}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -836,10 +783,11 @@ const Canvas: React.FC<CanvasProps> = ({
         </button>
         <button
           onClick={() => setView('library')}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${view === 'library'
-            ? 'bg-purple-500/80 text-white shadow-lg shadow-purple-500/30'
-            : 'text-gray-400 hover:text-white hover:bg-white/10'
-            }`}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${
+            view === 'library'
+              ? 'bg-purple-500/80 text-white shadow-lg shadow-purple-500/30'
+              : 'text-gray-400 hover:text-white hover:bg-white/10'
+          }`}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -865,7 +813,7 @@ const Canvas: React.FC<CanvasProps> = ({
           画布
         </button>
       </div>
-
+      
       {view === 'library' ? (
         <div className="relative z-10 w-full flex-1 p-8 pt-16 flex flex-col overflow-hidden">
           <CreativeLibrary
@@ -914,7 +862,7 @@ const Canvas: React.FC<CanvasProps> = ({
             history={history}
             creativeIdeas={creativeIdeas}
           />
-
+          
           {/* 生成结果浮层 */}
           {(status === ApiStatus.Loading || (status === ApiStatus.Success && content) || (status === ApiStatus.Error && error)) && (
             <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-40 bg-gray-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10 p-4">
@@ -942,14 +890,14 @@ const Canvas: React.FC<CanvasProps> = ({
           )}
         </div>
       )}
-    </main>
+   </main>
   );
 };
 
 export const defaultSmartPlusConfig: SmartPlusConfig = [
-  { id: 1, label: 'Product', enabled: true, features: '' },
-  { id: 2, label: 'Person', enabled: true, features: '' },
-  { id: 3, label: 'Scene', enabled: true, features: '' },
+    { id: 1, label: 'Product', enabled: true, features: '' },
+    { id: 2, label: 'Person', enabled: true, features: '' },
+    { id: 3, label: 'Scene', enabled: true, features: '' },
 ];
 
 const App: React.FC = () => {
@@ -961,21 +909,16 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
-
+  
   const [smartPromptGenStatus, setSmartPromptGenStatus] = useState<ApiStatus>(ApiStatus.Idle);
 
   const [apiKey, setApiKey] = useState<string>('');
   const [creativeIdeas, setCreativeIdeas] = useState<CreativeIdea[]>([]);
-<<<<<<< HEAD
-
-  const [view, setView] = useState<'editor' | 'library'>('editor'); // 默认编辑器模式（显示桌面）
-=======
   
   const [view, setView] = useState<'editor' | 'library' | 'canvas'>('editor'); // 默认编辑器模式（显示桌面）
->>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
   const [isAddIdeaModalOpen, setAddIdeaModalOpen] = useState(false);
   const [editingIdea, setEditingIdea] = useState<CreativeIdea | null>(null);
-
+  
   const [activeSmartTemplate, setActiveSmartTemplate] = useState<CreativeIdea | null>(null);
   const [activeSmartPlusTemplate, setActiveSmartPlusTemplate] = useState<CreativeIdea | null>(null);
   const [smartPlusOverrides, setSmartPlusOverrides] = useState<SmartPlusConfig>(() => JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
@@ -983,13 +926,10 @@ const App: React.FC = () => {
   // BP Mode States
   const [activeBPTemplate, setActiveBPTemplate] = useState<CreativeIdea | null>(null);
   const [bpInputs, setBpInputs] = useState<Record<string, string>>({});
-
-  // RunningHub Mode States
-  const [activeRunningHubIdea, setActiveRunningHubIdea] = useState<CreativeIdea | null>(null);
-
+  
   // 当前使用的创意库（用于获取扣费金额，不论类型）
   const [activeCreativeIdea, setActiveCreativeIdea] = useState<CreativeIdea | null>(null);
-
+  
   // No global polish switch needed for BP anymore, as agents handle intelligence
   // const [bpPolish, setBpPolish] = useState(false); 
 
@@ -998,7 +938,7 @@ const App: React.FC = () => {
   const [imageSize, setImageSize] = useState<string>('2K');
 
   const [autoSave, setAutoSave] = useState(false);
-
+  
   // 第三方API配置状态
   const [thirdPartyApiConfig, setThirdPartyApiConfig] = useState<ThirdPartyApiConfig>({
     enabled: false,
@@ -1006,16 +946,16 @@ const App: React.FC = () => {
     apiKey: '',
     model: 'nano-banana-2'
   });
-
+  
   // 历史记录状态
   const [generationHistory, setGenerationHistory] = useState<GenerationHistory[]>([]);
-
+  
   // 用户认证状态
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   const [isRechargeModalOpen, setRechargeModalOpen] = useState(false);
   const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
-
+  
   // Pebbling 鹅卵石状态 🪨
   const [priceConfig, setPriceConfig] = useState<PriceConfig>({ generateImage: 10, analyzeImage: 5, chat: 2 });
 
@@ -1038,7 +978,7 @@ const App: React.FC = () => {
       setApiKey(savedApiKey);
       initializeAiClient(savedApiKey);
     }
-
+    
     // 加载第三方API配置
     const savedThirdPartyConfig = localStorage.getItem('third_party_api_config');
     if (savedThirdPartyConfig) {
@@ -1050,7 +990,7 @@ const App: React.FC = () => {
         console.error('Failed to parse third party API config:', e);
       }
     }
-
+    
     // 检查登录状态并加载数据
     const initializeData = async () => {
       // 检查是否已登录
@@ -1074,92 +1014,32 @@ const App: React.FC = () => {
         await loadDataFromLocal();
       }
     };
-
+    
     initializeData();
-
+    
     const savedAutoSave = localStorage.getItem('auto_save_enabled');
     if (savedAutoSave) {
-      setAutoSave(JSON.parse(savedAutoSave));
+        setAutoSave(JSON.parse(savedAutoSave));
     }
   }, []);
-
-  // 监听 RunningHub 任务完成，将结果添加到桌面
-  const { onTaskCompleted } = useRunningHubTasks();
-  useEffect(() => {
-    const unsubscribe = onTaskCompleted((task) => {
-      if (task.status === 'completed' && task.imageUrl) {
-        // 创建桌面项目
-        const newItem: DesktopImageItem = {
-          id: `rh-${task.id}-${Date.now()}`,
-          type: 'image',
-          name: task.ideaTitle.slice(0, 15) + (task.ideaTitle.length > 15 ? '...' : ''),
-          position: { x: Math.floor(Math.random() * (DESKTOP_COLS - 1)), y: TOP_OFFSET },
-          createdAt: task.startTime,
-          updatedAt: Date.now(),
-          imageUrl: task.imageUrl,
-          prompt: task.ideaTitle,
-          model: 'RunningHub',
-          isThirdParty: true,
-        };
-
-        setDesktopItems(prev => [newItem, ...prev]);
-
-        // 同时添加到历史记录
-        const historyItem: GenerationHistory = {
-          id: Date.now(),
-          timestamp: Date.now(),
-          prompt: task.ideaTitle,
-          imageUrl: task.imageUrl,
-          model: 'RunningHub',
-          isThirdParty: true,
-          coinsDeducted: task.cost || 0,
-        };
-
-        if (isLoggedIn()) {
-          historyApi.createHistory(historyItem).then(() => {
-            historyApi.getAllHistory().then(result => {
-              if (result.success && result.data) {
-                setGenerationHistory(result.data.sort((a, b) => b.timestamp - a.timestamp));
-              }
-            });
-          });
-        } else {
-          saveHistoryToDB(historyItem).then(() => {
-            setGenerationHistory(prev => [historyItem, ...prev]);
-          });
-        }
-      }
-    });
-
-    return unsubscribe;
-  }, [onTaskCompleted]);
-
-
+  
   // 从后端API加载数据
   const loadDataFromBackend = async () => {
     try {
       // 加载创意库
       const ideasResult = await creativeIdeasApi.getAllCreativeIdeas();
       if (ideasResult.success && ideasResult.data) {
-        // 合并默认 RunningHub 创意库和后端数据
-        const backendIdeas = ideasResult.data;
-        const defaultIds = DEFAULT_RUNNINGHUB_IDEAS.map(idea => idea.id);
-        const filteredBackendIdeas = backendIdeas.filter(idea => !defaultIds.includes(idea.id));
-        const mergedIdeas = [...DEFAULT_RUNNINGHUB_IDEAS, ...filteredBackendIdeas];
-        const ideas = mergedIdeas.sort((a, b) => (b.order || 0) - (a.order || 0));
+        const ideas = ideasResult.data.sort((a, b) => (b.order || 0) - (a.order || 0));
         setCreativeIdeas(ideas);
-      } else {
-        // 如果后端没有数据，只使用默认预设
-        setCreativeIdeas(DEFAULT_RUNNINGHUB_IDEAS);
       }
-
+      
       // 加载历史记录
       const historyResult = await historyApi.getAllHistory();
       if (historyResult.success && historyResult.data) {
         const history = historyResult.data.sort((a, b) => b.timestamp - a.timestamp);
         setGenerationHistory(history);
       }
-
+      
       // 加载价格配置
       const pricesResult = await coinsApi.getPrices();
       if (pricesResult.success && pricesResult.data) {
@@ -1169,21 +1049,17 @@ const App: React.FC = () => {
       console.error('Failed to load data from backend:', e);
     }
   };
-
+  
   // 从本地IndexedDB加载数据
   const loadDataFromLocal = async () => {
     try {
-      let localIdeas = await getAllFromDB();
-      // 合并默认 RunningHub 创意库和本地数据
-      const defaultIds = DEFAULT_RUNNINGHUB_IDEAS.map(idea => idea.id);
-      const filteredLocalIdeas = localIdeas.filter(idea => !defaultIds.includes(idea.id));
-      const mergedIdeas = [...DEFAULT_RUNNINGHUB_IDEAS, ...filteredLocalIdeas];
-      let ideas = mergedIdeas.sort((a, b) => (b.order || 0) - (a.order || 0));
+      let ideas = await getAllFromDB();
+      ideas.sort((a, b) => (b.order || 0) - (a.order || 0)); 
       setCreativeIdeas(ideas);
     } catch (e) {
       console.error("Failed to load creative ideas from DB", e);
     }
-
+    
     try {
       let history = await getAllHistoryFromDB();
       history.sort((a, b) => b.timestamp - a.timestamp);
@@ -1192,25 +1068,26 @@ const App: React.FC = () => {
       console.error("Failed to load history from DB", e);
     }
   };
-
+  
   // 用户登录成功处理
   const handleLoginSuccess = async (user: User) => {
     setCurrentUser(user);
-    // 登录成功后，强制启用云端模式（使用后端的第三方 API）
-    const cloudConfig: ThirdPartyApiConfig = {
-      enabled: true,
-      baseUrl: '', // 云端模式不需要前端配置，后端已配置
-      apiKey: '',  // 云端模式不需要前端配置，后端已配置
-      model: 'nano-banana-2',
-      chatModel: 'gemini-2.5-pro'
-    };
-    setThirdPartyApiConfig(cloudConfig);
-    setThirdPartyConfig(cloudConfig);
-    localStorage.setItem('third_party_api_config', JSON.stringify(cloudConfig));
+    // 登录成功后，如果没有本地配置，默认切换到云端模式
+    if (!thirdPartyApiConfig.apiKey && !thirdPartyApiConfig.baseUrl) {
+      const cloudConfig: ThirdPartyApiConfig = {
+        ...thirdPartyApiConfig,
+        enabled: true,
+        apiKey: '',
+        baseUrl: '',
+      };
+      setThirdPartyApiConfig(cloudConfig);
+      setThirdPartyConfig(cloudConfig);
+      localStorage.setItem('third_party_api_config', JSON.stringify(cloudConfig));
+    }
     // 登录成功后从后端加载数据
     await loadDataFromBackend();
   };
-
+  
   // 刷新用户信息（包括余额）
   const refreshUserInfo = async () => {
     if (!isLoggedIn()) return;
@@ -1223,7 +1100,7 @@ const App: React.FC = () => {
       console.error('Failed to refresh user info:', e);
     }
   };
-
+  
   // 用户退出登录处理
   const handleLogout = async () => {
     apiLogout();
@@ -1272,7 +1149,7 @@ const App: React.FC = () => {
   const handleFileInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     handleFileSelection(event.target.files);
     if (event.target) {
-      event.target.value = '';
+        event.target.value = '';
     }
   }, [handleFileSelection]);
 
@@ -1280,21 +1157,21 @@ const App: React.FC = () => {
     setApiKey(key);
     localStorage.setItem('gemini_api_key', key);
     initializeAiClient(key);
-    setError(null);
+    setError(null); 
   };
-
+  
   const handleAutoSaveToggle = (enabled: boolean) => {
     setAutoSave(enabled);
     localStorage.setItem('auto_save_enabled', JSON.stringify(enabled));
   };
-
+  
   // 第三方API配置变更处理
   const handleThirdPartyConfigChange = (config: ThirdPartyApiConfig) => {
     setThirdPartyApiConfig(config);
     setThirdPartyConfig(config);
     localStorage.setItem('third_party_api_config', JSON.stringify(config));
   };
-
+  
   // 历史记录操作
   const handleHistorySelect = async (item: GenerationHistory) => {
     // 恢复原始输入图片（如果有）
@@ -1310,7 +1187,7 @@ const App: React.FC = () => {
         const byteArray = new Uint8Array(byteNumbers);
         const blob = new Blob([byteArray], { type: item.inputImageType });
         restoredInputFile = new File([blob], item.inputImageName || 'restored-input.png', { type: item.inputImageType });
-
+        
         // 清空其他图片，仅保留恢复的输入图片
         setFiles([restoredInputFile]);
         setActiveFileIndex(0);
@@ -1322,7 +1199,7 @@ const App: React.FC = () => {
       setFiles([]);
       setActiveFileIndex(null);
     }
-
+    
     // 恢复创意库设置（用于重新生成）
     setActiveSmartTemplate(null);
     setActiveSmartPlusTemplate(null);
@@ -1330,13 +1207,13 @@ const App: React.FC = () => {
     setActiveCreativeIdea(null);
     setBpInputs({});
     setSmartPlusOverrides(JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
-
+    
     if (item.creativeTemplateType && item.creativeTemplateType !== 'none' && item.creativeTemplateId) {
       const template = creativeIdeas.find(idea => idea.id === item.creativeTemplateId);
       if (template) {
         // 设置当前使用的创意库（用于扣费）
         setActiveCreativeIdea(template);
-
+        
         if (item.creativeTemplateType === 'bp') {
           setActiveBPTemplate(template);
           if (item.bpInputs) {
@@ -1352,18 +1229,18 @@ const App: React.FC = () => {
         }
       }
     }
-
+    
     // 设置生成的内容，并保留原始图片引用用于“重新生成”
-    setGeneratedContent({
-      imageUrl: item.imageUrl,
+    setGeneratedContent({ 
+      imageUrl: item.imageUrl, 
       text: null,
-      originalFiles: restoredInputFile ? [restoredInputFile] : []
+      originalFiles: restoredInputFile ? [restoredInputFile] : [] 
     });
     setPrompt(item.prompt);
     setStatus(ApiStatus.Success);
     setView('editor'); // 切换到编辑器视图以显示图片
   };
-
+  
   const handleHistoryDelete = async (id: number) => {
     try {
       if (currentUser) {
@@ -1381,7 +1258,7 @@ const App: React.FC = () => {
       console.error("Failed to delete history:", e);
     }
   };
-
+  
   const handleHistoryClear = async () => {
     if (!confirm('确定要清空所有历史记录吗？')) return;
     try {
@@ -1400,11 +1277,11 @@ const App: React.FC = () => {
       console.error("Failed to clear history:", e);
     }
   };
-
+  
   const saveToHistory = async (
-    imageUrl: string,
-    promptText: string,
-    isThirdParty: boolean,
+    imageUrl: string, 
+    promptText: string, 
+    isThirdParty: boolean, 
     inputFile?: File | null,
     creativeInfo?: {
       templateId?: number;
@@ -1417,7 +1294,7 @@ const App: React.FC = () => {
     let inputImageData: string | undefined;
     let inputImageName: string | undefined;
     let inputImageType: string | undefined;
-
+    
     if (inputFile) {
       try {
         inputImageData = await new Promise<string>((resolve) => {
@@ -1431,7 +1308,7 @@ const App: React.FC = () => {
         console.warn('保存输入图片失败:', e);
       }
     }
-
+    
     const historyId = Date.now();
     const historyItem: GenerationHistory = {
       id: historyId,
@@ -1469,11 +1346,11 @@ const App: React.FC = () => {
     }
     return undefined;
   };
-
+  
   const downloadImage = useCallback(async (url: string, filename?: string) => {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const downloadFilename = filename || `ai-generated-${timestamp}.png`;
-
+    
     // 如果是 base64 数据或同源URL，直接下载
     if (url.startsWith('data:')) {
       const link = document.createElement('a');
@@ -1484,7 +1361,7 @@ const App: React.FC = () => {
       document.body.removeChild(link);
       return;
     }
-
+    
     // 对于外部URL，尝试使用fetch获取blob后下载
     try {
       const response = await fetch(url);
@@ -1506,13 +1383,13 @@ const App: React.FC = () => {
 
   const handleExportIdeas = () => {
     if (creativeIdeas.length === 0) {
-      alert("库是空的 / Library is empty.");
-      return;
+        alert("库是空的 / Library is empty.");
+        return;
     }
     const dataStr = JSON.stringify(creativeIdeas, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
-
+    
     const link = document.createElement('a');
     link.href = url;
     link.download = 'creative_library.json';
@@ -1521,59 +1398,59 @@ const App: React.FC = () => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-
+  
   const handleImportIdeas = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+      const file = event.target.files?.[0];
+      if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const content = e.target?.result;
-        if (typeof content !== 'string') throw new Error("File content is not a string.");
-        const ideas = JSON.parse(content);
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+          try {
+              const content = e.target?.result;
+              if (typeof content !== 'string') throw new Error("File content is not a string.");
+              const ideas = JSON.parse(content);
 
-        if (Array.isArray(ideas) && ideas.every(idea => 'id' in idea && 'title' in idea && 'prompt' in idea && 'imageUrl' in idea)) {
-          if (currentUser) {
-            // 登录状态，使用后端API
-            const ideasWithoutId = ideas.map(({ id, ...rest }) => rest);
-            const result = await creativeIdeasApi.importCreativeIdeas(ideasWithoutId as any);
-            if (result.success) {
-              await loadDataFromBackend();
-              alert(`已导入 ${ideas.length} 个创意!`);
-            } else {
-              throw new Error(result.error || '导入失败');
-            }
-          } else {
-            // 未登录，使用本地IndexedDB
-            await importToDB(ideas as CreativeIdea[]);
-            const allIdeas = await getAllFromDB();
-            allIdeas.sort((a, b) => (b.order || 0) - (a.order || 0));
-            setCreativeIdeas(allIdeas);
-            alert(`已导入 ${ideas.length} 个创意!`);
+              if (Array.isArray(ideas) && ideas.every(idea => 'id' in idea && 'title' in idea && 'prompt' in idea && 'imageUrl' in idea)) {
+                  if (currentUser) {
+                    // 登录状态，使用后端API
+                    const ideasWithoutId = ideas.map(({ id, ...rest }) => rest);
+                    const result = await creativeIdeasApi.importCreativeIdeas(ideasWithoutId as any);
+                    if (result.success) {
+                      await loadDataFromBackend();
+                      alert(`已导入 ${ideas.length} 个创意!`);
+                    } else {
+                      throw new Error(result.error || '导入失败');
+                    }
+                  } else {
+                    // 未登录，使用本地IndexedDB
+                    await importToDB(ideas as CreativeIdea[]);
+                    const allIdeas = await getAllFromDB();
+                    allIdeas.sort((a, b) => (b.order || 0) - (a.order || 0));
+                    setCreativeIdeas(allIdeas);
+                    alert(`已导入 ${ideas.length} 个创意!`);
+                  }
+              } else {
+                  throw new Error("文件格式无效");
+              }
+          } catch (error) {
+              console.error("Failed to import creative ideas:", error);
+              alert("导入失败");
+          } finally {
+              if (event.target) {
+                  event.target.value = '';
+              }
           }
-        } else {
-          throw new Error("文件格式无效");
-        }
-      } catch (error) {
-        console.error("Failed to import creative ideas:", error);
-        alert("导入失败");
-      } finally {
-        if (event.target) {
-          event.target.value = '';
-        }
-      }
-    };
-    reader.readAsText(file);
+      };
+      reader.readAsText(file);
   };
-
+  
   const handleSaveCreativeIdea = async (idea: Partial<CreativeIdea>) => {
     console.log('[handleSaveCreativeIdea] 接收到数据:', {
       id: idea.id,
       suggestedAspectRatio: idea.suggestedAspectRatio,
       suggestedResolution: idea.suggestedResolution
     });
-
+    
     try {
       if (currentUser) {
         // 登录状态，使用后端API
@@ -1604,20 +1481,20 @@ const App: React.FC = () => {
           const newOrder = creativeIdeas.length > 0 ? Math.max(...creativeIdeas.map(i => i.order || 0)) + 1 : 1;
           ideaToSave = { ...idea, id: Date.now(), order: newOrder } as CreativeIdea;
         }
-
+        
         console.log('[handleSaveCreativeIdea] 保存到IndexedDB:', {
           suggestedAspectRatio: ideaToSave.suggestedAspectRatio,
           suggestedResolution: ideaToSave.suggestedResolution
         });
-
+        
         await saveToDB(ideaToSave);
         const updatedIdeas = await getAllFromDB();
         updatedIdeas.sort((a, b) => (b.order || 0) - (a.order || 0));
-
-        console.log('[handleSaveCreativeIdea] 从 IndexedDB 读取后:',
+        
+        console.log('[handleSaveCreativeIdea] 从 IndexedDB 读取后:', 
           updatedIdeas.map(i => ({ id: i.id, ratio: i.suggestedAspectRatio, res: i.suggestedResolution }))
         );
-
+        
         setCreativeIdeas(updatedIdeas);
       }
 
@@ -1650,7 +1527,7 @@ const App: React.FC = () => {
       alert(`删除失败: ${e instanceof Error ? e.message : 'Unknown error'}`);
     }
   };
-
+  
   const handleStartEditIdea = (idea: CreativeIdea) => {
     setEditingIdea(idea);
     setAddIdeaModalOpen(true);
@@ -1663,22 +1540,22 @@ const App: React.FC = () => {
 
   const handleReorderIdeas = async (reorderedIdeas: CreativeIdea[]) => {
     try {
-      const ideasToUpdate = reorderedIdeas.map((idea, index) => ({
-        ...idea,
-        order: reorderedIdeas.length - index,
-      }));
-      setCreativeIdeas(ideasToUpdate);
-
-      if (currentUser) {
-        // 登录状态，使用后端API
-        const orderedIds = ideasToUpdate.map(i => i.id);
-        await creativeIdeasApi.reorderCreativeIdeas(orderedIds);
-      } else {
-        // 未登录，使用本地IndexedDB
-        await Promise.all(ideasToUpdate.map(idea => saveToDB(idea)));
-      }
+        const ideasToUpdate = reorderedIdeas.map((idea, index) => ({
+            ...idea,
+            order: reorderedIdeas.length - index,
+        }));
+        setCreativeIdeas(ideasToUpdate);
+        
+        if (currentUser) {
+          // 登录状态，使用后端API
+          const orderedIds = ideasToUpdate.map(i => i.id);
+          await creativeIdeasApi.reorderCreativeIdeas(orderedIds);
+        } else {
+          // 未登录，使用本地IndexedDB
+          await Promise.all(ideasToUpdate.map(idea => saveToDB(idea)));
+        }
     } catch (e) {
-      console.error("Failed to reorder ideas:", e);
+        console.error("Failed to reorder ideas:", e);
     }
   };
 
@@ -1687,11 +1564,10 @@ const App: React.FC = () => {
     setActiveSmartTemplate(null);
     setActiveSmartPlusTemplate(null);
     setActiveBPTemplate(null);
-    setActiveRunningHubIdea(null);
-
+    
     // 保存当前使用的创意库（用于扣费）
     setActiveCreativeIdea(idea);
-
+    
     // 应用创意库建议的宽高比和分辨率
     if (idea.suggestedAspectRatio) {
       setAspectRatio(idea.suggestedAspectRatio);
@@ -1699,105 +1575,95 @@ const App: React.FC = () => {
     if (idea.suggestedResolution) {
       setImageSize(idea.suggestedResolution);
     }
-
+    
     // Reset BP
     setBpInputs({});
 
-    if (idea.isRunningHub) {
-      // RunningHub 工作流或 AI 应用
-      setActiveRunningHubIdea(idea);
-      setView('editor');
-    } else if (idea.isBP) {
-      setActiveBPTemplate(idea);
-      setPrompt(''); // BP starts empty, waits for generation/fill
-
-      // Initialize inputs for 'input' type fields
-      if (idea.bpFields) {
-        const initialInputs: Record<string, string> = {};
-        idea.bpFields.forEach(v => {
-          if (v.type === 'input') {
-            initialInputs[v.id] = '';
-          }
-        });
-        setBpInputs(initialInputs);
-      } else if (idea.bpVariables) {
-        // Migration fallback
-        const initialInputs: Record<string, string> = {};
-        idea.bpVariables.forEach(v => initialInputs[v.id] = '');
-        setBpInputs(initialInputs);
-      }
-      setView('editor');
+    if (idea.isBP) {
+        setActiveBPTemplate(idea);
+        setPrompt(''); // BP starts empty, waits for generation/fill
+        
+        // Initialize inputs for 'input' type fields
+        if (idea.bpFields) {
+            const initialInputs: Record<string, string> = {};
+            idea.bpFields.forEach(v => {
+                if (v.type === 'input') {
+                    initialInputs[v.id] = '';
+                }
+            });
+            setBpInputs(initialInputs);
+        } else if (idea.bpVariables) { 
+            // Migration fallback
+            const initialInputs: Record<string, string> = {};
+            idea.bpVariables.forEach(v => initialInputs[v.id] = '');
+            setBpInputs(initialInputs);
+        }
     } else if (idea.isSmart) {
       setActiveSmartTemplate(idea);
       setPrompt(''); // Clear prompt for keyword
-      setView('editor');
     } else if (idea.isSmartPlus) {
-      setActiveSmartPlusTemplate(idea);
-      setSmartPlusOverrides(idea.smartPlusConfig || JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
-      setPrompt(''); // Clear prompt for keywords
-      setView('editor');
+        setActiveSmartPlusTemplate(idea);
+        setSmartPlusOverrides(idea.smartPlusConfig || JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
+        setPrompt(''); // Clear prompt for keywords
     } else {
       setPrompt(idea.prompt);
-      setView('editor');
     }
+    setView('editor');
   };
 
   const activeFile = activeFileIndex !== null ? files[activeFileIndex] : null;
 
   const handleGenerateSmartPrompt = useCallback(async () => {
     const activeTemplate = activeSmartTemplate || activeSmartPlusTemplate || activeBPTemplate;
-    if (!activeTemplate) {
+     if (!activeTemplate) {
       alert('请先从创意库选择一个模板');
       return;
     }
 
-    // 检查API配置：云端模式（已登录）或本地模式（有 API Key）
-    const isCloudMode = isLoggedIn() && thirdPartyApiConfig.enabled;
-    const hasValidApi = apiKey ||
-      (thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey && thirdPartyApiConfig.baseUrl) ||
-      isCloudMode;
+    // 检查API配置：要么有Gemini Key，要么启用了第三方API
+    const hasValidApi = apiKey || (thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey);
 
     setSmartPromptGenStatus(ApiStatus.Loading);
     setError(null);
 
     try {
       if (activeBPTemplate) {
-        // BP Mode Logic (New Orchestration)
-        if (!hasValidApi) {
-          alert('BP 模式运行智能体需要配置 API Key 或登录使用云端服务');
-          setSmartPromptGenStatus(ApiStatus.Idle);
-          return;
-        }
-        // BP模式支持有图片或无图片，传递 activeFile（可能为 null）
-        const finalPrompt = await processBPTemplate(activeFile, activeBPTemplate, bpInputs);
-        setPrompt(finalPrompt);
+          // BP Mode Logic (New Orchestration)
+          if (!hasValidApi) {
+             alert('BP 模式运行智能体需要配置 API Key（Gemini 或第三方API）');
+             setSmartPromptGenStatus(ApiStatus.Idle);
+             return;
+          }
+          // BP模式支持有图片或无图片，传递 activeFile（可能为 null）
+          const finalPrompt = await processBPTemplate(activeFile, activeBPTemplate, bpInputs);
+          setPrompt(finalPrompt);
 
       } else {
-        // Standard/Smart Logic (Legacy)
-        if (!hasValidApi) {
-          alert('智能提示词生成需要配置 API Key（Gemini 或第三方API）');
-          setSmartPromptGenStatus(ApiStatus.Idle);
-          return;
-        }
-        if (!activeFile) {
-          alert('请先上传并选择一张图片');
-          setSmartPromptGenStatus(ApiStatus.Idle);
-          return;
-        }
-        if (activeSmartTemplate && !prompt.trim()) {
-          alert('请输入关键词');
-          setSmartPromptGenStatus(ApiStatus.Idle);
-          return;
-        }
-        const newPromptText = await generateCreativePromptFromImage({
-          file: activeFile,
-          idea: activeTemplate,
-          keyword: prompt,
-          smartPlusConfig: activeTemplate.isSmartPlus ? smartPlusOverrides : undefined,
-        });
-        setPrompt(newPromptText);
+          // Standard/Smart Logic (Legacy)
+          if (!hasValidApi) {
+             alert('智能提示词生成需要配置 API Key（Gemini 或第三方API）');
+             setSmartPromptGenStatus(ApiStatus.Idle);
+             return;
+          }
+          if (!activeFile) {
+            alert('请先上传并选择一张图片');
+            setSmartPromptGenStatus(ApiStatus.Idle);
+            return;
+          }
+          if (activeSmartTemplate && !prompt.trim()) {
+            alert('请输入关键词');
+            setSmartPromptGenStatus(ApiStatus.Idle);
+            return;
+          }
+          const newPromptText = await generateCreativePromptFromImage({
+              file: activeFile,
+              idea: activeTemplate,
+              keyword: prompt, 
+              smartPlusConfig: activeTemplate.isSmartPlus ? smartPlusOverrides : undefined,
+          });
+          setPrompt(newPromptText); 
       }
-
+      
       setSmartPromptGenStatus(ApiStatus.Success);
 
     } catch (e: unknown) {
@@ -1807,48 +1673,6 @@ const App: React.FC = () => {
       setSmartPromptGenStatus(ApiStatus.Error);
     }
   }, [activeFile, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, smartPlusOverrides, bpInputs]);
-<<<<<<< HEAD
-
-  // 桌面操作处理
-  const handleDesktopItemsChange = useCallback((items: DesktopItem[]) => {
-    setDesktopItems(items);
-    // 保存到 localStorage
-    localStorage.setItem('desktop_items', JSON.stringify(items));
-  }, []);
-
-  // 查找桌面空闲位置
-  const findNextFreePosition = useCallback((): { x: number, y: number } => {
-    const gridSize = 100;
-    const maxCols = 10; // 每行最多10个
-    const occupiedPositions = new Set(
-      desktopItems
-        .filter(item => {
-          // 只考虑不在文件夹内的项目
-          const isInFolder = desktopItems.some(
-            other => other.type === 'folder' && (other as DesktopFolderItem).itemIds.includes(item.id)
-          );
-          return !isInFolder;
-        })
-        .map(item => `${Math.round(item.position.x / gridSize)},${Math.round(item.position.y / gridSize)}`)
-    );
-
-    // 从左上角开始找空位
-    for (let y = 0; y < 100; y++) {
-      for (let x = 0; x < maxCols; x++) {
-        const key = `${x},${y}`;
-        if (!occupiedPositions.has(key)) {
-          return { x: x * gridSize, y: y * gridSize };
-        }
-      }
-    }
-    return { x: 0, y: 0 };
-  }, [desktopItems]);
-
-  const handleAddToDesktop = useCallback((item: DesktopImageItem) => {
-    // 添加图片到桌面 - 使用函数式更新确保使用最新状态
-    setDesktopItems(prevItems => {
-      // 在最新状态上查找空闲位置
-=======
   
     // 安全保存桌面项目到 localStorage（移除大型 base64 数据）
     const safeDesktopSave = useCallback((items: DesktopItem[]) => {
@@ -1897,73 +1721,29 @@ const App: React.FC = () => {
   
     // 查找桌面空闲位置
     const findNextFreePosition = useCallback((): { x: number, y: number } => {
->>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
       const gridSize = 100;
-      const maxCols = DESKTOP_COLS; // 固定7列
-
-      // 位置从0开始（渲染时会自动加上居中偏移）
+      const maxCols = 10; // 每行最多10个
       const occupiedPositions = new Set(
-        prevItems
-          .filter(existingItem => {
-            const isInFolder = prevItems.some(
-              other => other.type === 'folder' && (other as DesktopFolderItem).itemIds.includes(existingItem.id)
+        desktopItems
+          .filter(item => {
+            // 只考虑不在文件夹内的项目
+            const isInFolder = desktopItems.some(
+              other => other.type === 'folder' && (other as DesktopFolderItem).itemIds.includes(item.id)
             );
             return !isInFolder;
           })
-          .map(existingItem => `${Math.round(existingItem.position.x / gridSize)},${Math.round(existingItem.position.y / gridSize)}`)
+          .map(item => `${Math.round(item.position.x / gridSize)},${Math.round(item.position.y / gridSize)}`)
       );
-
-      // 从第0列、第0行开始找空位
-      let freePos = { x: 0, y: 0 };
+      
+      // 从左上角开始找空位
       for (let y = 0; y < 100; y++) {
         for (let x = 0; x < maxCols; x++) {
           const key = `${x},${y}`;
           if (!occupiedPositions.has(key)) {
-            freePos = { x: x * gridSize, y: y * gridSize };
-            break;
+            return { x: x * gridSize, y: y * gridSize };
           }
         }
-        // 检查是否已找到空位
-        const foundKey = `${Math.round(freePos.x / gridSize)},${Math.round(freePos.y / gridSize)}`;
-        if (!occupiedPositions.has(foundKey)) break;
       }
-<<<<<<< HEAD
-
-      // 更新项目位置
-      const itemWithPosition = { ...item, position: freePos };
-      const newItems = [...prevItems, itemWithPosition];
-      // 保存到 localStorage
-      localStorage.setItem('desktop_items', JSON.stringify(newItems));
-      return newItems;
-    });
-  }, []);
-
-  const handleGenerateClick = useCallback(async () => {
-    // 检查API配置：
-    // 1. 云端模式（已登录 + 启用第三方API）：不需要前端配置 API Key
-    // 2. 本地第三方API模式：需要前端配置 API Key 和 Base URL
-    // 3. 本地 Gemini 模式：需要 Gemini API Key
-    const isCloudMode = isLoggedIn() && thirdPartyApiConfig.enabled;
-    const hasValidApi = apiKey ||
-      (thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey && thirdPartyApiConfig.baseUrl) ||
-      isCloudMode;
-    if (!hasValidApi) {
-      setError('请先配置 API Key 或登录使用云端服务');
-      setStatus(ApiStatus.Error);
-      return;
-    }
-    if (!prompt) {
-      setError('请输入提示词');
-      setStatus(ApiStatus.Error);
-      return;
-    }
-
-    // Ensure prompt is generated if template is active but prompt box is empty
-    if ((activeSmartTemplate || activeSmartPlusTemplate || activeBPTemplate) && !prompt.trim()) {
-      setError(`请先点击企鹅按钮生成/填入提示词`);
-      setStatus(ApiStatus.Error);
-      return;
-=======
       return { x: 0, y: 0 };
     }, [desktopItems]);
   
@@ -2105,9 +1885,8 @@ const App: React.FC = () => {
            setStatus(ApiStatus.Error);
            return;
       }
->>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
     }
-
+    
     setStatus(ApiStatus.Loading);
     setError(null);
     setGeneratedContent(null);
@@ -2115,15 +1894,6 @@ const App: React.FC = () => {
     try {
       // 获取当前创意库的扣费金额（优先用 activeCreativeIdea，它保存了所有类型的创意库）
       const creativeIdeaCost = activeCreativeIdea?.cost;
-<<<<<<< HEAD
-
-      // 传递所有上传的文件（支持多图编辑）
-      const result = await editImageWithGemini(files, prompt, { aspectRatio, imageSize }, creativeIdeaCost);
-      // 保存生成时使用的所有原始图片，用于重新生成
-      setGeneratedContent({ ...result, originalFiles: [...files] });
-      setStatus(ApiStatus.Success);
-
-=======
       
       // 传递所有上传的文件（支持多图编辑），使用 finalPrompt
       const result = await editImageWithGemini(files, finalPrompt, { aspectRatio, imageSize }, creativeIdeaCost);
@@ -2134,7 +1904,6 @@ const App: React.FC = () => {
       // 日志输出 - 不打印提示词内容
       console.log('[Generate] 生成成功');
       
->>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
       // 保存到历史记录（包含原始输入图片和创意库信息）
       // 如果不允许查看提示词，保存时用占位文本
       const promptToSave = canViewPrompt ? finalPrompt : '[加密提示词]';
@@ -2171,13 +1940,8 @@ const App: React.FC = () => {
           templateType = 'smart';
           templateId = activeSmartTemplate.id;
         }
-<<<<<<< HEAD
-
-        await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled, files.length > 0 ? files[0] : null, {
-=======
         
         await saveToHistory(result.imageUrl, promptToSave, thirdPartyApiConfig.enabled, files.length > 0 ? files[0] : null, {
->>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
           templateId,
           templateType,
           bpInputs: templateType === 'bp' ? { ...bpInputs } : undefined,
@@ -2201,11 +1965,11 @@ const App: React.FC = () => {
           handleAddToDesktop(desktopItem);
         });
       }
-
+      
       if (autoSave && result.imageUrl) {
         downloadImage(result.imageUrl);
       }
-
+      
       // 生成成功后实时更新用户余额
       if (result.coinsRemaining !== undefined && currentUser) {
         setCurrentUser({ ...currentUser, coins: result.coinsRemaining });
@@ -2378,35 +2142,29 @@ const App: React.FC = () => {
     };
   }, [handleGenerateClick, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, handleClearTemplate]);
 
-<<<<<<< HEAD
-  // 修改canGenerate条件，只需要有prompt即可（文生图不需要图片）
-  const canGenerate = prompt.trim().length > 0 && status !== ApiStatus.Loading;
-
-=======
   // 修改canGenerate条件
   // 如果不允许查看提示词，则只要有模板就可以生成
   const activeTemplateForCheck = activeBPTemplate || activeSmartPlusTemplate || activeSmartTemplate;
   const canViewPromptForCheck = activeTemplateForCheck?.allowViewPrompt !== false;
   const canGenerate = (canViewPromptForCheck ? prompt.trim().length > 0 : !!activeTemplateForCheck) && status !== ApiStatus.Loading;
   
->>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
   const isSmartReady = !!activeSmartTemplate && prompt.trim().length > 0;
   const isSmartPlusReady = !!activeSmartPlusTemplate;
   const isBPReady = !!activeBPTemplate; // BP is ready to click penguin anytime to fill variables
-
+  
   const canGenerateSmartPrompt = ((files.length > 0) && (isSmartReady || isSmartPlusReady)) || (isBPReady) && smartPromptGenStatus !== ApiStatus.Loading;
 
   const handleBpInputChange = (id: string, value: string) => {
-    setBpInputs(prev => ({ ...prev, [id]: value }));
+      setBpInputs(prev => ({...prev, [id]: value}));
   };
-
+  
   // 再次编辑：将生成的图片转换为File，清空其他图片，卸载创意库
   const handleEditAgain = useCallback(async () => {
     if (!generatedContent?.imageUrl) return;
-
+    
     try {
       let blob: Blob;
-
+      
       if (generatedContent.imageUrl.startsWith('data:')) {
         // base64 转 Blob
         const response = await fetch(generatedContent.imageUrl);
@@ -2416,15 +2174,15 @@ const App: React.FC = () => {
         const response = await fetch(generatedContent.imageUrl);
         blob = await response.blob();
       }
-
+      
       // 创建 File 对象
       const timestamp = Date.now();
       const file = new File([blob], `generated-${timestamp}.png`, { type: 'image/png' });
-
+      
       // 清空所有图片，仅保留结果图并选中
       setFiles([file]);
       setActiveFileIndex(0);
-
+      
       // 清空创意库，还原默认状态
       setActiveSmartTemplate(null);
       setActiveSmartPlusTemplate(null);
@@ -2433,7 +2191,7 @@ const App: React.FC = () => {
       setBpInputs({});
       setSmartPlusOverrides(JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
       setPrompt(''); // 清空提示词
-
+      
       // 清除当前生成结果，准备再次编辑
       setGeneratedContent(null);
       setStatus(ApiStatus.Idle);
@@ -2442,12 +2200,12 @@ const App: React.FC = () => {
       setError('无法将图片添加到编辑列表');
     }
   }, [generatedContent]);
-
+  
   // 重新生成：恢复原始输入状态，等待用户手动点击生成
   const handleRegenerate = useCallback(() => {
     // 保存当初使用的所有原始图片
     const originalFiles = generatedContent?.originalFiles || [];
-
+    
     // 恢复原始输入图片到 UI 上
     if (originalFiles.length > 0) {
       setFiles(originalFiles);
@@ -2456,12 +2214,12 @@ const App: React.FC = () => {
       setFiles([]);
       setActiveFileIndex(null);
     }
-
+    
     // 关闭结果浮层，回到编辑状态
     setStatus(ApiStatus.Idle);
     setGeneratedContent(null);
     setError(null);
-
+    
     // 提示已恢复 - 保留 prompt 不变，用户可以手动点生成
   }, [generatedContent]);
 
@@ -2499,11 +2257,11 @@ const App: React.FC = () => {
       const response = await fetch(item.imageUrl);
       const blob = await response.blob();
       const file = new File([blob], `${item.name}.png`, { type: 'image/png' });
-
+      
       // 添加到文件列表
       setFiles(prev => [...prev, file]);
       setActiveFileIndex(files.length); // 选中新添加的图片
-
+      
       // 设置提示词
       if (item.prompt) {
         setPrompt(item.prompt);
@@ -2520,16 +2278,11 @@ const App: React.FC = () => {
       setStatus(ApiStatus.Error);
       return;
     }
-
+    
     // 恢复提示词
     setPrompt(item.prompt);
-<<<<<<< HEAD
-
-    // 尝试恢复原始输入图片（如果有历史记录中的输入图片）
-=======
     
     // 尝试恢复原始输入图片和创意库配置（如果有历史记录）
->>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
     if (item.historyId) {
       const historyItem = generationHistory.find(h => h.id === item.historyId);
       if (historyItem) {
@@ -2552,19 +2305,8 @@ const App: React.FC = () => {
             setFiles([]);
             setActiveFileIndex(null);
           }
-<<<<<<< HEAD
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], { type: historyItem.inputImageType });
-          const restoredFile = new File([blob], historyItem.inputImageName || 'restored-input.png', { type: historyItem.inputImageType });
-
-          setFiles([restoredFile]);
-          setActiveFileIndex(0);
-        } catch (e) {
-          console.warn('恢复输入图片失败:', e);
-=======
         } else {
           // 没有输入图片
->>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
           setFiles([]);
           setActiveFileIndex(null);
         }
@@ -2608,12 +2350,12 @@ const App: React.FC = () => {
       setFiles([]);
       setActiveFileIndex(null);
     }
-
+    
     // 关闭结果浮层，回到编辑状态
     setStatus(ApiStatus.Idle);
     setGeneratedContent(null);
     setError(null);
-
+    
     // 取消桌面选中，让用户注意力回到编辑区
     setDesktopSelectedIds([]);
   }, [generationHistory, creativeIdeas]);
@@ -2649,8 +2391,8 @@ const App: React.FC = () => {
     <div className="h-screen bg-gray-950 text-gray-100 font-sans flex flex-row overflow-hidden selection:bg-indigo-500/30">
       {/* 雪花效果 */}
       <SnowfallEffect />
-
-      <input
+      
+      <input 
         ref={fileInputRef}
         type="file"
         accept="image/*"
@@ -2665,34 +2407,6 @@ const App: React.FC = () => {
         className="hidden"
         onChange={handleImportIdeas}
       />
-<<<<<<< HEAD
-
-      <LeftPanel
-        files={files}
-        activeFileIndex={activeFileIndex}
-        onFileSelection={handleFileSelection}
-        onFileRemove={handleFileRemove}
-        onFileSelect={setActiveFileIndex}
-        onTriggerUpload={() => fileInputRef.current?.click()}
-        currentUser={currentUser}
-        onLoginClick={() => setAuthModalOpen(true)}
-        onLogout={handleLogout}
-        onRechargeClick={() => setRechargeModalOpen(true)}
-        onSettingsClick={() => setSettingsModalOpen(true)}
-        currentApiMode={
-          // 计算当前模式
-          thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey && thirdPartyApiConfig.baseUrl
-            ? 'local-thirdparty'
-            : !thirdPartyApiConfig.enabled && apiKey
-              ? 'local-gemini'
-              : currentUser && thirdPartyApiConfig.enabled
-                ? 'cloud'
-                : currentUser
-                  ? 'cloud'
-                  : 'local-gemini'
-        }
-      />
-=======
       
       {/* 左侧面板 - 画布模式下点击按钮弹出，其他模式正常显示 */}
       {view !== 'canvas' ? (
@@ -2779,9 +2493,8 @@ const App: React.FC = () => {
           )}
         </>
       )}
->>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
       <div className="relative flex-1 flex min-w-0">
-        <Canvas
+        <Canvas 
           view={view}
           setView={setView}
           files={files}
@@ -2830,102 +2543,15 @@ const App: React.FC = () => {
           }}
         />
         {view === 'editor' && (
-          <div className="absolute left-1/2 -translate-x-1/2 z-30 transition-all duration-300 bottom-6">
-            <GenerateButton
-              onClick={handleGenerateClick}
-              disabled={!canGenerate}
-              status={status}
-            />
-          </div>
+             <div className="absolute left-1/2 -translate-x-1/2 z-30 transition-all duration-300 bottom-6">
+                <GenerateButton 
+                    onClick={handleGenerateClick}
+                    disabled={!canGenerate}
+                    status={status}
+                />
+             </div>
         )}
       </div>
-<<<<<<< HEAD
-
-      {/* RunningHub 生成器全屏覆盖层 */}
-      {activeRunningHubIdea && view === 'editor' && (
-        <div className="absolute inset-0 z-50 bg-gray-950/95 backdrop-blur-sm">
-          <div className="h-full p-8 pt-20">
-            <RunningHubGenerator
-              idea={activeRunningHubIdea}
-              onBack={() => {
-                setActiveRunningHubIdea(null);
-                setActiveCreativeIdea(null);
-              }}
-              onSuccess={async (imageUrl, taskId) => {
-                // 生成成功，显示结果
-                setGeneratedContent({
-                  text: null,
-                  imageUrl,
-                  originalFiles: files,
-                  coinsDeducted: activeRunningHubIdea.cost,
-                });
-                setStatus(ApiStatus.Success);
-                setActiveRunningHubIdea(null);
-                // 刷新用户余额
-                if (isLoggedIn()) {
-                  refreshUserInfo();
-                }
-                // 保存到历史记录
-                const historyItem: GenerationHistory = {
-                  id: Date.now(),
-                  timestamp: Date.now(),
-                  prompt: activeRunningHubIdea.title,
-                  imageUrl,
-                  model: 'RunningHub',
-                  isThirdParty: true,
-                  coinsDeducted: activeRunningHubIdea.cost,
-                  creativeTemplateId: activeRunningHubIdea.id,
-                  creativeTemplateType: 'none',
-                };
-
-                if (isLoggedIn()) {
-                  // 云端模式，保存到后端
-                  await historyApi.createHistory(historyItem);
-                  const historyResult = await historyApi.getAllHistory();
-                  if (historyResult.success && historyResult.data) {
-                    setGenerationHistory(historyResult.data.sort((a, b) => b.timestamp - a.timestamp));
-                  }
-                } else {
-                  // 本地模式，保存到 IndexedDB
-                  await saveHistoryToDB(historyItem);
-                  setGenerationHistory(prev => [historyItem, ...prev]);
-                }
-              }}
-              onError={(errorMsg) => {
-                setError(errorMsg);
-                setStatus(ApiStatus.Error);
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      <RightPanel
-        prompt={prompt}
-        setPrompt={handleSetPrompt}
-        activeSmartTemplate={activeSmartTemplate}
-        activeSmartPlusTemplate={activeSmartPlusTemplate}
-        activeBPTemplate={activeBPTemplate}
-        bpInputs={bpInputs}
-        setBpInput={handleBpInputChange}
-        smartPlusOverrides={smartPlusOverrides}
-        setSmartPlusOverrides={setSmartPlusOverrides}
-        handleGenerateSmartPrompt={handleGenerateSmartPrompt}
-        canGenerateSmartPrompt={canGenerateSmartPrompt}
-        smartPromptGenStatus={smartPromptGenStatus}
-        creativeIdeas={creativeIdeas}
-        handleUseCreativeIdea={handleUseCreativeIdea}
-        setAddIdeaModalOpen={() => setAddIdeaModalOpen(true)}
-        setView={setView}
-        aspectRatio={aspectRatio}
-        setAspectRatio={setAspectRatio}
-        imageSize={imageSize}
-        setImageSize={setImageSize}
-        isThirdPartyApiEnabled={thirdPartyApiConfig.enabled}
-        onClearTemplate={handleClearTemplate}
-      />
-
-=======
       {/* 右侧面板 - 画布模式下完全不显示，其他模式正常显示 */}
       {view !== 'canvas' && (
         <div className="flex-shrink-0">
@@ -2956,7 +2582,6 @@ const App: React.FC = () => {
         </div>
       )}
       
->>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
       <style>{`
         @keyframes fade-in {
             from { opacity: 0; transform: translateY(-10px); }
@@ -2969,11 +2594,11 @@ const App: React.FC = () => {
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.1); border-radius: 20px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.2); }
       `}</style>
-
+      
       {previewImageUrl && (
         <ImagePreviewModal imageUrl={previewImageUrl} onClose={() => setPreviewImageUrl(null)} />
       )}
-      <AddCreativeIdeaModal
+      <AddCreativeIdeaModal 
         isOpen={isAddIdeaModalOpen}
         onClose={() => { setAddIdeaModalOpen(false); setEditingIdea(null); }}
         onSave={handleSaveCreativeIdea}
@@ -3017,9 +2642,7 @@ const App: React.FC = () => {
 const AppWithTheme: React.FC = () => {
   return (
     <ThemeProvider>
-      <RunningHubTaskProvider>
-        <App />
-      </RunningHubTaskProvider>
+      <App />
     </ThemeProvider>
   );
 };

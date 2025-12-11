@@ -322,6 +322,238 @@
     rgba(248, 250, 252, 0.96) 100%);
 }
 
+/* 日间模式综合修复 */
+.theme-light .modern-card,
+.theme-light .liquid-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+.theme-light .modern-input,
+.theme-light textarea.liquid-input {
+  background: rgba(248, 250, 252, 0.95);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #0f172a;
+}
+
+.theme-light .modern-input::placeholder,
+.theme-light textarea.liquid-input::placeholder {
+  color: #94a3b8;
+}
+
+/* 日间模式按钮 */
+.theme-light .bg-white\/4,
+.theme-light .bg-white\/5 {
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+
+.theme-light .bg-white\/8,
+.theme-light .hover\:bg-white\/8:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
+.theme-light .bg-white\/3 {
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* 日间模式文字 */
+.theme-light .text-white {
+  color: #0f172a !important;
+}
+
+.theme-light .text-gray-300 {
+  color: #475569 !important;
+}
+
+.theme-light .text-gray-400 {
+  color: #64748b !important;
+}
+
+.theme-light .text-gray-500 {
+  color: #64748b !important;
+}
+
+.theme-light .hover\:text-gray-300:hover {
+  color: #334155 !important;
+}
+
+/* 日间模式背景 */
+.theme-light .bg-gray-700 {
+  background: #e2e8f0 !important;
+}
+
+.theme-light .bg-gray-800 {
+  background: #f1f5f9 !important;
+}
+
+.theme-light .bg-gray-900 {
+  background: #ffffff !important;
+}
+
+/* 日间模式边框 */
+.theme-light .border-gray-700 {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.theme-light .border-gray-700\/50 {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* 日间模式开关 */
+.theme-light .peer-checked\:bg-teal-500 {
+  background: #14b8a6 !important;
+}
+
+/* 日间模式弹窗 */
+.theme-light .bg-black\/85 {
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* 日间模式卡片悬浮 */
+.theme-light .hover\:bg-gray-700:hover {
+  background: #e2e8f0 !important;
+}
+
+.theme-light .hover\:bg-gray-800:hover {
+  background: #f1f5f9 !important;
+}
+
+/* 日间模式 placeholder */
+.theme-light .placeholder-gray-500::placeholder,
+.theme-light .placeholder-gray-600::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* 日间模式滑动条 */
+.theme-light .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.theme-light .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* 日间模式标签颜色 */
+.theme-light .text-indigo-400 {
+  color: #6366f1 !important;
+}
+
+.theme-light .text-teal-400 {
+  color: #14b8a6 !important;
+}
+
+.theme-light .text-yellow-400 {
+  color: #d97706 !important;
+}
+
+.theme-light .text-purple-400 {
+  color: #a855f7 !important;
+}
+
+.theme-light .text-cyan-400 {
+  color: #06b6d4 !important;
+}
+
+.theme-light .text-orange-300,
+.theme-light .text-orange-400 {
+  color: #ea580c !important;
+}
+
+.theme-light .text-red-400 {
+  color: #ef4444 !important;
+}
+
+/* 日间模式半透明背景 */
+.theme-light .bg-indigo-500\/15 {
+  background: rgba(99, 102, 241, 0.12) !important;
+}
+
+.theme-light .bg-yellow-500\/15 {
+  background: rgba(234, 179, 8, 0.12) !important;
+}
+
+.theme-light .bg-teal-500\/15 {
+  background: rgba(20, 184, 166, 0.12) !important;
+}
+
+.theme-light .bg-purple-500\/10,
+.theme-light .bg-purple-500\/15 {
+  background: rgba(168, 85, 247, 0.1) !important;
+}
+
+.theme-light .bg-orange-500\/5,
+.theme-light .bg-orange-500\/15 {
+  background: rgba(249, 115, 22, 0.08) !important;
+}
+
+.theme-light .bg-red-500\/10 {
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+
+.theme-light .bg-indigo-500\/10,
+.theme-light .bg-indigo-500\/20 {
+  background: rgba(99, 102, 241, 0.1) !important;
+}
+
+.theme-light .bg-yellow-500\/20 {
+  background: rgba(234, 179, 8, 0.15) !important;
+}
+
+/* 日间模式 ReactFlow 控件 */
+.theme-light .react-flow__controls-button {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #475569 !important;
+}
+
+.theme-light .react-flow__controls-button:hover {
+  background-color: rgba(241, 245, 249, 1) !important;
+  color: #0f172a !important;
+}
+
+/* 日间模式标签边框 */
+.theme-light .border-indigo-500\/30,
+.theme-light .border-indigo-500\/20 {
+  border-color: rgba(99, 102, 241, 0.25) !important;
+}
+
+.theme-light .border-yellow-500\/30 {
+  border-color: rgba(234, 179, 8, 0.3) !important;
+}
+
+.theme-light .border-orange-500\/20 {
+  border-color: rgba(249, 115, 22, 0.2) !important;
+}
+
+.theme-light .border-yellow-700\/30,
+.theme-light .border-yellow-700\/50 {
+  border-color: rgba(161, 98, 7, 0.25) !important;
+}
+
+/* 日间模式弹窗背景 */
+.theme-light .bg-gray-800\/50 {
+  background: rgba(248, 250, 252, 0.95) !important;
+}
+
+/* 日间模式 focus 状态 */
+.theme-light .focus\:border-indigo-500:focus,
+.theme-light .focus\:border-indigo-500\/50:focus {
+  border-color: rgba(99, 102, 241, 0.6) !important;
+}
+
+.theme-light .focus\:border-yellow-500:focus,
+.theme-light .focus\:border-yellow-500\/50:focus {
+  border-color: rgba(234, 179, 8, 0.6) !important;
+}
+
+.theme-light .focus\:ring-indigo-500\/20:focus {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+}
+
+.theme-light .focus\:ring-yellow-500\/20:focus {
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.15) !important;
+}
+
 /* 液态组件标题 */
 .liquid-title {
   font-size: 10px;

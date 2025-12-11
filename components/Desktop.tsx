@@ -68,7 +68,8 @@ export const Desktop: React.FC<DesktopProps> = ({
   history = [],
   creativeIdeas = [],
 }) => {
-  const { theme } = useTheme();
+  const { theme, themeName } = useTheme();
+  const isLight = themeName === 'light';
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -1100,11 +1101,17 @@ export const Desktop: React.FC<DesktopProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索图片或文件夹..."
-            className="w-72 px-4 py-2.5 pl-10 text-sm bg-black/50 backdrop-blur-xl border border-white/20 rounded-xl text-white placeholder-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+            className="w-72 px-4 py-2.5 pl-10 text-sm backdrop-blur-xl border rounded-xl transition-all focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            style={{
+              background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.5)',
+              borderColor: isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.2)',
+              color: isLight ? '#0f172a' : 'white'
+            }}
             onMouseDown={(e) => e.stopPropagation()}
           />
           <svg 
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" 
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" 
+            style={{ color: isLight ? '#64748b' : '#9ca3af' }}
             fill="none" 
             viewBox="0 0 24 24" 
             stroke="currentColor"
@@ -1114,7 +1121,8 @@ export const Desktop: React.FC<DesktopProps> = ({
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+              style={{ color: isLight ? '#64748b' : '#9ca3af' }}
               onMouseDown={(e) => e.stopPropagation()}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1125,7 +1133,7 @@ export const Desktop: React.FC<DesktopProps> = ({
         </div>
         {/* 搜索结果提示 */}
         {searchQuery && (
-          <div className="text-center mt-2 text-xs text-gray-400">
+          <div className="text-center mt-2 text-xs" style={{ color: isLight ? '#64748b' : '#9ca3af' }}>
             找到 {currentItems.length} 个结果
           </div>
         )}
@@ -1135,7 +1143,12 @@ export const Desktop: React.FC<DesktopProps> = ({
       <div className="absolute top-[76px] right-6 z-20 flex items-center gap-2">
         <button
           onClick={handleAutoStackByCreative}
-          className="px-3 py-2 text-xs font-medium rounded-xl backdrop-blur-xl border transition-all bg-black/50 border-white/20 text-gray-400 hover:text-white hover:border-white/30 hover:bg-indigo-500/20"
+          className="px-3 py-2 text-xs font-medium rounded-xl backdrop-blur-xl border transition-all"
+          style={{
+            background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.5)',
+            borderColor: isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.2)',
+            color: isLight ? '#475569' : '#9ca3af'
+          }}
           title="将同创意库生成的图片自动叠放在一起"
           onMouseDown={(e) => e.stopPropagation()}
         >
@@ -1146,8 +1159,13 @@ export const Desktop: React.FC<DesktopProps> = ({
           className={`px-3 py-2 text-xs font-medium rounded-xl backdrop-blur-xl border transition-all ${
             hideFileNames
               ? 'bg-indigo-500/30 border-indigo-500/50 text-indigo-200'
-              : 'bg-black/50 border-white/20 text-gray-400 hover:text-white hover:border-white/30'
+              : ''
           }`}
+          style={!hideFileNames ? {
+            background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.5)',
+            borderColor: isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.2)',
+            color: isLight ? '#475569' : '#9ca3af'
+          } : {}}
           title={hideFileNames ? '显示文件名' : '隐藏文件名'}
           onMouseDown={(e) => e.stopPropagation()}
         >
@@ -1156,18 +1174,25 @@ export const Desktop: React.FC<DesktopProps> = ({
       </div>
       {/* 面包屑导航（在文件夹或叠放内时显示） */}
       {(openFolderId || openStackId) && (
-        <div className="absolute top-[76px] left-6 z-20 flex items-center gap-2 px-4 py-2 rounded-xl bg-black/40 backdrop-blur-xl border border-white/10">
+        <div 
+          className="absolute top-[76px] left-6 z-20 flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-xl border"
+          style={{
+            background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.4)',
+            borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'
+          }}
+        >
           <button
             onClick={openFolderId ? onFolderClose : onStackClose}
-            className="text-sm text-gray-300 hover:text-white transition-colors flex items-center gap-1"
+            className="text-sm transition-colors flex items-center gap-1"
+            style={{ color: isLight ? '#475569' : '#d1d5db' }}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             返回桌面
           </button>
-          <span className="text-gray-500">/</span>
-          <span className="text-sm font-medium text-white flex items-center gap-1">
+          <span style={{ color: isLight ? '#94a3b8' : '#6b7280' }}>/</span>
+          <span className="text-sm font-medium flex items-center gap-1" style={{ color: isLight ? '#0f172a' : 'white' }}>
             {openFolderId ? '📁' : '📚'}
             {openFolderId 
               ? (items.find(i => i.id === openFolderId)?.name || '文件夹')

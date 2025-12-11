@@ -33,6 +33,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onAutoSaveToggle,
 }) => {
   const { themeName, setTheme, allThemes } = useTheme();
+  const isLight = themeName === 'light';
   
   // 确定当前模式 - 根据实际配置自动选择
   const getCurrentMode = (): ApiMode => {
@@ -138,7 +139,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       />
       
       {/* 弹窗内容 */}
-      <div className="relative w-full max-w-lg bg-gray-900 rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-fade-in">
+      <div 
+        className="relative w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden animate-fade-in"
+        style={{
+          background: isLight ? 'rgba(255,255,255,0.98)' : '#111827',
+          borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'
+        }}
+      >
         {/* 保存成功提示 */}
         {saveSuccessMessage && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-green-500/90 text-white text-sm font-medium rounded-lg shadow-lg animate-fade-in">
@@ -146,15 +153,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         )}
         {/* 头部 */}
-        <div className="p-6 border-b border-white/10">
+        <div className="p-6 border-b" style={{ borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)' }}>
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-white">设置</h2>
-              <p className="text-sm text-gray-400 mt-1">配置 API 连接方式</p>
+              <h2 className="text-xl font-bold" style={{ color: isLight ? '#0f172a' : 'white' }}>设置</h2>
+              <p className="text-sm mt-1" style={{ color: isLight ? '#64748b' : '#9ca3af' }}>配置 API 连接方式</p>
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all"
+              className="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
+              style={{ 
+                background: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+                color: isLight ? '#64748b' : '#9ca3af'
+              }}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -167,7 +178,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
           {/* API 模式选择 */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">API 连接方式</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: isLight ? '#475569' : '#d1d5db' }}>API 连接方式</h3>
             
             {/* 云服务模式 - 推荐 */}
             <div
@@ -181,23 +192,27 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 activeMode === 'cloud' && isLoggedIn
                   ? 'border-indigo-500 bg-indigo-500/10'
-                  : 'border-white/10 hover:border-white/20 bg-white/5'
+                  : ''
               }`}
+              style={{
+                borderColor: (activeMode === 'cloud' && isLoggedIn) ? undefined : isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
+                background: (activeMode === 'cloud' && isLoggedIn) ? undefined : isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.05)'
+              }}
             >
               <div className="flex items-start gap-4">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  activeMode === 'cloud' && isLoggedIn ? 'bg-indigo-500' : 'bg-gray-700'
-                }`}>
+                  activeMode === 'cloud' && isLoggedIn ? 'bg-indigo-500' : ''
+                }`} style={!(activeMode === 'cloud' && isLoggedIn) ? { background: isLight ? '#e2e8f0' : '#374151' } : {}}>
                   <span className="text-xl">☁️</span>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-semibold text-white">云服务模式</h4>
+                    <h4 className="text-sm font-semibold" style={{ color: isLight ? '#0f172a' : 'white' }}>云服务模式</h4>
                     <span className="px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full">
                       推荐
                     </span>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs mt-1" style={{ color: isLight ? '#64748b' : '#9ca3af' }}>
                     登录后使用云端 API，享受云创意库、历史同步等功能
                   </p>
                   {!isLoggedIn && (
@@ -231,18 +246,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 activeMode === 'local-thirdparty'
                   ? 'border-orange-500 bg-orange-500/10'
-                  : 'border-white/10 hover:border-white/20 bg-white/5'
+                  : ''
               }`}
+              style={{
+                borderColor: activeMode === 'local-thirdparty' ? undefined : isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
+                background: activeMode === 'local-thirdparty' ? undefined : isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.05)'
+              }}
             >
               <div className="flex items-start gap-4">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  activeMode === 'local-thirdparty' ? 'bg-orange-500' : 'bg-gray-700'
-                }`}>
+                  activeMode === 'local-thirdparty' ? 'bg-orange-500' : ''
+                }`} style={activeMode !== 'local-thirdparty' ? { background: isLight ? '#e2e8f0' : '#374151' } : {}}>
                   <span className="text-xl">🔌</span>
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-white">贞贞 API</h4>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <h4 className="text-sm font-semibold" style={{ color: isLight ? '#0f172a' : 'white' }}>贞贞 API</h4>
+                  <p className="text-xs mt-1" style={{ color: isLight ? '#64748b' : '#9ca3af' }}>
                     使用贞贞 API，支持 nano-banana 等模型
                   </p>
                 </div>
@@ -260,29 +279,40 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {activeMode === 'local-thirdparty' && (
               <div className="ml-14 space-y-3 animate-fade-in">
                 <div>
-                  <label className="text-xs font-medium text-gray-400 block mb-1">API 地址</label>
+                  <label className="text-xs font-medium block mb-1" style={{ color: isLight ? '#64748b' : '#9ca3af' }}>API 地址</label>
                   <input
                     type="text"
                     value={localThirdPartyUrl}
                     onChange={(e) => setLocalThirdPartyUrl(e.target.value)}
                     placeholder="https://ai.t8star.cn"
-                    className="w-full px-3 py-2 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                    className="w-full px-3 py-2 text-sm border rounded-lg transition-all focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    style={{
+                      background: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(0,0,0,0.4)',
+                      borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
+                      color: isLight ? '#0f172a' : 'white'
+                    }}
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-gray-400 block mb-1">API Key</label>
+                  <label className="text-xs font-medium block mb-1" style={{ color: isLight ? '#64748b' : '#9ca3af' }}>API Key</label>
                   <div className="relative">
                     <input
                       type={showApiKey ? 'text' : 'password'}
                       value={localThirdPartyKey}
                       onChange={(e) => setLocalThirdPartyKey(e.target.value)}
                       placeholder="sk-..."
-                      className="w-full px-3 py-2 pr-10 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                      className="w-full px-3 py-2 pr-10 text-sm border rounded-lg transition-all focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                      style={{
+                        background: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(0,0,0,0.4)',
+                        borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
+                        color: isLight ? '#0f172a' : 'white'
+                      }}
                     />
                     <button
                       type="button"
                       onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                      style={{ color: isLight ? '#64748b' : '#9ca3af' }}
                     >
                       {showApiKey ? '🙈' : '👁️'}
                     </button>
@@ -303,18 +333,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 activeMode === 'local-gemini'
                   ? 'border-purple-500 bg-purple-500/10'
-                  : 'border-white/10 hover:border-white/20 bg-white/5'
+                  : ''
               }`}
+              style={{
+                borderColor: activeMode === 'local-gemini' ? undefined : isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
+                background: activeMode === 'local-gemini' ? undefined : isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.05)'
+              }}
             >
               <div className="flex items-start gap-4">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  activeMode === 'local-gemini' ? 'bg-purple-500' : 'bg-gray-700'
-                }`}>
+                  activeMode === 'local-gemini' ? 'bg-purple-500' : ''
+                }`} style={activeMode !== 'local-gemini' ? { background: isLight ? '#e2e8f0' : '#374151' } : {}}>
                   <span className="text-xl">💎</span>
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-white">Gemini API</h4>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <h4 className="text-sm font-semibold" style={{ color: isLight ? '#0f172a' : 'white' }}>Gemini API</h4>
+                  <p className="text-xs mt-1" style={{ color: isLight ? '#64748b' : '#9ca3af' }}>
                     使用 Google Gemini API Key，直接从浏览器请求
                   </p>
                 </div>
@@ -332,19 +366,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {activeMode === 'local-gemini' && (
               <div className="ml-14 space-y-3 animate-fade-in">
                 <div>
-                  <label className="text-xs font-medium text-gray-400 block mb-1">Gemini API Key</label>
+                  <label className="text-xs font-medium block mb-1" style={{ color: isLight ? '#64748b' : '#9ca3af' }}>Gemini API Key</label>
                   <div className="relative">
                     <input
                       type={showApiKey ? 'text' : 'password'}
                       value={localGeminiKey}
                       onChange={(e) => setLocalGeminiKey(e.target.value)}
                       placeholder="AIza..."
-                      className="w-full px-3 py-2 pr-10 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                      className="w-full px-3 py-2 pr-10 text-sm border rounded-lg transition-all focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                      style={{
+                        background: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(0,0,0,0.4)',
+                        borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
+                        color: isLight ? '#0f172a' : 'white'
+                      }}
                     />
                     <button
                       type="button"
                       onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                      style={{ color: isLight ? '#64748b' : '#9ca3af' }}
                     >
                       {showApiKey ? '🙈' : '👁️'}
                     </button>
@@ -361,11 +401,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           {/* 分割线 */}
-          <div className="border-t border-white/10" />
+          <div style={{ borderTop: `1px solid ${isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)'}` }} />
 
           {/* 主题设置 */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">主题设置</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: isLight ? '#475569' : '#d1d5db' }}>主题设置</h3>
             
             <div className="grid grid-cols-4 gap-3">
               {allThemes.map((t) => (
@@ -374,12 +414,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   onClick={() => setTheme(t.name)}
                   className={`relative p-4 rounded-xl border-2 transition-all ${
                     themeName === t.name
-                      ? 'border-white/40 bg-white/10 ring-2 ring-white/20'
-                      : 'border-white/10 hover:border-white/20 bg-white/5'
+                      ? 'ring-2'
+                      : ''
                   }`}
+                  style={{
+                    borderColor: themeName === t.name ? (isLight ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.4)') : isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
+                    background: themeName === t.name ? (isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)') : isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.05)',
+                    ringColor: themeName === t.name ? (isLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)') : 'transparent'
+                  }}
                 >
                   <div className="text-3xl text-center mb-2">{t.icon}</div>
-                  <p className="text-xs text-center text-gray-300 font-medium">{t.displayName}</p>
+                  <p className="text-xs text-center font-medium" style={{ color: isLight ? '#475569' : '#d1d5db' }}>{t.displayName}</p>
                   {themeName === t.name && (
                     <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
                       <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -401,19 +446,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           {/* 分割线 */}
-          <div className="border-t border-white/10" />
+          <div style={{ borderTop: `1px solid ${isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)'}` }} />
 
           {/* 其他设置 */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">其他设置</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: isLight ? '#475569' : '#d1d5db' }}>其他设置</h3>
             
             {/* 自动保存 */}
-            <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
+            <div className="flex items-center justify-between p-3 rounded-xl border" style={{ background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.05)', borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)' }}>
               <div className="flex items-center gap-3">
                 <span className="text-xl">💾</span>
                 <div>
-                  <h4 className="text-sm font-medium text-white">自动保存</h4>
-                  <p className="text-xs text-gray-400">生成图片后自动下载到本地</p>
+                  <h4 className="text-sm font-medium" style={{ color: isLight ? '#0f172a' : 'white' }}>自动保存</h4>
+                  <p className="text-xs" style={{ color: isLight ? '#64748b' : '#9ca3af' }}>生成图片后自动下载到本地</p>
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -423,17 +468,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   checked={autoSaveEnabled} 
                   onChange={(e) => onAutoSaveToggle(e.target.checked)}
                 />
-                <div className="w-11 h-6 bg-gray-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-indigo-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 transition-colors"></div>
+                <div className="w-11 h-6 rounded-full peer peer-focus:ring-2 peer-focus:ring-indigo-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 transition-colors" style={{ background: autoSaveEnabled ? undefined : isLight ? '#e2e8f0' : '#374151' }}></div>
               </label>
             </div>
 
             {/* 当前模型显示 */}
-            <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
+            <div className="flex items-center justify-between p-3 rounded-xl border" style={{ background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.05)', borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)' }}>
               <div className="flex items-center gap-3">
                 <span className="text-xl">🤖</span>
                 <div>
-                  <h4 className="text-sm font-medium text-white">当前模型</h4>
-                  <p className="text-xs text-gray-400">正在使用的 AI 模型</p>
+                  <h4 className="text-sm font-medium" style={{ color: isLight ? '#0f172a' : 'white' }}>当前模型</h4>
+                  <p className="text-xs" style={{ color: isLight ? '#64748b' : '#9ca3af' }}>正在使用的 AI 模型</p>
                 </div>
               </div>
               <span className={`text-xs font-medium px-3 py-1 rounded-full ${
@@ -450,7 +495,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* 底部 */}
-        <div className="p-6 border-t border-white/10 bg-black/20">
+        <div className="p-6 border-t" style={{ borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)', background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(0,0,0,0.2)' }}>
           <button
             onClick={onClose}
             className="w-full py-3 text-sm font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-xl transition-all shadow-lg shadow-indigo-500/20"

@@ -45,9 +45,7 @@ interface LeftPanelProps {
   onSettingsClick: () => void;
   // 当前 API 模式状态
   currentApiMode: 'cloud' | 'local-thirdparty' | 'local-gemini';
-}
-
-interface RightPanelProps {
+  // 参数与提示词相关 (从RightPanel移入)
   prompt: string;
   setPrompt: (value: string) => void;
   activeSmartTemplate: CreativeIdea | null;
@@ -60,17 +58,23 @@ interface RightPanelProps {
   handleGenerateSmartPrompt: () => void;
   canGenerateSmartPrompt: boolean;
   smartPromptGenStatus: ApiStatus;
-  onCancelSmartPrompt: () => void; // 取消 BP/Smart 处理
-  creativeIdeas: CreativeIdea[];
-  handleUseCreativeIdea: (idea: CreativeIdea) => void;
-  setAddIdeaModalOpen: (isOpen: boolean) => void;
-  setView: (view: 'editor' | 'library') => void;
+  onCancelSmartPrompt: () => void;
   aspectRatio: string;
   setAspectRatio: (value: string) => void;
   imageSize: string;
   setImageSize: (value: string) => void;
   isThirdPartyApiEnabled: boolean;
-  onClearTemplate: () => void; // 卸载创意库
+  onClearTemplate: () => void;
+}
+
+interface RightPanelProps {
+  // 创意库相关
+  creativeIdeas: CreativeIdea[];
+  handleUseCreativeIdea: (idea: CreativeIdea) => void;
+  setAddIdeaModalOpen: (isOpen: boolean) => void;
+  setView: (view: 'editor' | 'library') => void;
+  onDeleteIdea: (id: number) => void;
+  onEditIdea: (idea: CreativeIdea) => void;
 }
 
 interface CanvasProps {
@@ -259,6 +263,26 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
   onRechargeClick,
   onSettingsClick,
   currentApiMode,
+  // 参数与提示词
+  prompt,
+  setPrompt,
+  activeSmartTemplate,
+  activeSmartPlusTemplate,
+  activeBPTemplate,
+  bpInputs,
+  setBpInput,
+  smartPlusOverrides,
+  setSmartPlusOverrides,
+  handleGenerateSmartPrompt,
+  canGenerateSmartPrompt,
+  smartPromptGenStatus,
+  onCancelSmartPrompt,
+  aspectRatio,
+  setAspectRatio,
+  imageSize,
+  setImageSize,
+  isThirdPartyApiEnabled,
+  onClearTemplate,
 }) => {
   const { theme, themeName, setTheme } = useTheme();
   
@@ -294,8 +318,14 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
   
   const modeDisplay = getModeDisplay();
   
+  const hasActiveTemplate = activeSmartTemplate || activeSmartPlusTemplate || activeBPTemplate;
+  const activeTemplateName = activeBPTemplate?.title || activeSmartPlusTemplate?.title || activeSmartTemplate?.title;
+  const activeTemplate = activeBPTemplate || activeSmartPlusTemplate || activeSmartTemplate;
+  const canViewPrompt = activeTemplate?.allowViewPrompt !== false;
+  const canEditPrompt = activeTemplate?.allowEditPrompt !== false;
+  
   return (
-  <aside className="w-[220px] flex-shrink-0 flex flex-col h-full liquid-panel border-r z-20">
+  <aside className="w-[280px] flex-shrink-0 flex flex-col h-full liquid-panel border-r z-20">
       {/* 顶部导航栏 */}
       <div className="liquid-panel-section flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -418,10 +448,11 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
         </div>
       </div>
       
-      {/* 资源素材区域 */}
-      <div className="flex-grow p-3 flex flex-col min-h-0 overflow-hidden">
-        <h2 className="liquid-title mb-2">资源素材</h2>
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
+      {/* 可滚动内容区域 */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+        {/* 资源素材区域 */}
+        <div>
+          <h2 className="liquid-title mb-2">资源素材</h2>
           <ImageUploader 
             files={files}
             activeFileIndex={activeFileIndex}
@@ -431,6 +462,187 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
             onTriggerUpload={onTriggerUpload}
           />
         </div>
+        
+        {/* 模型参数卡片 */}
+        <div className="liquid-card p-2.5">
+           <div className="flex items-center gap-1.5 mb-2">
+              <div className="w-4 h-4 rounded bg-indigo-500/15 flex items-center justify-center">
+                <ImageIcon className="w-2.5 h-2.5 text-indigo-400"/>
+              </div>
+              <h3 className="text-[11px] font-medium" style={{ color: theme.colors.textPrimary }}>参数</h3>
+           </div>
+           
+           <div className="space-y-2.5">
+              {/* 画面比例 */}
+              <div>
+                  <div className="flex justify-between mb-1.5">
+                       <span className="liquid-title">比例</span>
+                       <span className="text-[9px] text-indigo-400 font-mono">{aspectRatio}</span>
+                  </div>
+                  <div className="grid grid-cols-6 gap-0.5">
+                      {['Auto', '1:1', '3:4', '4:3', '9:16', '16:9'].map(ratio => (
+                          <button
+                              key={ratio}
+                              onClick={() => setAspectRatio(ratio)}
+                              className={`py-1 text-[9px] font-medium rounded transition-all ${
+                                  aspectRatio === ratio
+                                      ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-sm'
+                                      : 'bg-white/4 text-gray-500 hover:bg-white/8 hover:text-gray-300'
+                              }`}
+                          >
+                              {ratio}
+                          </button>
+                      ))}
+                  </div>
+                  <div className="grid grid-cols-5 gap-0.5 mt-0.5">
+                      {['2:3', '3:2', '4:5', '5:4', '21:9'].map(ratio => (
+                          <button
+                              key={ratio}
+                              onClick={() => setAspectRatio(ratio)}
+                              className={`py-1 text-[9px] font-medium rounded transition-all ${
+                                  aspectRatio === ratio
+                                      ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-sm'
+                                      : 'bg-white/4 text-gray-500 hover:bg-white/8 hover:text-gray-300'
+                              }`}
+                          >
+                              {ratio}
+                          </button>
+                      ))}
+                  </div>
+              </div>
+              
+              {/* 分辨率 */}
+              <div>
+                  <div className="flex justify-between mb-1.5">
+                       <span className="liquid-title">分辨率</span>
+                       <span className="text-[9px] text-cyan-400 font-mono">{imageSize}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-0.5">
+                       {['1K', '2K', '4K'].map(size => (
+                          <button
+                              key={size}
+                              onClick={() => setImageSize(size)}
+                              className={`py-1 text-[9px] font-medium rounded transition-all ${
+                                  imageSize === size
+                                      ? 'bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-sm'
+                                      : 'bg-white/4 text-gray-500 hover:bg-white/8 hover:text-gray-300'
+                              }`}
+                          >
+                              {size}
+                          </button>
+                      ))}
+                  </div>
+              </div>
+           </div>
+        </div>
+        
+        {/* 提示词区域 */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+             <h2 className="liquid-title">
+                {hasActiveTemplate ? '关键词' : '提示词'}
+             </h2>
+             <div className="flex items-center gap-1">
+               {hasActiveTemplate && (
+                 <div className="flex items-center gap-0.5">
+                   <span className={`liquid-badge ${
+                     activeBPTemplate 
+                       ? 'warning'
+                       : activeSmartPlusTemplate
+                       ? 'success'
+                       : 'primary'
+                   }`}>
+                     {activeTemplateName}
+                   </span>
+                   <button
+                     onClick={onClearTemplate}
+                     className="w-5 h-5 rounded flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                     title="卸载 (Esc)"
+                   >
+                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                     </svg>
+                   </button>
+                 </div>
+               )}
+               <span className={`liquid-badge ${isThirdPartyApiEnabled ? 'warning' : 'primary'}`}>
+                 {isThirdPartyApiEnabled ? 'Nano' : 'Gemini'}
+               </span>
+             </div>
+          </div>
+          
+          {activeBPTemplate && (
+              <BPModePanel 
+                   template={activeBPTemplate}
+                   inputs={bpInputs}
+                   onInputChange={setBpInput}
+              />
+          )}
+
+          {canViewPrompt ? (
+            <div className="relative group">
+             <textarea
+                 value={prompt}
+                 onChange={(e) => setPrompt(e.target.value)}
+                 placeholder={
+                   activeBPTemplate
+                     ? "生成的提示词显示在这里..."
+                     : activeSmartTemplate
+                     ? `"${activeSmartTemplate.title}" 关键词...`
+                     : activeSmartPlusTemplate
+                     ? `场景关键词 (可选)...`
+                     : "描述想生成的画面..."
+                 }
+                 readOnly={!!activeBPTemplate || !canEditPrompt}
+                 className={`w-full h-20 p-2.5 pr-10 liquid-input rounded-lg resize-none text-[11px] transition-all ${
+                     activeBPTemplate ? 'focus:border-yellow-500/40' : 'focus:border-indigo-500/40'
+                 } ${!canEditPrompt ? 'cursor-not-allowed opacity-60' : ''}`}
+               />
+               <button
+                 onClick={smartPromptGenStatus === ApiStatus.Loading ? onCancelSmartPrompt : handleGenerateSmartPrompt}
+                 disabled={smartPromptGenStatus !== ApiStatus.Loading && !canGenerateSmartPrompt}
+                 className={`absolute top-1.5 right-1.5 w-7 h-7 rounded-md text-white shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 flex items-center justify-center ${
+                     smartPromptGenStatus === ApiStatus.Loading
+                     ? 'bg-gradient-to-br from-red-500 to-red-600'
+                     : activeBPTemplate 
+                     ? 'bg-gradient-to-br from-yellow-500 to-orange-600' 
+                     : 'bg-gradient-to-br from-indigo-500 to-purple-600'
+                 }`}
+                 title={smartPromptGenStatus === ApiStatus.Loading ? "取消" : "生成"}
+               >
+                   {smartPromptGenStatus === ApiStatus.Loading ? (
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                   ) : (
+                     <PenguinIcon className="w-3.5 h-3.5" />
+                   )}
+               </button>
+            </div>
+          ) : (
+            <div className="p-2.5 liquid-card border-orange-500/15">
+              <div className="flex items-center gap-1.5 text-orange-300 mb-1.5">
+                <div className="w-5 h-5 rounded bg-orange-500/15 flex items-center justify-center">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <span className="text-xs font-medium">提示词已加密</span>
+              </div>
+              <p className="text-[10px] text-gray-500">
+                填写输入框后点击生成即可
+              </p>
+            </div>
+          )}
+        </div>
+        
+        {activeSmartPlusTemplate && (
+            <SmartPlusDirector 
+                config={smartPlusOverrides} 
+                onConfigChange={setSmartPlusOverrides}
+                templateConfig={activeSmartPlusTemplate.smartPlusConfig}
+            />
+        )}
       </div>
       
       {/* 免责声明 - 底部 */}
@@ -562,225 +774,163 @@ const BPModePanel: React.FC<{
 }
 
 const RightPanel: React.FC<RightPanelProps> = ({
-  prompt,
-  setPrompt,
-  activeSmartTemplate,
-  activeSmartPlusTemplate,
-  activeBPTemplate,
-  bpInputs,
-  setBpInput,
-  smartPlusOverrides,
-  setSmartPlusOverrides,
-  handleGenerateSmartPrompt,
-  canGenerateSmartPrompt,
-  smartPromptGenStatus,
-  onCancelSmartPrompt,
   creativeIdeas,
   handleUseCreativeIdea,
   setAddIdeaModalOpen,
   setView,
-  aspectRatio,
-  setAspectRatio,
-  imageSize,
-  setImageSize,
-  isThirdPartyApiEnabled,
-  onClearTemplate,
+  onDeleteIdea,
+  onEditIdea,
 }) => {
-  const hasActiveTemplate = activeSmartTemplate || activeSmartPlusTemplate || activeBPTemplate;
-  const activeTemplateName = activeBPTemplate?.title || activeSmartPlusTemplate?.title || activeSmartTemplate?.title;
+  const { theme } = useTheme();
   
-  // 获取当前模板的权限设置
-  const activeTemplate = activeBPTemplate || activeSmartPlusTemplate || activeSmartTemplate;
-  const canViewPrompt = activeTemplate?.allowViewPrompt !== false; // 默认true
-  const canEditPrompt = activeTemplate?.allowEditPrompt !== false; // 默认true
+  // 按类型分组创意库
+  const smartIdeas = creativeIdeas.filter(idea => idea.isSmart && !idea.isSmartPlus && !idea.isBP);
+  const smartPlusIdeas = creativeIdeas.filter(idea => idea.isSmartPlus);
+  const bpIdeas = creativeIdeas.filter(idea => idea.isBP);
+  
+  // 渲染单个创意项
+  const renderIdeaItem = (idea: CreativeIdea) => (
+    <div
+      key={idea.id}
+      className="group liquid-card p-2 hover:border-indigo-500/30 transition-all cursor-pointer"
+      onClick={() => handleUseCreativeIdea(idea)}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          {idea.imageUrl ? (
+            <img src={idea.imageUrl} alt="" className="w-6 h-6 rounded object-cover flex-shrink-0" />
+          ) : (
+            <span className="text-sm flex-shrink-0">✨</span>
+          )}
+          <span className="text-[11px] font-medium truncate" style={{ color: theme.colors.textPrimary }}>
+            {idea.title}
+          </span>
+        </div>
+        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={(e) => { e.stopPropagation(); onEditIdea(idea); }}
+            className="w-5 h-5 rounded flex items-center justify-center text-gray-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all"
+            title="编辑"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDeleteIdea(idea.id); }}
+            className="w-5 h-5 rounded flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+            title="删除"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+  
+  const renderGroup = (title: string, ideas: CreativeIdea[], badge: string, badgeClass: string) => {
+    if (ideas.length === 0) return null;
+    return (
+      <div className="mb-3">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[10px] font-medium" style={{ color: theme.colors.textMuted }}>{title}</span>
+          <span className={`liquid-badge ${badgeClass}`}>{ideas.length}</span>
+        </div>
+        <div className="space-y-1.5">
+          {ideas.slice(0, 5).map(renderIdeaItem)}
+          {ideas.length > 5 && (
+            <button 
+              onClick={() => setView('library')}
+              className="w-full py-1.5 text-[10px] text-indigo-400 hover:text-indigo-300 transition-colors"
+            >
+              查看全部 {ideas.length} 个...
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
   
   return (
-  <aside className="w-[280px] flex-shrink-0 flex flex-col h-full liquid-panel border-l z-20">
-     <div className="p-3 space-y-3 overflow-y-auto custom-scrollbar">
-        {/* Prompt Section */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-             <h2 className="liquid-title">
-                {hasActiveTemplate ? '关键词' : '提示词'}
-             </h2>
-             <div className="flex items-center gap-1">
-               {/* 当前模板标识 + 卸载按钮 */}
-               {hasActiveTemplate && (
-                 <div className="flex items-center gap-0.5">
-                   <span className={`liquid-badge ${
-                     activeBPTemplate 
-                       ? 'warning'
-                       : activeSmartPlusTemplate
-                       ? 'success'
-                       : 'primary'
-                   }`}>
-                     {activeTemplateName}
-                   </span>
-                   <button
-                     onClick={onClearTemplate}
-                     className="w-5 h-5 rounded flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                     title="卸载 (Esc)"
-                   >
-                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                     </svg>
-                   </button>
-                 </div>
-               )}
-               <span className={`liquid-badge ${isThirdPartyApiEnabled ? 'warning' : 'primary'}`}>
-                 {isThirdPartyApiEnabled ? 'Nano' : 'Gemini'}
-               </span>
-             </div>
+  <aside className="w-[220px] flex-shrink-0 flex flex-col h-full liquid-panel border-l z-20">
+     {/* 标题栏 */}
+     <div className="liquid-panel-section flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded bg-purple-500/15 flex items-center justify-center">
+            <LibraryIcon className="w-3 h-3 text-purple-400"/>
           </div>
-          
-           {activeBPTemplate && (
-               <BPModePanel 
-                    template={activeBPTemplate}
-                    inputs={bpInputs}
-                    onInputChange={setBpInput}
-               />
-           )}
-
-           {/* 提示词输入区域 - 精致设计 */}
-           {canViewPrompt ? (
-             <div className="relative group">
-              <textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder={
-                    activeBPTemplate
-                      ? "生成的提示词显示在这里..."
-                      : activeSmartTemplate
-                      ? `“${activeSmartTemplate.title}” 关键词...`
-                      : activeSmartPlusTemplate
-                      ? `场景关键词 (可选)...`
-                      : "描述想生成的画面..."
-                  }
-                  readOnly={!!activeBPTemplate || !canEditPrompt}
-                  className={`w-full h-24 p-2.5 pr-10 liquid-input rounded-lg resize-none text-[11px] transition-all ${
-                      activeBPTemplate ? 'focus:border-yellow-500/40' : 'focus:border-indigo-500/40'
-                  } ${!canEditPrompt ? 'cursor-not-allowed opacity-60' : ''}`}
-                />
-                <button
-                  onClick={smartPromptGenStatus === ApiStatus.Loading ? onCancelSmartPrompt : handleGenerateSmartPrompt}
-                  disabled={smartPromptGenStatus !== ApiStatus.Loading && !canGenerateSmartPrompt}
-                  className={`absolute top-1.5 right-1.5 w-7 h-7 rounded-md text-white shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 flex items-center justify-center ${
-                      smartPromptGenStatus === ApiStatus.Loading
-                      ? 'bg-gradient-to-br from-red-500 to-red-600'
-                      : activeBPTemplate 
-                      ? 'bg-gradient-to-br from-yellow-500 to-orange-600' 
-                      : 'bg-gradient-to-br from-indigo-500 to-purple-600'
-                  }`}
-                  title={smartPromptGenStatus === ApiStatus.Loading ? "取消" : "生成"}
-                >
-                    {smartPromptGenStatus === ApiStatus.Loading ? (
-                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                       </svg>
-                    ) : (
-                      <PenguinIcon className="w-3.5 h-3.5" />
-                    )}
-                </button>
-             </div>
-           ) : (
-             /* 不允许查看提示词 */
-             <div className="p-2.5 liquid-card border-orange-500/15">
-               <div className="flex items-center gap-1.5 text-orange-300 mb-1.5">
-                 <div className="w-5 h-5 rounded bg-orange-500/15 flex items-center justify-center">
-                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                   </svg>
-                 </div>
-                 <span className="text-xs font-medium">提示词已加密</span>
-               </div>
-               <p className="text-[10px] text-gray-500">
-                 填写输入框后点击生成即可
-               </p>
-             </div>
-           )}
+          <h2 className="text-[12px] font-semibold" style={{ color: theme.colors.textPrimary }}>创意库</h2>
         </div>
-        
-        {activeSmartPlusTemplate && (
-            <SmartPlusDirector 
-                config={smartPlusOverrides} 
-                onConfigChange={setSmartPlusOverrides}
-                templateConfig={activeSmartPlusTemplate.smartPlusConfig}
-            />
-        )}
-
-        {/* 模型参数卡片 */}
-        <div className="liquid-card p-2.5">
-           <div className="flex items-center gap-1.5 mb-2">
-              <div className="w-4 h-4 rounded bg-indigo-500/15 flex items-center justify-center">
-                <ImageIcon className="w-2.5 h-2.5 text-indigo-400"/>
-              </div>
-              <h3 className="text-[11px] font-medium text-white">参数</h3>
-           </div>
-           
-           <div className="space-y-2.5">
-              {/* 画面比例 */}
-              <div>
-                  <div className="flex justify-between mb-1.5">
-                       <span className="liquid-title">比例</span>
-                       <span className="text-[9px] text-indigo-400 font-mono">{aspectRatio}</span>
-                  </div>
-                  <div className="grid grid-cols-6 gap-0.5">
-                      {['Auto', '1:1', '3:4', '4:3', '9:16', '16:9'].map(ratio => (
-                          <button
-                              key={ratio}
-                              onClick={() => setAspectRatio(ratio)}
-                              className={`py-1 text-[9px] font-medium rounded transition-all ${
-                                  aspectRatio === ratio
-                                      ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-sm'
-                                      : 'bg-white/4 text-gray-500 hover:bg-white/8 hover:text-gray-300'
-                              }`}
-                          >
-                              {ratio}
-                          </button>
-                      ))}
-                  </div>
-                  <div className="grid grid-cols-5 gap-0.5 mt-0.5">
-                      {['2:3', '3:2', '4:5', '5:4', '21:9'].map(ratio => (
-                          <button
-                              key={ratio}
-                              onClick={() => setAspectRatio(ratio)}
-                              className={`py-1 text-[9px] font-medium rounded transition-all ${
-                                  aspectRatio === ratio
-                                      ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-sm'
-                                      : 'bg-white/4 text-gray-500 hover:bg-white/8 hover:text-gray-300'
-                              }`}
-                          >
-                              {ratio}
-                          </button>
-                      ))}
-                  </div>
-              </div>
-              
-              {/* 分辨率 */}
-              <div>
-                  <div className="flex justify-between mb-1.5">
-                       <span className="liquid-title">分辨率</span>
-                       <span className="text-[9px] text-cyan-400 font-mono">{imageSize}</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-0.5">
-                       {['1K', '2K', '4K'].map(size => (
-                          <button
-                              key={size}
-                              onClick={() => setImageSize(size)}
-                              className={`py-1 text-[9px] font-medium rounded transition-all ${
-                                  imageSize === size
-                                      ? 'bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-sm'
-                                      : 'bg-white/4 text-gray-500 hover:bg-white/8 hover:text-gray-300'
-                              }`}
-                          >
-                              {size}
-                          </button>
-                      ))}
-                  </div>
-              </div>
-           </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setAddIdeaModalOpen(true)}
+            className="w-6 h-6 rounded-md flex items-center justify-center transition-all hover:scale-105 press-scale"
+            style={{ 
+              background: 'var(--glass-bg)',
+              color: theme.colors.textSecondary 
+            }}
+            title="新建创意"
+          >
+            <PlusCircleIcon className="w-3 h-3" />
+          </button>
+          <button
+            onClick={() => setView('library')}
+            className="w-6 h-6 rounded-md flex items-center justify-center transition-all hover:scale-105 press-scale"
+            style={{ 
+              background: 'var(--glass-bg)',
+              color: theme.colors.textSecondary 
+            }}
+            title="全部创意库"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+          </button>
         </div>
      </div>
+     
+     {/* 创意列表 */}
+     <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
+        {creativeIdeas.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center py-8">
+            <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-3">
+              <LibraryIcon className="w-6 h-6 text-purple-400"/>
+            </div>
+            <p className="text-[11px] font-medium" style={{ color: theme.colors.textPrimary }}>还没有创意</p>
+            <p className="text-[10px] mt-1" style={{ color: theme.colors.textMuted }}>点击右上角创建第一个</p>
+            <button
+              onClick={() => setAddIdeaModalOpen(true)}
+              className="mt-4 px-4 py-2 liquid-btn text-[11px]"
+            >
+              <PlusCircleIcon className="w-3.5 h-3.5 mr-1.5" />
+              新建创意
+            </button>
+          </div>
+        ) : (
+          <>
+            {renderGroup('BP 模式', bpIdeas, 'BP', 'warning')}
+            {renderGroup('Smart+', smartPlusIdeas, 'S+', 'success')}
+            {renderGroup('Smart', smartIdeas, 'S', 'primary')}
+          </>
+        )}
+     </div>
+     
+     {/* 底部统计 */}
+     {creativeIdeas.length > 0 && (
+       <div className="mx-3 mb-3 px-2.5 py-2 liquid-card">
+         <div className="flex items-center justify-between text-[10px]">
+           <span style={{ color: theme.colors.textMuted }}>共 {creativeIdeas.length} 个创意</span>
+           <button
+             onClick={() => setView('library')}
+             className="text-indigo-400 hover:text-indigo-300 transition-colors"
+           >
+             管理全部 →
+           </button>
+         </div>
+       </div>
+     )}
   </aside>
 );
 };
@@ -2556,6 +2706,25 @@ const App: React.FC = () => {
                       ? 'cloud'
                       : 'local-gemini'
             }
+            prompt={prompt}
+            setPrompt={handleSetPrompt}
+            activeSmartTemplate={activeSmartTemplate}
+            activeSmartPlusTemplate={activeSmartPlusTemplate}
+            activeBPTemplate={activeBPTemplate}
+            bpInputs={bpInputs}
+            setBpInput={handleBpInputChange}
+            smartPlusOverrides={smartPlusOverrides}
+            setSmartPlusOverrides={setSmartPlusOverrides}
+            handleGenerateSmartPrompt={handleGenerateSmartPrompt}
+            canGenerateSmartPrompt={canGenerateSmartPrompt}
+            smartPromptGenStatus={smartPromptGenStatus}
+            onCancelSmartPrompt={handleCancelSmartPrompt}
+            aspectRatio={aspectRatio}
+            setAspectRatio={setAspectRatio}
+            imageSize={imageSize}
+            setImageSize={setImageSize}
+            isThirdPartyApiEnabled={thirdPartyApiConfig.enabled}
+            onClearTemplate={handleClearTemplate}
           />
         </div>
       ) : (
@@ -2603,6 +2772,25 @@ const App: React.FC = () => {
                         ? 'cloud'
                         : 'local-gemini'
               }
+              prompt={prompt}
+              setPrompt={handleSetPrompt}
+              activeSmartTemplate={activeSmartTemplate}
+              activeSmartPlusTemplate={activeSmartPlusTemplate}
+              activeBPTemplate={activeBPTemplate}
+              bpInputs={bpInputs}
+              setBpInput={handleBpInputChange}
+              smartPlusOverrides={smartPlusOverrides}
+              setSmartPlusOverrides={setSmartPlusOverrides}
+              handleGenerateSmartPrompt={handleGenerateSmartPrompt}
+              canGenerateSmartPrompt={canGenerateSmartPrompt}
+              smartPromptGenStatus={smartPromptGenStatus}
+              onCancelSmartPrompt={handleCancelSmartPrompt}
+              aspectRatio={aspectRatio}
+              setAspectRatio={setAspectRatio}
+              imageSize={imageSize}
+              setImageSize={setImageSize}
+              isThirdPartyApiEnabled={thirdPartyApiConfig.enabled}
+              onClearTemplate={handleClearTemplate}
             />
           </div>
           
@@ -2678,29 +2866,12 @@ const App: React.FC = () => {
       {view !== 'canvas' && (
         <div className="flex-shrink-0">
           <RightPanel 
-            prompt={prompt}
-            setPrompt={handleSetPrompt}
-            activeSmartTemplate={activeSmartTemplate}
-            activeSmartPlusTemplate={activeSmartPlusTemplate}
-            activeBPTemplate={activeBPTemplate}
-            bpInputs={bpInputs}
-            setBpInput={handleBpInputChange}
-            smartPlusOverrides={smartPlusOverrides}
-            setSmartPlusOverrides={setSmartPlusOverrides}
-            handleGenerateSmartPrompt={handleGenerateSmartPrompt}
-            onCancelSmartPrompt={handleCancelSmartPrompt}
-            canGenerateSmartPrompt={canGenerateSmartPrompt}
-            smartPromptGenStatus={smartPromptGenStatus}
             creativeIdeas={creativeIdeas}
             handleUseCreativeIdea={handleUseCreativeIdea}
             setAddIdeaModalOpen={() => setAddIdeaModalOpen(true)}
             setView={setView}
-            aspectRatio={aspectRatio}
-            setAspectRatio={setAspectRatio}
-            imageSize={imageSize}
-            setImageSize={setImageSize}
-            isThirdPartyApiEnabled={thirdPartyApiConfig.enabled}
-            onClearTemplate={handleClearTemplate}
+            onDeleteIdea={handleDeleteCreativeIdea}
+            onEditIdea={handleStartEditIdea}
           />
         </div>
       )}

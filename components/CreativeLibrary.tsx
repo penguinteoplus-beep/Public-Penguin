@@ -7,6 +7,7 @@ import { LibraryIcon } from './icons/LibraryIcon';
 import { EditIcon } from './icons/EditIcon';
 import { DownloadIcon } from './icons/DownloadIcon';
 import { UploadIcon } from './icons/UploadIcon';
+import { useTheme } from '../contexts/ThemeContext';
 
 
 interface CreativeLibraryProps {
@@ -24,6 +25,8 @@ interface CreativeLibraryProps {
 type FilterType = 'all' | 'simple' | 'bp' | 'plus';
 
 export const CreativeLibrary: React.FC<CreativeLibraryProps> = ({ ideas, onBack, onAdd, onDelete, onEdit, onUse, onExport, onImport, onReorder }) => {
+  const { themeName } = useTheme();
+  const isLight = themeName === 'light';
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<FilterType>('all');
 
@@ -72,25 +75,39 @@ export const CreativeLibrary: React.FC<CreativeLibraryProps> = ({ ideas, onBack,
   ];
 
   return (
-    <div className="flex flex-col w-full h-full p-6 bg-gray-950/50 animate-fade-in">
-      <header className="flex-shrink-0 flex items-center justify-between gap-4 pb-4 border-b border-gray-700/50">
+    <div 
+      className="flex flex-col w-full h-full p-6 animate-fade-in"
+      style={{ background: isLight ? 'rgba(248,250,252,0.95)' : 'rgba(3,7,18,0.5)' }}
+    >
+      <header 
+        className="flex-shrink-0 flex items-center justify-between gap-4 pb-4 border-b"
+        style={{ borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)' }}
+      >
         <div>
           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-500">
             创意库
           </h1>
-          <p className="text-sm text-gray-400 mt-1">管理和使用您的创意灵感</p>
+          <p className="text-sm mt-1" style={{ color: isLight ? '#64748b' : '#9ca3af' }}>管理和使用您的创意灵感</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={onImport}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white font-semibold rounded-lg text-sm shadow-md hover:bg-gray-600 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 font-semibold rounded-lg text-sm shadow-md transition-colors"
+            style={{
+              background: isLight ? '#e2e8f0' : '#374151',
+              color: isLight ? '#0f172a' : 'white'
+            }}
           >
             <UploadIcon className="w-5 h-5" />
             <span>导入</span>
           </button>
            <button
             onClick={onExport}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white font-semibold rounded-lg text-sm shadow-md hover:bg-gray-600 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 font-semibold rounded-lg text-sm shadow-md transition-colors"
+            style={{
+              background: isLight ? '#e2e8f0' : '#374151',
+              color: isLight ? '#0f172a' : 'white'
+            }}
           >
             <DownloadIcon className="w-5 h-5" />
             <span>导出</span>
@@ -104,7 +121,12 @@ export const CreativeLibrary: React.FC<CreativeLibraryProps> = ({ ideas, onBack,
           </button>
           <button
             onClick={onBack}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white font-semibold rounded-lg text-sm hover:bg-gray-700 border border-gray-600 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 font-semibold rounded-lg text-sm border transition-colors"
+            style={{
+              background: isLight ? 'rgba(0,0,0,0.05)' : '#1f2937',
+              color: isLight ? '#0f172a' : 'white',
+              borderColor: isLight ? 'rgba(0,0,0,0.15)' : '#4b5563'
+            }}
           >
             &larr; 返回
           </button>
@@ -113,16 +135,27 @@ export const CreativeLibrary: React.FC<CreativeLibraryProps> = ({ ideas, onBack,
 
       <div className="flex-shrink-0 flex items-center justify-between gap-4 py-4">
         <div className="relative flex-grow">
-          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: isLight ? '#94a3b8' : '#6b7280' }} />
           <input
             type="text"
             placeholder="搜索标题..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 pl-10 pr-4 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+            className="w-full border rounded-lg py-2 pl-10 pr-4 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+            style={{
+              background: isLight ? 'rgba(255,255,255,0.9)' : '#1f2937',
+              borderColor: isLight ? 'rgba(0,0,0,0.15)' : '#374151',
+              color: isLight ? '#0f172a' : 'white'
+            }}
           />
         </div>
-        <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg p-1">
+        <div 
+          className="flex items-center gap-2 border rounded-lg p-1"
+          style={{
+            background: isLight ? 'rgba(255,255,255,0.9)' : '#1f2937',
+            borderColor: isLight ? 'rgba(0,0,0,0.15)' : '#374151'
+          }}
+        >
           {filterButtons.map(({ key, label }) => (
             <button
               key={key}
@@ -130,8 +163,9 @@ export const CreativeLibrary: React.FC<CreativeLibraryProps> = ({ ideas, onBack,
               className={`px-4 py-1 text-sm font-semibold rounded-md transition-colors ${
                 filter === key
                   ? key === 'bp' ? 'bg-yellow-600 text-white' : 'bg-indigo-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-700'
+                  : ''
               }`}
+              style={filter !== key ? { color: isLight ? '#475569' : '#d1d5db' } : {}}
             >
               {label}
             </button>
@@ -145,7 +179,11 @@ export const CreativeLibrary: React.FC<CreativeLibraryProps> = ({ ideas, onBack,
             {filteredIdeas.map(idea => (
               <div 
                 key={idea.id} 
-                className="group relative rounded-lg overflow-hidden cursor-grab aspect-square bg-gray-800/70 border border-gray-700/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/20 hover:-translate-y-1"
+                className="group relative rounded-lg overflow-hidden cursor-grab aspect-square border transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/20 hover:-translate-y-1"
+                style={{
+                  background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(31,41,55,0.7)',
+                  borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(55,65,81,0.5)'
+                }}
                 title={idea.title}
                 draggable
                 onDragStart={() => (dragItem.current = idea)}
@@ -214,9 +252,9 @@ export const CreativeLibrary: React.FC<CreativeLibraryProps> = ({ ideas, onBack,
             ))}
           </div>
         ) : (
-          <div className="text-center text-gray-500 flex flex-col items-center justify-center h-full">
-            <LibraryIcon className="w-16 h-16 text-gray-700 mb-4"/>
-            <h2 className="text-2xl font-semibold">
+          <div className="text-center flex flex-col items-center justify-center h-full" style={{ color: isLight ? '#64748b' : '#6b7280' }}>
+            <LibraryIcon className="w-16 h-16 mb-4" style={{ color: isLight ? '#cbd5e1' : '#374151' }}/>
+            <h2 className="text-2xl font-semibold" style={{ color: isLight ? '#475569' : '#6b7280' }}>
               {searchTerm || filter !== 'all' ? '未找到创意' : '创意库是空的'}
             </h2>
             <p className="mt-2">

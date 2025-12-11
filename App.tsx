@@ -295,36 +295,36 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
   const modeDisplay = getModeDisplay();
   
   return (
-  <aside className="w-[260px] flex-shrink-0 flex flex-col h-full modern-panel border-r z-20">
-      {/* 顶部导航栏 - 精简 */}
-      <div className="modern-panel-section flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
-            <span className="text-base">🐧</span>
+  <aside className="w-[220px] flex-shrink-0 flex flex-col h-full liquid-panel border-r z-20">
+      {/* 顶部导航栏 */}
+      <div className="liquid-panel-section flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+            <span className="text-sm">🐧</span>
           </div>
           <div>
-            <h1 className="text-sm font-semibold gradient-text">Pebbling UI</h1>
-            <p className="text-[9px]" style={{ color: theme.colors.textMuted }}>AI 创意工具</p>
+            <h1 className="text-[13px] font-semibold gradient-text">Pebbling</h1>
+            <p className="text-[9px]" style={{ color: theme.colors.textMuted }}>AI Creative</p>
           </div>
         </div>
         
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {/* 明暗切换 */}
           <button
             onClick={toggleDarkMode}
-            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105"
+            className="w-6 h-6 rounded-md flex items-center justify-center transition-all hover:scale-105 press-scale"
             style={{ 
-              background: theme.colors.bgTertiary,
+              background: 'var(--glass-bg)',
               color: theme.colors.textSecondary 
             }}
-            title={isDark ? '切换到浅色模式' : '切换到深色模式'}
+            title={isDark ? '浅色' : '深色'}
           >
             {isDark ? (
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             ) : (
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
               </svg>
             )}
@@ -332,30 +332,30 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
           {/* 设置按钮 */}
           <button
             onClick={onSettingsClick}
-            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105"
+            className="w-6 h-6 rounded-md flex items-center justify-center transition-all hover:scale-105 press-scale"
             style={{ 
-              background: theme.colors.bgTertiary,
+              background: 'var(--glass-bg)',
               color: theme.colors.textSecondary 
             }}
             title="设置"
           >
-            <SettingsIcon className="w-3.5 h-3.5" />
+            <SettingsIcon className="w-3 h-3" />
           </button>
         </div>
       </div>
       
-      {/* 用户信息栏 - 紧凑 */}
-      <div className="px-4 py-3" style={{ borderBottom: `1px solid ${theme.colors.borderLight}` }}>
-        <div className="flex items-center gap-2.5">
+      {/* 用户信息栏 */}
+      <div className="px-3 py-2.5" style={{ borderBottom: `1px solid ${theme.colors.borderLight}` }}>
+        <div className="flex items-center gap-2">
           {currentUser ? (
             <>
               {/* 头像 */}
               <div className="relative group">
-                <button className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium text-xs shadow-md hover:scale-105 transition-transform">
+                <button className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium text-[10px] shadow-md hover:scale-105 transition-transform">
                   {currentUser.nickname?.[0] || currentUser.username[0].toUpperCase()}
                 </button>
                 {/* 下拉菜单 */}
-                <div className="absolute left-0 top-full mt-1.5 w-36 modern-card p-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 animate-scale-in">
+                <div className="absolute left-0 top-full mt-1 w-32 liquid-card p-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 animate-scale-in">
                   <div className="p-2.5" style={{ borderBottom: `1px solid ${theme.colors.borderLight}` }}>
                     <p className="text-xs font-medium truncate" style={{ color: theme.colors.textPrimary }}>{currentUser.nickname || currentUser.username}</p>
                     <p className="text-[10px] truncate mt-0.5" style={{ color: theme.colors.textMuted }}>{currentUser.email}</p>
@@ -396,31 +396,31 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
           ) : (
             <button
               onClick={onLoginClick}
-              className="flex-1 py-2 text-xs font-medium text-white modern-btn w-full"
+              className="flex-1 py-1.5 text-[11px] font-medium text-white liquid-btn w-full"
             >
-              <span className="text-sm">☁️</span>
+              <span className="text-xs">☁️</span>
               登录云服务
             </button>
           )}
         </div>
       </div>
       
-      {/* 公告区域 - 简洁卡片 */}
-      <div className="mx-4 mt-3 p-3 modern-card">
-        <div className="flex items-start gap-2.5">
-          <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99, 102, 241, 0.15)' }}>
-            <span className="text-xs">📣</span>
+      {/* 公告区域 */}
+      <div className="mx-3 mt-2.5 p-2.5 liquid-card">
+        <div className="flex items-start gap-2">
+          <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99, 102, 241, 0.15)' }}>
+            <span className="text-[10px]">📣</span>
           </div>
           <div className="flex-1">
-            <p className="text-xs font-medium" style={{ color: theme.colors.textPrimary }}>欢迎使用</p>
-            <p className="text-[10px] mt-0.5" style={{ color: theme.colors.textMuted }}>单击预览，拖拽整理</p>
+            <p className="text-[11px] font-medium" style={{ color: theme.colors.textPrimary }}>欢迎使用</p>
+            <p className="text-[9px] mt-0.5" style={{ color: theme.colors.textMuted }}>单击预览，拖拽整理</p>
           </div>
         </div>
       </div>
       
       {/* 资源素材区域 */}
-      <div className="flex-grow p-4 flex flex-col min-h-0 overflow-hidden">
-        <h2 className="modern-title mb-3">资源素材</h2>
+      <div className="flex-grow p-3 flex flex-col min-h-0 overflow-hidden">
+        <h2 className="liquid-title mb-2">资源素材</h2>
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           <ImageUploader 
             files={files}
@@ -434,8 +434,8 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       </div>
       
       {/* 免责声明 - 底部 */}
-      <div className="mx-4 mb-4 px-3 py-2 rounded-lg" style={{ background: theme.colors.bgSecondary, border: `1px solid ${theme.colors.borderLight}` }}>
-        <p className="text-[9px] leading-relaxed" style={{ color: theme.colors.textMuted }}>
+      <div className="mx-3 mb-3 px-2.5 py-1.5 rounded-md" style={{ background: theme.colors.bgSecondary, border: `1px solid ${theme.colors.borderLight}` }}>
+        <p className="text-[8px] leading-relaxed" style={{ color: theme.colors.textMuted }}>
           ⚠️ AI 内容仅供学习测试
         </p>
       </div>
@@ -595,19 +595,19 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const canEditPrompt = activeTemplate?.allowEditPrompt !== false; // 默认true
   
   return (
-  <aside className="w-[320px] flex-shrink-0 flex flex-col h-full modern-panel border-l z-20">
-     <div className="p-4 space-y-4 overflow-y-auto custom-scrollbar">
+  <aside className="w-[280px] flex-shrink-0 flex flex-col h-full liquid-panel border-l z-20">
+     <div className="p-3 space-y-3 overflow-y-auto custom-scrollbar">
         {/* Prompt Section */}
         <div>
-          <div className="flex items-center justify-between mb-3">
-             <h2 className="modern-title">
+          <div className="flex items-center justify-between mb-2">
+             <h2 className="liquid-title">
                 {hasActiveTemplate ? '关键词' : '提示词'}
              </h2>
-             <div className="flex items-center gap-1.5">
+             <div className="flex items-center gap-1">
                {/* 当前模板标识 + 卸载按钮 */}
                {hasActiveTemplate && (
-                 <div className="flex items-center gap-1">
-                   <span className={`modern-badge ${
+                 <div className="flex items-center gap-0.5">
+                   <span className={`liquid-badge ${
                      activeBPTemplate 
                        ? 'warning'
                        : activeSmartPlusTemplate
@@ -627,7 +627,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                    </button>
                  </div>
                )}
-               <span className={`modern-badge ${isThirdPartyApiEnabled ? 'warning' : 'primary'}`}>
+               <span className={`liquid-badge ${isThirdPartyApiEnabled ? 'warning' : 'primary'}`}>
                  {isThirdPartyApiEnabled ? 'Nano' : 'Gemini'}
                </span>
              </div>
@@ -657,14 +657,14 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       : "描述想生成的画面..."
                   }
                   readOnly={!!activeBPTemplate || !canEditPrompt}
-                  className={`w-full h-28 p-3 pr-11 modern-input rounded-lg resize-none text-xs transition-all ${
+                  className={`w-full h-24 p-2.5 pr-10 liquid-input rounded-lg resize-none text-[11px] transition-all ${
                       activeBPTemplate ? 'focus:border-yellow-500/40' : 'focus:border-indigo-500/40'
                   } ${!canEditPrompt ? 'cursor-not-allowed opacity-60' : ''}`}
                 />
                 <button
                   onClick={smartPromptGenStatus === ApiStatus.Loading ? onCancelSmartPrompt : handleGenerateSmartPrompt}
                   disabled={smartPromptGenStatus !== ApiStatus.Loading && !canGenerateSmartPrompt}
-                  className={`absolute top-2 right-2 w-8 h-8 rounded-lg text-white shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 flex items-center justify-center ${
+                  className={`absolute top-1.5 right-1.5 w-7 h-7 rounded-md text-white shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 flex items-center justify-center ${
                       smartPromptGenStatus === ApiStatus.Loading
                       ? 'bg-gradient-to-br from-red-500 to-red-600'
                       : activeBPTemplate 
@@ -674,20 +674,20 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   title={smartPromptGenStatus === ApiStatus.Loading ? "取消" : "生成"}
                 >
                     {smartPromptGenStatus === ApiStatus.Loading ? (
-                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                        </svg>
                     ) : (
-                      <PenguinIcon className="w-4 h-4" />
+                      <PenguinIcon className="w-3.5 h-3.5" />
                     )}
                 </button>
              </div>
            ) : (
              /* 不允许查看提示词 */
-             <div className="p-3 modern-card border-orange-500/15">
-               <div className="flex items-center gap-2 text-orange-300 mb-2">
-                 <div className="w-6 h-6 rounded-md bg-orange-500/15 flex items-center justify-center">
-                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             <div className="p-2.5 liquid-card border-orange-500/15">
+               <div className="flex items-center gap-1.5 text-orange-300 mb-1.5">
+                 <div className="w-5 h-5 rounded bg-orange-500/15 flex items-center justify-center">
+                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                    </svg>
                  </div>
@@ -708,28 +708,28 @@ const RightPanel: React.FC<RightPanelProps> = ({
             />
         )}
 
-        {/* 模型参数卡片 - 紧凑设计 */}
-        <div className="modern-card p-3">
-           <div className="flex items-center gap-2 mb-3">
-              <div className="w-5 h-5 rounded bg-indigo-500/15 flex items-center justify-center">
-                <ImageIcon className="w-3 h-3 text-indigo-400"/>
+        {/* 模型参数卡片 */}
+        <div className="liquid-card p-2.5">
+           <div className="flex items-center gap-1.5 mb-2">
+              <div className="w-4 h-4 rounded bg-indigo-500/15 flex items-center justify-center">
+                <ImageIcon className="w-2.5 h-2.5 text-indigo-400"/>
               </div>
-              <h3 className="text-xs font-medium text-white">参数</h3>
+              <h3 className="text-[11px] font-medium text-white">参数</h3>
            </div>
            
-           <div className="space-y-3">
+           <div className="space-y-2.5">
               {/* 画面比例 */}
               <div>
-                  <div className="flex justify-between mb-2">
-                       <span className="modern-title">比例</span>
-                       <span className="text-[10px] text-indigo-400 font-mono">{aspectRatio}</span>
+                  <div className="flex justify-between mb-1.5">
+                       <span className="liquid-title">比例</span>
+                       <span className="text-[9px] text-indigo-400 font-mono">{aspectRatio}</span>
                   </div>
-                  <div className="grid grid-cols-6 gap-1">
+                  <div className="grid grid-cols-6 gap-0.5">
                       {['Auto', '1:1', '3:4', '4:3', '9:16', '16:9'].map(ratio => (
                           <button
                               key={ratio}
                               onClick={() => setAspectRatio(ratio)}
-                              className={`py-1.5 text-[10px] font-medium rounded transition-all ${
+                              className={`py-1 text-[9px] font-medium rounded transition-all ${
                                   aspectRatio === ratio
                                       ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-sm'
                                       : 'bg-white/4 text-gray-500 hover:bg-white/8 hover:text-gray-300'
@@ -739,12 +739,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           </button>
                       ))}
                   </div>
-                  <div className="grid grid-cols-5 gap-1 mt-1">
+                  <div className="grid grid-cols-5 gap-0.5 mt-0.5">
                       {['2:3', '3:2', '4:5', '5:4', '21:9'].map(ratio => (
                           <button
                               key={ratio}
                               onClick={() => setAspectRatio(ratio)}
-                              className={`py-1.5 text-[10px] font-medium rounded transition-all ${
+                              className={`py-1 text-[9px] font-medium rounded transition-all ${
                                   aspectRatio === ratio
                                       ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-sm'
                                       : 'bg-white/4 text-gray-500 hover:bg-white/8 hover:text-gray-300'
@@ -758,16 +758,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
               
               {/* 分辨率 */}
               <div>
-                  <div className="flex justify-between mb-2">
-                       <span className="modern-title">分辨率</span>
-                       <span className="text-[10px] text-cyan-400 font-mono">{imageSize}</span>
+                  <div className="flex justify-between mb-1.5">
+                       <span className="liquid-title">分辨率</span>
+                       <span className="text-[9px] text-cyan-400 font-mono">{imageSize}</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-1">
+                  <div className="grid grid-cols-3 gap-0.5">
                        {['1K', '2K', '4K'].map(size => (
                           <button
                               key={size}
                               onClick={() => setImageSize(size)}
-                              className={`py-1.5 text-[10px] font-medium rounded transition-all ${
+                              className={`py-1 text-[9px] font-medium rounded transition-all ${
                                   imageSize === size
                                       ? 'bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-sm'
                                       : 'bg-white/4 text-gray-500 hover:bg-white/8 hover:text-gray-300'
@@ -853,42 +853,42 @@ const Canvas: React.FC<CanvasProps> = ({
         </>
       )}
       
-      {/* 顶部切换标签 - 紧凑精致 */}
-      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 modern-tabs">
+      {/* 顶部切换标签 */}
+      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 liquid-tabs">
         <button
           onClick={() => setView('editor')}
-          className={`modern-tab flex items-center gap-1.5 ${
+          className={`liquid-tab flex items-center gap-1 ${
             view === 'editor' ? 'active' : ''
           }`}
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
           桌面
         </button>
         <button
           onClick={() => setView('library')}
-          className={`modern-tab flex items-center gap-1.5 ${
+          className={`liquid-tab flex items-center gap-1 ${
             view === 'library' ? 'active' : ''
           }`}
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
           创意库
           {creativeIdeas.length > 0 && (
-            <span className="px-1 py-0.5 text-[9px] rounded bg-white/20 font-medium">
+            <span className="px-1 py-0.5 text-[8px] rounded bg-white/20 font-medium">
               {creativeIdeas.length}
             </span>
           )}
         </button>
         <button
           onClick={() => setView('canvas')}
-          className={`modern-tab flex items-center gap-1.5 ${
+          className={`liquid-tab flex items-center gap-1 ${
             view === 'canvas' ? 'active' : ''
           }`}
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
           </svg>
           画布

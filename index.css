@@ -1,26 +1,45 @@
 /* ===========================================
-   Pebbling UI - 现代UI样式系统
+   Pebbling UI - 现代精致样式系统
+   灵感来源: Moonvy + Refly 设计风格
    =========================================== */
 
 /* 基础重置和全局样式 */
 :root {
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
-  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* 液态组件变量 */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-hover: rgba(255, 255, 255, 0.08);
+  --glass-glow: rgba(99, 102, 241, 0.15);
+  
+  /* 阴影系统 */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16), 0 4px 8px rgba(0, 0, 0, 0.08);
+  --shadow-glow: 0 0 24px rgba(99, 102, 241, 0.2);
+  --shadow-inner: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* 亮色主题变量 */
 .theme-light {
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-hover: rgba(0, 0, 0, 0.04);
+  --glass-glow: rgba(99, 102, 241, 0.1);
+  
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
 }
 
-/* 现代化滚动条 */
+/* 现代化滚动条 - 极细 */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -28,79 +47,81 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--color-border, rgba(255, 255, 255, 0.1));
-  border-radius: 10px;
+  background: var(--glass-border);
+  border-radius: 100px;
   transition: background 0.2s ease;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted, rgba(255, 255, 255, 0.2));
+  background: var(--glass-hover);
 }
 
-/* 现代化卡片样式 - 精致 */
-.modern-card {
-  background: var(--color-bg-panel, linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%));
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.05));
-  border-radius: 10px;
-  box-shadow: var(--shadow-card);
-  transition: all 0.15s ease;
+/* ============================================
+   液态组件系统 - Liquid Glass Style
+   ============================================ */
+
+/* 液态组件卡片 - 核心样式 */
+.liquid-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s var(--ease-smooth);
 }
 
-.modern-card:hover {
-  border-color: var(--color-border-light, rgba(255, 255, 255, 0.08));
+.liquid-card:hover {
+  border-color: var(--glass-hover);
+  box-shadow: var(--shadow-md);
 }
 
-/* 亮色主题卡片 */
-.theme-light .modern-card {
-  background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(0, 0, 0, 0.06);
-}
-
-.theme-light .modern-card:hover {
-  border-color: rgba(0, 0, 0, 0.1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-/* 现代化按钮 - 精致小巧 */
-.modern-btn {
+/* 液态组件按钮 */
+.liquid-btn {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: 5px;
+  padding: 7px 14px;
   font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   color: white;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  border: none;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(139, 92, 246, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s var(--ease-smooth);
   overflow: hidden;
 }
 
-.modern-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-  filter: brightness(1.1);
+.liquid-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+  pointer-events: none;
 }
 
-.modern-btn:active {
+.liquid-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glow), var(--shadow-sm);
+}
+
+.liquid-btn:active {
   transform: translateY(0) scale(0.98);
 }
 
-.modern-btn:disabled {
-  opacity: 0.4;
+.liquid-btn:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
 /* 小型按钮 */
-.modern-btn-sm {
+.liquid-btn-sm {
   padding: 5px 10px;
   font-size: 11px;
   border-radius: 6px;
@@ -108,101 +129,96 @@
 }
 
 /* 图标按钮 */
-.modern-btn-icon {
-  width: 28px;
-  height: 28px;
+.liquid-btn-icon {
+  width: 26px;
+  height: 26px;
   padding: 0;
   border-radius: 6px;
 }
 
-/* 幽灵按钮 - 适配亮暗主题 */
-.modern-btn-ghost {
+/* 幽灵按钮 */
+.liquid-btn-ghost {
   background: transparent;
-  color: var(--color-text-secondary, #a1a1aa);
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+  color: var(--color-text-secondary, rgba(255, 255, 255, 0.7));
+  border: 1px solid var(--glass-border);
 }
 
-.modern-btn-ghost:hover {
-  background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.05));
-  color: var(--color-text-primary, white);
-  border-color: var(--color-border, rgba(255, 255, 255, 0.15));
+.liquid-btn-ghost::before {
+  display: none;
+}
+
+.liquid-btn-ghost:hover {
+  background: var(--glass-hover);
+  border-color: var(--glass-hover);
   box-shadow: none;
-  filter: none;
 }
 
-.theme-light .modern-btn-ghost {
+.theme-light .liquid-btn-ghost {
   color: #475569;
-  border-color: rgba(0, 0, 0, 0.1);
 }
 
-.theme-light .modern-btn-ghost:hover {
+.theme-light .liquid-btn-ghost:hover {
   background: rgba(0, 0, 0, 0.04);
   color: #0f172a;
-  border-color: rgba(0, 0, 0, 0.15);
 }
 
-/* 现代化输入框 - 精细 */
-.modern-input {
+/* 液态组件输入框 */
+.liquid-input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 9px 12px;
   font-size: 13px;
   line-height: 1.5;
   color: var(--color-text-primary, white);
-  background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.06));
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: 8px;
   outline: none;
-  transition: all 0.15s ease;
+  transition: all 0.2s var(--ease-smooth);
 }
 
-.modern-input:hover {
-  border-color: var(--color-border, rgba(255, 255, 255, 0.1));
+.liquid-input:hover {
+  border-color: var(--glass-hover);
 }
 
-.modern-input:focus {
-  border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+.liquid-input:focus {
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
-.modern-input::placeholder {
-  color: var(--color-text-muted, rgba(255, 255, 255, 0.25));
+.liquid-input::placeholder {
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.3));
   font-size: 12px;
 }
 
-/* 亮色主题输入框 */
-.theme-light .modern-input {
-  background: white;
-  border-color: rgba(0, 0, 0, 0.1);
+.theme-light .liquid-input {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.08);
   color: #0f172a;
 }
 
-.theme-light .modern-input:hover {
-  border-color: rgba(0, 0, 0, 0.15);
-}
-
-.theme-light .modern-input::placeholder {
+.theme-light .liquid-input::placeholder {
   color: #94a3b8;
 }
 
 /* 小型输入框 */
-.modern-input-sm {
+.liquid-input-sm {
   padding: 6px 10px;
   font-size: 12px;
   border-radius: 6px;
 }
 
-/* 现代化标签切换 - 紧凑精细 */
-.modern-tabs {
-  display: flex;
+/* 液态组件标签 */
+.liquid-tabs {
+  display: inline-flex;
   gap: 2px;
   padding: 3px;
-  background: var(--color-bg-panel, rgba(0, 0, 0, 0.5));
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.05));
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: 10px;
   backdrop-filter: blur(20px);
 }
 
-.modern-tab {
+.liquid-tab {
   position: relative;
   padding: 6px 14px;
   font-size: 12px;
@@ -212,121 +228,110 @@
   border: none;
   border-radius: 7px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s var(--ease-smooth);
 }
 
-.modern-tab:hover {
-  color: var(--color-text-primary, rgba(255, 255, 255, 0.8));
-  background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.05));
+.liquid-tab:hover {
+  color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
+  background: var(--glass-hover);
 }
 
-.modern-tab.active {
+.liquid-tab.active {
   color: white;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(139, 92, 246, 0.9) 100%);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
-/* 亮色主题标签 */
-.theme-light .modern-tabs {
+.theme-light .liquid-tabs {
   background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(0, 0, 0, 0.06);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm);
 }
 
-.theme-light .modern-tab {
+.theme-light .liquid-tab {
   color: #64748b;
 }
 
-.theme-light .modern-tab:hover {
+.theme-light .liquid-tab:hover {
   color: #0f172a;
   background: rgba(0, 0, 0, 0.04);
 }
 
-/* 现代化徽章 - 小巧精致 */
-.modern-badge {
+/* 液态组件徽章 */
+.liquid-badge {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  padding: 2px 6px;
+  padding: 2px 7px;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.02em;
-  border-radius: 4px;
+  border-radius: 5px;
+  backdrop-filter: blur(8px);
 }
 
-.modern-badge.primary {
+.liquid-badge.primary {
   color: #a5b4fc;
-  background: rgba(99, 102, 241, 0.12);
+  background: rgba(99, 102, 241, 0.15);
   border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
-.modern-badge.success {
+.liquid-badge.success {
   color: #86efac;
-  background: rgba(34, 197, 94, 0.12);
+  background: rgba(34, 197, 94, 0.15);
   border: 1px solid rgba(34, 197, 94, 0.2);
 }
 
-.modern-badge.warning {
+.liquid-badge.warning {
   color: #fcd34d;
-  background: rgba(245, 158, 11, 0.12);
+  background: rgba(245, 158, 11, 0.15);
   border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
-/* 亮色主题徽章 */
-.theme-light .modern-badge.primary {
+.theme-light .liquid-badge.primary {
   color: #4f46e5;
   background: rgba(99, 102, 241, 0.1);
-  border-color: rgba(99, 102, 241, 0.2);
 }
 
-.theme-light .modern-badge.success {
+.theme-light .liquid-badge.success {
   color: #16a34a;
   background: rgba(34, 197, 94, 0.1);
-  border-color: rgba(34, 197, 94, 0.2);
 }
 
-.theme-light .modern-badge.warning {
-  color: #d97706;
-  background: rgba(245, 158, 11, 0.1);
-  border-color: rgba(245, 158, 11, 0.2);
+/* 液态组件面板 */
+.liquid-panel {
+  background: linear-gradient(180deg, 
+    rgba(18, 18, 26, 0.98) 0%, 
+    rgba(14, 14, 20, 0.96) 100%);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid var(--glass-border);
 }
 
-/* 现代化面板 - 紧凑 */
-.modern-panel {
-  background: var(--color-bg-panel, linear-gradient(180deg, rgba(16, 16, 22, 0.98) 0%, rgba(14, 14, 20, 0.95) 100%));
-  backdrop-filter: blur(24px);
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.04));
+.liquid-panel-section {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--glass-border);
 }
 
-.modern-panel-section {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--color-border-light, rgba(255, 255, 255, 0.04));
-}
-
-.modern-panel-section:last-child {
+.liquid-panel-section:last-child {
   border-bottom: none;
 }
 
-/* 亮色主题面板 */
-.theme-light .modern-panel {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(0, 0, 0, 0.06);
+.theme-light .liquid-panel {
+  background: linear-gradient(180deg, 
+    rgba(255, 255, 255, 0.98) 0%, 
+    rgba(248, 250, 252, 0.96) 100%);
 }
 
-.theme-light .modern-panel-section {
-  border-bottom-color: rgba(0, 0, 0, 0.06);
-}
-
-/* 现代化标题 - 简约 */
-.modern-title {
+/* 液态组件标题 */
+.liquid-title {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-text-muted, rgba(255, 255, 255, 0.35));
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.4));
 }
 
-.theme-light .modern-title {
+.theme-light .liquid-title {
   color: #64748b;
 }
 

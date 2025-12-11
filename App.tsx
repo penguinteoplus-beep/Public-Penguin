@@ -60,6 +60,7 @@ interface RightPanelProps {
   handleGenerateSmartPrompt: () => void;
   canGenerateSmartPrompt: boolean;
   smartPromptGenStatus: ApiStatus;
+  onCancelSmartPrompt: () => void; // 取消 BP/Smart 处理
   creativeIdeas: CreativeIdea[];
   handleUseCreativeIdea: (idea: CreativeIdea) => void;
   setAddIdeaModalOpen: (isOpen: boolean) => void;
@@ -521,6 +522,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   handleGenerateSmartPrompt,
   canGenerateSmartPrompt,
   smartPromptGenStatus,
+  onCancelSmartPrompt,
   creativeIdeas,
   handleUseCreativeIdea,
   setAddIdeaModalOpen,
@@ -610,17 +612,21 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   } ${!canEditPrompt ? 'cursor-not-allowed opacity-75' : ''}`}
                 />
                 <button
-                  onClick={handleGenerateSmartPrompt}
-                  disabled={!canGenerateSmartPrompt}
+                  onClick={smartPromptGenStatus === ApiStatus.Loading ? onCancelSmartPrompt : handleGenerateSmartPrompt}
+                  disabled={smartPromptGenStatus !== ApiStatus.Loading && !canGenerateSmartPrompt}
                   className={`absolute top-3 right-3 p-2 text-white rounded-xl shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95 ${
-                      activeBPTemplate 
+                      smartPromptGenStatus === ApiStatus.Loading
+                      ? 'bg-gradient-to-br from-red-500 to-red-600 hover:shadow-red-500/30'
+                      : activeBPTemplate 
                       ? 'bg-gradient-to-br from-yellow-500 to-orange-600 hover:shadow-yellow-500/30' 
                       : 'bg-gradient-to-br from-indigo-500 to-purple-600 hover:shadow-indigo-500/30'
                   }`}
-                  title={activeBPTemplate ? "运行智能体 & 编译 Prompt" : "生成/更新提示词"}
+                  title={smartPromptGenStatus === ApiStatus.Loading ? "点击取消" : (activeBPTemplate ? "运行智能体 & 编译 Prompt" : "生成/更新提示词")}
                 >
                     {smartPromptGenStatus === ApiStatus.Loading ? (
-                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                       </svg>
                     ) : (
                       <PenguinIcon className="w-4 h-4" />
                     )}
@@ -911,6 +917,16 @@ const App: React.FC = () => {
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   
   const [smartPromptGenStatus, setSmartPromptGenStatus] = useState<ApiStatus>(ApiStatus.Idle);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
+  
+  // 取消 BP/Smart 处理
+  const handleCancelSmartPrompt = useCallback(() => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+      setSmartPromptGenStatus(ApiStatus.Idle);
+    }
+  }, [abortController]);
 
   const [apiKey, setApiKey] = useState<string>('');
   const [creativeIdeas, setCreativeIdeas] = useState<CreativeIdea[]>([]);
@@ -1623,6 +1639,10 @@ const App: React.FC = () => {
     // 检查API配置：要么有Gemini Key，要么启用了第三方API
     const hasValidApi = apiKey || (thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey);
 
+    // 创建新的 AbortController
+    const controller = new AbortController();
+    setAbortController(controller);
+    
     setSmartPromptGenStatus(ApiStatus.Loading);
     setError(null);
 
@@ -1665,14 +1685,24 @@ const App: React.FC = () => {
       }
       
       setSmartPromptGenStatus(ApiStatus.Success);
+      setAbortController(null); // 清除控制器
 
     } catch (e: unknown) {
+      // 检查是否是用户主动取消
+      if (e instanceof Error && e.name === 'AbortError') {
+        console.log('BP处理已被用户取消');
+        setSmartPromptGenStatus(ApiStatus.Idle);
+        setAbortController(null); // 清除控制器
+        return;
+      }
+      
       const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
       console.error(errorMessage);
       alert(`智能提示词生成失败: ${errorMessage}`);
       setSmartPromptGenStatus(ApiStatus.Error);
+      setAbortController(null); // 清除控制器
     }
-  }, [activeFile, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, smartPlusOverrides, bpInputs]);
+  }, [activeFile, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, smartPlusOverrides, bpInputs, abortController]);
   
     // 安全保存桌面项目到 localStorage（移除大型 base64 数据）
     const safeDesktopSave = useCallback((items: DesktopItem[]) => {
@@ -2566,6 +2596,7 @@ const App: React.FC = () => {
             smartPlusOverrides={smartPlusOverrides}
             setSmartPlusOverrides={setSmartPlusOverrides}
             handleGenerateSmartPrompt={handleGenerateSmartPrompt}
+            onCancelSmartPrompt={handleCancelSmartPrompt}
             canGenerateSmartPrompt={canGenerateSmartPrompt}
             smartPromptGenStatus={smartPromptGenStatus}
             creativeIdeas={creativeIdeas}

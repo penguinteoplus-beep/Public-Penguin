@@ -62,9 +62,17 @@ const withRetry = async <T>(
 };
 
 const fileToGenerativePart = async (file: File): Promise<Part> => {
-  const base64EncodedDataPromise = new Promise<string>((resolve) => {
+  const base64EncodedDataPromise = new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+    reader.onloadend = () => {
+      if (reader.result && typeof reader.result === 'string') {
+        const parts = reader.result.split(',');
+        resolve(parts[1] || '');
+      } else {
+        reject(new Error('文件读取失败'));
+      }
+    };
+    reader.onerror = () => reject(new Error('文件读取出错'));
     reader.readAsDataURL(file);
   });
   return {
@@ -83,9 +91,17 @@ export interface ImageEditConfig {
 
 // 将文件转换为 base64
 const fileToBase64 = async (file: File): Promise<string> => {
-  return new Promise<string>((resolve) => {
+  return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+    reader.onloadend = () => {
+      if (reader.result && typeof reader.result === 'string') {
+        const parts = reader.result.split(',');
+        resolve(parts[1] || '');
+      } else {
+        reject(new Error('文件读取失败'));
+      }
+    };
+    reader.onerror = () => reject(new Error('文件读取出错'));
     reader.readAsDataURL(file);
   });
 };

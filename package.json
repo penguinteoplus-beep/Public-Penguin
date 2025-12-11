@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.16.0",
+    "@xyflow/react": "^12.10.0",
     "jszip": "^3.10.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"

@@ -28,9 +28,13 @@ import { PriceConfig } from './types';
 import { ThemeProvider, useTheme, SnowfallEffect } from './contexts/ThemeContext';
 import { Desktop, createDesktopItemFromHistory, TOP_OFFSET, DESKTOP_COLS } from './components/Desktop';
 import { HistoryDock } from './components/HistoryDock';
+<<<<<<< HEAD
 import { DEFAULT_RUNNINGHUB_IDEAS } from './constants/defaultRunningHubIdeas';
 import { RunningHubProgress } from './components/RunningHubProgress';
 import { RunningHubTaskProvider, useRunningHubTasks } from './contexts/RunningHubTaskContext';
+=======
+import { Canvas as FlowCanvas } from './components/Canvas';
+>>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
 
 
 interface LeftPanelProps {
@@ -76,8 +80,8 @@ interface RightPanelProps {
 }
 
 interface CanvasProps {
-  view: 'editor' | 'library';
-  setView: (view: 'editor' | 'library') => void;
+  view: 'editor' | 'library' | 'canvas';
+  setView: (view: 'editor' | 'library' | 'canvas') => void;
   files: File[];
   onUploadClick: () => void;
   creativeIdeas: CreativeIdea[];
@@ -96,12 +100,15 @@ interface CanvasProps {
   onEditAgain?: () => void; // 再次编辑
   onRegenerate?: () => void; // 重新生成
   onDismissResult?: () => void; // 关闭结果浮层
+  // 故事系统相关
+  prompt?: string;
+  imageSize?: string;
   // 历史记录相关
   history: GenerationHistory[];
   onHistorySelect: (item: GenerationHistory) => void;
   onHistoryDelete: (id: number) => void;
   onHistoryClear: () => void;
-  // 桌面模式相关
+  // 框面模式相关
   desktopItems: DesktopItem[];
   onDesktopItemsChange: (items: DesktopItem[]) => void;
   onDesktopImageDoubleClick: (item: DesktopImageItem) => void;
@@ -110,11 +117,18 @@ interface CanvasProps {
   openFolderId: string | null;
   onFolderOpen: (id: string) => void;
   onFolderClose: () => void;
+  openStackId: string | null; // 叠放打开状态
+  onStackOpen: (id: string) => void;
+  onStackClose: () => void;
   onRenameItem: (id: string, newName: string) => void;
   // 图片操作回调
   onDesktopImagePreview?: (item: DesktopImageItem) => void;
   onDesktopImageEditAgain?: (item: DesktopImageItem) => void;
   onDesktopImageRegenerate?: (item: DesktopImageItem) => void;
+  // 画布模式回调
+  onGenerateFromFlow?: (prompt: string, creativeIdea?: CreativeIdea, imageFile?: File) => Promise<GeneratedContent | null>;
+  onSaveImageFromFlow?: (imageUrl: string, name: string) => void;
+  onCanvasClick?: () => void; // 点击画布时收起左右面板
 }
 
 // --- IndexedDB Service ---
@@ -530,7 +544,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
 }) => {
   const hasActiveTemplate = activeSmartTemplate || activeSmartPlusTemplate || activeBPTemplate;
   const activeTemplateName = activeBPTemplate?.title || activeSmartPlusTemplate?.title || activeSmartTemplate?.title;
+<<<<<<< HEAD
 
+=======
+  
+  // 获取当前模板的权限设置
+  const activeTemplate = activeBPTemplate || activeSmartPlusTemplate || activeSmartTemplate;
+  const canViewPrompt = activeTemplate?.allowViewPrompt !== false; // 默认true
+  const canEditPrompt = activeTemplate?.allowEditPrompt !== false; // 默认true
+  
+>>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
   return (
     <aside className="w-[380px] bg-black/40 backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-l border-white/10 z-20">
       <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
@@ -571,6 +594,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
             </div>
           </div>
 
+<<<<<<< HEAD
           {activeBPTemplate && (
             <BPModePanel
               template={activeBPTemplate}
@@ -595,6 +619,66 @@ const RightPanel: React.FC<RightPanelProps> = ({
               readOnly={!!activeBPTemplate} // BP mode: read only until generated
               className={`w-full h-40 p-4 pr-12 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 resize-none text-sm text-gray-200 shadow-inner placeholder-gray-600 custom-scrollbar ${activeBPTemplate ? 'focus:ring-yellow-500/50 focus:border-yellow-500/50' : 'focus:ring-indigo-500/50 focus:border-indigo-500/50'
                 }`}
+=======
+           {/* 提示词输入区域 - 根据权限显示 */}
+           {canViewPrompt ? (
+             <div className="relative group">
+              <textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder={
+                    activeBPTemplate
+                      ? "生成的提示词将显示在这里..."
+                      : activeSmartTemplate
+                      ? `"${activeSmartTemplate.title}" 的关键词...\n例如: '钢铁侠'`
+                      : activeSmartPlusTemplate
+                      ? `(可选) 场景关键词...\n例如: '微笑着, 霓虹灯光'`
+                      : "描述你想要生成的画面..."
+                  }
+                  readOnly={!!activeBPTemplate || !canEditPrompt} // BP模式或不允许编辑时只读
+                  className={`w-full h-40 p-4 pr-12 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 resize-none text-sm text-gray-200 shadow-inner placeholder-gray-600 custom-scrollbar ${
+                      activeBPTemplate ? 'focus:ring-yellow-500/50 focus:border-yellow-500/50' : 'focus:ring-indigo-500/50 focus:border-indigo-500/50'
+                  } ${!canEditPrompt ? 'cursor-not-allowed opacity-75' : ''}`}
+                />
+                <button
+                  onClick={handleGenerateSmartPrompt}
+                  disabled={!canGenerateSmartPrompt}
+                  className={`absolute top-3 right-3 p-2 text-white rounded-xl shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95 ${
+                      activeBPTemplate 
+                      ? 'bg-gradient-to-br from-yellow-500 to-orange-600 hover:shadow-yellow-500/30' 
+                      : 'bg-gradient-to-br from-indigo-500 to-purple-600 hover:shadow-indigo-500/30'
+                  }`}
+                  title={activeBPTemplate ? "运行智能体 & 编译 Prompt" : "生成/更新提示词"}
+                >
+                    {smartPromptGenStatus === ApiStatus.Loading ? (
+                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    ) : (
+                      <PenguinIcon className="w-4 h-4" />
+                    )}
+                </button>
+             </div>
+           ) : (
+             /* 不允许查看提示词时显示提示信息 */
+             <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl">
+               <div className="flex items-center gap-2 text-orange-300 mb-2">
+                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                 </svg>
+                 <span className="text-sm font-medium">提示词已加密</span>
+               </div>
+               <p className="text-xs text-gray-400">
+                 此创意库不允许查看提示词内容。填写上方输入框后，点击生成即可。
+               </p>
+             </div>
+           )}
+        </div>
+        
+        {activeSmartPlusTemplate && (
+            <SmartPlusDirector 
+                config={smartPlusOverrides} 
+                onConfigChange={setSmartPlusOverrides}
+                templateConfig={activeSmartPlusTemplate.smartPlusConfig}
+>>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
             />
             <button
               onClick={handleGenerateSmartPrompt}
@@ -700,6 +784,8 @@ const Canvas: React.FC<CanvasProps> = ({
   onEditAgain,
   onRegenerate,
   onDismissResult,
+  prompt,
+  imageSize,
   history,
   onHistorySelect,
   onHistoryDelete,
@@ -712,10 +798,16 @@ const Canvas: React.FC<CanvasProps> = ({
   openFolderId,
   onFolderOpen,
   onFolderClose,
+  openStackId,
+  onStackOpen,
+  onStackClose,
   onRenameItem,
   onDesktopImagePreview,
   onDesktopImageEditAgain,
   onDesktopImageRegenerate,
+  onGenerateFromFlow,
+  onSaveImageFromFlow,
+  onCanvasClick,
 }) => {
   const { theme } = useTheme();
 
@@ -759,6 +851,19 @@ const Canvas: React.FC<CanvasProps> = ({
             </span>
           )}
         </button>
+        <button
+          onClick={() => setView('canvas')}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${
+            view === 'canvas'
+              ? 'bg-cyan-500/80 text-white shadow-lg shadow-cyan-500/30'
+              : 'text-gray-400 hover:text-white hover:bg-white/10'
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+          </svg>
+          画布
+        </button>
       </div>
 
       {view === 'library' ? (
@@ -775,6 +880,18 @@ const Canvas: React.FC<CanvasProps> = ({
             onReorder={onReorderIdeas}
           />
         </div>
+      ) : view === 'canvas' ? (
+        /* 画布模式 - 可视化工作流编辑器 */
+        <div className="relative z-10 flex-1 overflow-hidden pt-14">
+          <FlowCanvas
+            creativeIdeas={creativeIdeas}
+            desktopImages={desktopItems.filter((item): item is DesktopImageItem => item.type === 'image')}
+            onGenerateFromFlow={onGenerateFromFlow}
+            onSaveImage={onSaveImageFromFlow}
+            isGenerating={status === ApiStatus.Loading}
+            onPaneClick={onCanvasClick}
+          />
+        </div>
       ) : (
         /* 桌面模式 - 始终显示 */
         <div className="relative z-10 flex-1 overflow-hidden">
@@ -783,14 +900,19 @@ const Canvas: React.FC<CanvasProps> = ({
             onItemsChange={onDesktopItemsChange}
             onImageDoubleClick={onDesktopImageDoubleClick}
             onFolderDoubleClick={(folder) => onFolderOpen(folder.id)}
+            onStackDoubleClick={(stack) => onStackOpen(stack.id)}
             openFolderId={openFolderId}
             onFolderClose={onFolderClose}
+            openStackId={openStackId}
+            onStackClose={onStackClose}
             selectedIds={desktopSelectedIds}
             onSelectionChange={onDesktopSelectionChange}
             onRenameItem={onRenameItem}
             onImagePreview={onDesktopImagePreview}
             onImageEditAgain={onDesktopImageEditAgain}
             onImageRegenerate={onDesktopImageRegenerate}
+            history={history}
+            creativeIdeas={creativeIdeas}
           />
 
           {/* 生成结果浮层 */}
@@ -813,6 +935,8 @@ const Canvas: React.FC<CanvasProps> = ({
                 onPreviewClick={onPreviewClick}
                 onEditAgain={onEditAgain}
                 onRegenerate={onRegenerate}
+                prompt={prompt}
+                imageSize={imageSize}
               />
             </div>
           )}
@@ -842,8 +966,13 @@ const App: React.FC = () => {
 
   const [apiKey, setApiKey] = useState<string>('');
   const [creativeIdeas, setCreativeIdeas] = useState<CreativeIdea[]>([]);
+<<<<<<< HEAD
 
   const [view, setView] = useState<'editor' | 'library'>('editor'); // 默认编辑器模式（显示桌面）
+=======
+  
+  const [view, setView] = useState<'editor' | 'library' | 'canvas'>('editor'); // 默认编辑器模式（显示桌面）
+>>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
   const [isAddIdeaModalOpen, setAddIdeaModalOpen] = useState(false);
   const [editingIdea, setEditingIdea] = useState<CreativeIdea | null>(null);
 
@@ -894,6 +1023,11 @@ const App: React.FC = () => {
   const [desktopItems, setDesktopItems] = useState<DesktopItem[]>([]);
   const [desktopSelectedIds, setDesktopSelectedIds] = useState<string[]>([]);
   const [openFolderId, setOpenFolderId] = useState<string | null>(null);
+  const [openStackId, setOpenStackId] = useState<string | null>(null); // 叠放打开状态
+  
+  // 画布模式下左右面板收起状态
+  const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
+  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importIdeasInputRef = useRef<HTMLInputElement>(null);
@@ -1673,6 +1807,7 @@ const App: React.FC = () => {
       setSmartPromptGenStatus(ApiStatus.Error);
     }
   }, [activeFile, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, smartPlusOverrides, bpInputs]);
+<<<<<<< HEAD
 
   // 桌面操作处理
   const handleDesktopItemsChange = useCallback((items: DesktopItem[]) => {
@@ -1713,6 +1848,56 @@ const App: React.FC = () => {
     // 添加图片到桌面 - 使用函数式更新确保使用最新状态
     setDesktopItems(prevItems => {
       // 在最新状态上查找空闲位置
+=======
+  
+    // 安全保存桌面项目到 localStorage（移除大型 base64 数据）
+    const safeDesktopSave = useCallback((items: DesktopItem[]) => {
+      try {
+        // 保存前移除 base64 imageUrl 以节省空间（有 historyId 可恢复）
+        const itemsForStorage = items.map(item => {
+          if (item.type === 'image') {
+            const imageItem = item as DesktopImageItem;
+            // 如果 imageUrl 是 base64 且有 historyId，则不存储 imageUrl
+            if (imageItem.imageUrl?.startsWith('data:') && imageItem.historyId) {
+              const { imageUrl, ...rest } = imageItem;
+              return { ...rest, imageUrl: '' }; // 留空标记，加载时从历史恢复
+            }
+          }
+          return item;
+        });
+        localStorage.setItem('desktop_items', JSON.stringify(itemsForStorage));
+      } catch (e) {
+        if (e instanceof Error && e.name === 'QuotaExceededError') {
+          console.warn('Desktop storage quota exceeded, clearing oldest items...');
+          // 配额超出时，尝试只保留最新的20个项目
+          const recentItems = items.slice(-20);
+          try {
+            const itemsForStorage = recentItems.map(item => {
+              if (item.type === 'image') {
+                const { imageUrl, ...rest } = item as DesktopImageItem;
+                return { ...rest, imageUrl: '' };
+              }
+              return item;
+            });
+            localStorage.setItem('desktop_items', JSON.stringify(itemsForStorage));
+          } catch {
+            console.error('Failed to save desktop items even after cleanup');
+          }
+        } else {
+          console.error('Failed to save desktop items:', e);
+        }
+      }
+    }, []);
+
+    // 桌面操作处理
+    const handleDesktopItemsChange = useCallback((items: DesktopItem[]) => {
+      setDesktopItems(items);
+      safeDesktopSave(items);
+    }, [safeDesktopSave]);
+  
+    // 查找桌面空闲位置
+    const findNextFreePosition = useCallback((): { x: number, y: number } => {
+>>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
       const gridSize = 100;
       const maxCols = DESKTOP_COLS; // 固定7列
 
@@ -1742,6 +1927,7 @@ const App: React.FC = () => {
         const foundKey = `${Math.round(freePos.x / gridSize)},${Math.round(freePos.y / gridSize)}`;
         if (!occupiedPositions.has(foundKey)) break;
       }
+<<<<<<< HEAD
 
       // 更新项目位置
       const itemWithPosition = { ...item, position: freePos };
@@ -1777,6 +1963,149 @@ const App: React.FC = () => {
       setError(`请先点击企鹅按钮生成/填入提示词`);
       setStatus(ApiStatus.Error);
       return;
+=======
+      return { x: 0, y: 0 };
+    }, [desktopItems]);
+  
+    const handleAddToDesktop = useCallback((item: DesktopImageItem) => {
+      // 添加图片到桌面 - 使用函数式更新确保使用最新状态
+      setDesktopItems(prevItems => {
+        // 在最新状态上查找空闲位置
+        const gridSize = 100;
+        const maxCols = DESKTOP_COLS; // 固定7列
+        
+        // 位置从0开始（渲染时会自动加上居中偏移）
+        const occupiedPositions = new Set(
+          prevItems
+            .filter(existingItem => {
+              const isInFolder = prevItems.some(
+                other => other.type === 'folder' && (other as DesktopFolderItem).itemIds.includes(existingItem.id)
+              );
+              return !isInFolder;
+            })
+            .map(existingItem => `${Math.round(existingItem.position.x / gridSize)},${Math.round(existingItem.position.y / gridSize)}`)
+        );
+        
+        // 从第0列、第0行开始找空位
+        let freePos = { x: 0, y: 0 };
+        for (let y = 0; y < 100; y++) {
+          for (let x = 0; x < maxCols; x++) {
+            const key = `${x},${y}`;
+            if (!occupiedPositions.has(key)) {
+              freePos = { x: x * gridSize, y: y * gridSize };
+              break;
+            }
+          }
+          // 检查是否已找到空位
+          const foundKey = `${Math.round(freePos.x / gridSize)},${Math.round(freePos.y / gridSize)}`;
+          if (!occupiedPositions.has(foundKey)) break;
+        }
+        
+        // 更新项目位置
+        const itemWithPosition = { ...item, position: freePos };
+        const newItems = [...prevItems, itemWithPosition];
+        // 延迟保存到 localStorage（使用 safeDesktopSave 避免配额超限）
+        setTimeout(() => {
+          try {
+            const itemsForStorage = newItems.map(itm => {
+              if (itm.type === 'image') {
+                const imageItem = itm as DesktopImageItem;
+                if (imageItem.imageUrl?.startsWith('data:') && imageItem.historyId) {
+                  const { imageUrl, ...rest } = imageItem;
+                  return { ...rest, imageUrl: '' };
+                }
+              }
+              return itm;
+            });
+            localStorage.setItem('desktop_items', JSON.stringify(itemsForStorage));
+          } catch (e) {
+            console.warn('Desktop storage failed, items kept in memory only:', e);
+          }
+        }, 0);
+        return newItems;
+      });
+    }, []);
+
+  const handleGenerateClick = useCallback(async () => {
+    // 检查API配置
+    // 优先级：
+    // 1. 已登录 + 启用第三方API → 使用云端（不需要本地key）
+    // 2. 未登录 + 启用第三方API + 有本地key → 使用本地第三方
+    // 3. 有 Gemini key → 使用本地Gemini
+    // 4. 都没有 → 提示配置
+    const isCloud = isLoggedIn();
+    const hasValidApi = 
+      (isCloud && thirdPartyApiConfig.enabled) ||  // 云端模式
+      (!isCloud && thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey) ||  // 本地第三方
+      apiKey;  // 本地Gemini
+    
+    if (!hasValidApi) {
+      if (isCloud) {
+        setError('请在设置中启用云端服务');
+      } else {
+        setError('请先配置 API Key（第三方API 或 Gemini）或登录使用云服务');
+      }
+      setStatus(ApiStatus.Error);
+      return;
+    }
+    
+    // 获取当前模板的权限设置
+    const activeTemplate = activeBPTemplate || activeSmartPlusTemplate || activeSmartTemplate;
+    const canViewPrompt = activeTemplate?.allowViewPrompt !== false;
+    
+    let finalPrompt = prompt;
+    
+    // 如果不允许查看提示词，需要先自动生成提示词
+    if (!canViewPrompt && activeTemplate) {
+      setStatus(ApiStatus.Loading);
+      setError(null);
+      
+      try {
+        console.log('[Generate] 不允许查看提示词，自动生成中...');
+        
+        if (activeBPTemplate) {
+          // BP 模式
+          const activeFile = files.length > 0 ? files[0] : null;
+          finalPrompt = await processBPTemplate(activeFile, activeBPTemplate, bpInputs);
+        } else if (activeSmartPlusTemplate || activeSmartTemplate) {
+          // Smart/Smart+ 模式
+          const activeFile = files.length > 0 ? files[0] : null;
+          if (!activeFile) {
+            setError('Smart/Smart+模式需要上传图片');
+            setStatus(ApiStatus.Error);
+            return;
+          }
+          finalPrompt = await generateCreativePromptFromImage({
+            file: activeFile,
+            idea: activeTemplate,
+            keyword: prompt,
+            smartPlusConfig: activeTemplate.isSmartPlus ? smartPlusOverrides : undefined,
+          });
+        }
+        
+        console.log('[Generate] 提示词已生成，开始生图');
+      } catch (e: unknown) {
+        const errorMessage = e instanceof Error ? e.message : '提示词生成失败';
+        console.error('[Generate] 提示词生成失败');
+        setError(`生成失败: ${errorMessage}`);
+        setStatus(ApiStatus.Error);
+        return;
+      }
+    } else {
+      // 允许查看提示词的正常流程
+      if (!prompt) {
+        setError('请输入提示词');
+        setStatus(ApiStatus.Error);
+        return;
+      }
+      
+      // Ensure prompt is generated if template is active but prompt box is empty
+      if ((activeSmartTemplate || activeSmartPlusTemplate || activeBPTemplate) && !prompt.trim()) {
+           setError(`请先点击企鹅按钮生成/填入提示词`);
+           setStatus(ApiStatus.Error);
+           return;
+      }
+>>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
     }
 
     setStatus(ApiStatus.Loading);
@@ -1786,6 +2115,7 @@ const App: React.FC = () => {
     try {
       // 获取当前创意库的扣费金额（优先用 activeCreativeIdea，它保存了所有类型的创意库）
       const creativeIdeaCost = activeCreativeIdea?.cost;
+<<<<<<< HEAD
 
       // 传递所有上传的文件（支持多图编辑）
       const result = await editImageWithGemini(files, prompt, { aspectRatio, imageSize }, creativeIdeaCost);
@@ -1793,7 +2123,40 @@ const App: React.FC = () => {
       setGeneratedContent({ ...result, originalFiles: [...files] });
       setStatus(ApiStatus.Success);
 
+=======
+      
+      // 传递所有上传的文件（支持多图编辑），使用 finalPrompt
+      const result = await editImageWithGemini(files, finalPrompt, { aspectRatio, imageSize }, creativeIdeaCost);
+      // 保存生成时使用的所有原始图片，用于重新生成
+      setGeneratedContent({ ...result, originalFiles: [...files] });
+      setStatus(ApiStatus.Success);
+      
+      // 日志输出 - 不打印提示词内容
+      console.log('[Generate] 生成成功');
+      
+>>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
       // 保存到历史记录（包含原始输入图片和创意库信息）
+      // 如果不允许查看提示词，保存时用占位文本
+      const promptToSave = canViewPrompt ? finalPrompt : '[加密提示词]';
+      
+      // 加密场景下的命名规则：创意库标题 + 关键词
+      let promptForDesktop = finalPrompt;
+      if (!canViewPrompt && activeTemplate) {
+        // 获取创意库标题
+        const templateTitle = activeTemplate.title || '创意库';
+        // 获取关键词：BP模式用bpInputs的第一个输入，Smart/Smart+模式用prompt
+        let keyword = '';
+        if (activeBPTemplate && bpInputs) {
+          // BP模式：取所有用户输入的第一个非空值
+          const inputValues = Object.values(bpInputs as Record<string, string>).filter(v => v && v.trim());
+          keyword = inputValues[0] || '';
+        } else {
+          // Smart/Smart+模式：用用户输入的关键词
+          keyword = prompt.trim();
+        }
+        // 组合命名
+        promptForDesktop = keyword ? `${templateTitle}·${keyword}` : templateTitle;
+      }
       if (result.imageUrl) {
         // 确定当前使用的创意库类型
         let templateType: 'smart' | 'smartPlus' | 'bp' | 'none' = 'none';
@@ -1808,8 +2171,13 @@ const App: React.FC = () => {
           templateType = 'smart';
           templateId = activeSmartTemplate.id;
         }
+<<<<<<< HEAD
 
         await saveToHistory(result.imageUrl, prompt, thirdPartyApiConfig.enabled, files.length > 0 ? files[0] : null, {
+=======
+        
+        await saveToHistory(result.imageUrl, promptToSave, thirdPartyApiConfig.enabled, files.length > 0 ? files[0] : null, {
+>>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
           templateId,
           templateType,
           bpInputs: templateType === 'bp' ? { ...bpInputs } : undefined,
@@ -1820,12 +2188,12 @@ const App: React.FC = () => {
           const desktopItem: DesktopImageItem = {
             id: `img-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
             type: 'image',
-            name: prompt.slice(0, 15) + (prompt.length > 15 ? '...' : ''),
+            name: promptForDesktop.slice(0, 15) + (promptForDesktop.length > 15 ? '...' : ''),
             position: freePos,
             createdAt: Date.now(),
             updatedAt: Date.now(),
             imageUrl: result.imageUrl!,
-            prompt: prompt,
+            prompt: promptToSave,
             model: thirdPartyApiConfig.enabled ? 'nano-banana-2' : 'Gemini',
             isThirdParty: thirdPartyApiConfig.enabled,
             historyId: savedHistoryId, // 关联历史记录，用于重新生成时恢复原始输入图片
@@ -1854,10 +2222,10 @@ const App: React.FC = () => {
       } else {
         setError(`生成失败: ${errorMessage}`);
       }
-      console.error(errorMessage);
+      console.error('[Generate] 生成失败');
       setStatus(ApiStatus.Error);
     }
-  }, [files, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, autoSave, downloadImage, aspectRatio, imageSize, currentUser, activeCreativeIdea, findNextFreePosition, handleAddToDesktop]);
+  }, [files, prompt, apiKey, thirdPartyApiConfig, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, autoSave, downloadImage, aspectRatio, imageSize, currentUser, activeCreativeIdea, findNextFreePosition, handleAddToDesktop, bpInputs, smartPlusOverrides]);
 
   // 卸载创意库：清空所有模板设置
   const handleClearTemplate = useCallback(() => {
@@ -1868,6 +2236,126 @@ const App: React.FC = () => {
     setBpInputs({});
     setSmartPlusOverrides(JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
   }, []);
+
+  // 画布模式生成函数 - 用于可视化工作流，与外部保持一致的BP逻辑
+  const handleGenerateFromFlow = useCallback(async (
+    flowPrompt: string, 
+    creativeIdea?: CreativeIdea, 
+    imageFile?: File,
+    bpInputValues?: Record<string, string> // BP模式的变量输入值
+  ): Promise<GeneratedContent | null> => {
+    console.log('[handleGenerateFromFlow] 开始执行', { flowPrompt, creativeIdea: creativeIdea?.title, hasImage: !!imageFile, bpInputValues });
+    
+    // 检查API配置
+    const isCloud = isLoggedIn();
+    const hasValidApi = 
+      (isCloud && thirdPartyApiConfig.enabled) ||
+      (!isCloud && thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey) ||
+      apiKey;
+    
+    if (!hasValidApi) {
+      console.error('[handleGenerateFromFlow] 没有有效的API配置');
+      throw new Error('请先配置 API Key 或登录使用云服务');
+    }
+    
+    // 处理提示词
+    let finalPrompt = flowPrompt || '';
+    
+    if (creativeIdea) {
+      console.log('[handleGenerateFromFlow] 处理创意库:', creativeIdea.title, 'isBP:', creativeIdea.isBP);
+      
+      // BP模式 - 使用processBPTemplate处理，与外部保持一致
+      if (creativeIdea.isBP) {
+        console.log('[handleGenerateFromFlow] BP模式 - 调用processBPTemplate');
+        try {
+          // 使用与外部一致的BP处理逻辑
+          finalPrompt = await processBPTemplate(
+            imageFile || null,  // 传入图片用于智能体分析
+            creativeIdea,
+            bpInputValues || {}  // 用户在画布节点中输入的变量值
+          );
+          console.log('[handleGenerateFromFlow] BP处理完成, 提示词:', finalPrompt.slice(0, 150));
+        } catch (e: any) {
+          console.error('[handleGenerateFromFlow] BP处理失败:', e);
+          throw new Error(`BP处理失败: ${e?.message || '未知错误'}`);
+        }
+      } else if (creativeIdea.isSmartPlus) {
+        // SmartPlus模式 - 直接使用提示词模板
+        finalPrompt = creativeIdea.prompt || '';
+        if (flowPrompt) {
+          finalPrompt = `${finalPrompt} ${flowPrompt}`;
+        }
+        console.log('[handleGenerateFromFlow] SmartPlus模式提示词:', finalPrompt.slice(0, 100));
+      } else if (creativeIdea.prompt) {
+        // 普通模式：将用户输入替换占位符或追加
+        finalPrompt = creativeIdea.prompt.replace(/\{[^}]*\}/g, flowPrompt || '');
+        // 如果没有占位符且有用户输入，追加到末尾
+        if (finalPrompt === creativeIdea.prompt && flowPrompt) {
+          finalPrompt = `${creativeIdea.prompt} ${flowPrompt}`;
+        }
+        console.log('[handleGenerateFromFlow] 普通模式提示词:', finalPrompt.slice(0, 100));
+      }
+    }
+    
+    // 如果没有提示词也没有创意库
+    if (!finalPrompt && !creativeIdea) {
+      console.error('[handleGenerateFromFlow] 没有提示词也没有创意库');
+      throw new Error('请输入提示词或选择创意库');
+    }
+    
+    // 如果有创意库但没有提示词，使用创意库的提示词
+    if (!finalPrompt && creativeIdea?.prompt) {
+      finalPrompt = creativeIdea.prompt;
+      console.log('[handleGenerateFromFlow] 使用创意库原始提示词');
+    }
+    
+    if (!finalPrompt) {
+      console.error('[handleGenerateFromFlow] 最终提示词为空');
+      throw new Error('无法生成：提示词为空');
+    }
+    
+    // 应用创意库建议的宽高比和分辨率
+    const effectiveAspectRatio = creativeIdea?.suggestedAspectRatio || aspectRatio;
+    const effectiveImageSize = creativeIdea?.suggestedResolution || imageSize;
+    
+    const files = imageFile ? [imageFile] : [];
+    const creativeIdeaCost = creativeIdea?.cost;
+    
+    console.log('[handleGenerateFromFlow] 开始调用API', { 
+      promptLength: finalPrompt.length, 
+      hasFiles: files.length > 0,
+      cost: creativeIdeaCost,
+      aspectRatio: effectiveAspectRatio,
+      imageSize: effectiveImageSize
+    });
+    
+    try {
+      const result = await editImageWithGemini(files, finalPrompt, { aspectRatio: effectiveAspectRatio, imageSize: effectiveImageSize }, creativeIdeaCost);
+      console.log('[handleGenerateFromFlow] 生成成功', { hasImage: !!result?.imageUrl });
+      return result;
+    } catch (e: any) {
+      console.error('[handleGenerateFromFlow] 生成失败:', e);
+      throw new Error(e?.message || '生成失败');
+    }
+  }, [apiKey, thirdPartyApiConfig, aspectRatio, imageSize]);
+
+  // 画布保存图片到桌面
+  const handleSaveImageFromFlow = useCallback((imageUrl: string, name: string) => {
+    const freePos = findNextFreePosition();
+    const desktopItem: DesktopImageItem = {
+      id: `img-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      type: 'image',
+      name: name.slice(0, 15) + (name.length > 15 ? '...' : ''),
+      position: freePos,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      imageUrl: imageUrl,
+      prompt: '画布生成',
+      model: thirdPartyApiConfig.enabled ? 'nano-banana-2' : 'Gemini',
+      isThirdParty: thirdPartyApiConfig.enabled,
+    };
+    handleAddToDesktop(desktopItem);
+  }, [findNextFreePosition, handleAddToDesktop, thirdPartyApiConfig.enabled]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -1890,9 +2378,18 @@ const App: React.FC = () => {
     };
   }, [handleGenerateClick, activeSmartTemplate, activeSmartPlusTemplate, activeBPTemplate, handleClearTemplate]);
 
+<<<<<<< HEAD
   // 修改canGenerate条件，只需要有prompt即可（文生图不需要图片）
   const canGenerate = prompt.trim().length > 0 && status !== ApiStatus.Loading;
 
+=======
+  // 修改canGenerate条件
+  // 如果不允许查看提示词，则只要有模板就可以生成
+  const activeTemplateForCheck = activeBPTemplate || activeSmartPlusTemplate || activeSmartTemplate;
+  const canViewPromptForCheck = activeTemplateForCheck?.allowViewPrompt !== false;
+  const canGenerate = (canViewPromptForCheck ? prompt.trim().length > 0 : !!activeTemplateForCheck) && status !== ApiStatus.Loading;
+  
+>>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
   const isSmartReady = !!activeSmartTemplate && prompt.trim().length > 0;
   const isSmartPlusReady = !!activeSmartPlusTemplate;
   const isBPReady = !!activeBPTemplate; // BP is ready to click penguin anytime to fill variables
@@ -2026,17 +2523,36 @@ const App: React.FC = () => {
 
     // 恢复提示词
     setPrompt(item.prompt);
+<<<<<<< HEAD
 
     // 尝试恢复原始输入图片（如果有历史记录中的输入图片）
+=======
+    
+    // 尝试恢复原始输入图片和创意库配置（如果有历史记录）
+>>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
     if (item.historyId) {
       const historyItem = generationHistory.find(h => h.id === item.historyId);
-      if (historyItem?.inputImageData && historyItem?.inputImageType) {
-        try {
-          const byteCharacters = atob(historyItem.inputImageData);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
+      if (historyItem) {
+        // 恢复输入图片
+        if (historyItem.inputImageData && historyItem.inputImageType) {
+          try {
+            const byteCharacters = atob(historyItem.inputImageData);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: historyItem.inputImageType });
+            const restoredFile = new File([blob], historyItem.inputImageName || 'restored-input.png', { type: historyItem.inputImageType });
+            
+            setFiles([restoredFile]);
+            setActiveFileIndex(0);
+          } catch (e) {
+            console.warn('恢复输入图片失败:', e);
+            setFiles([]);
+            setActiveFileIndex(null);
           }
+<<<<<<< HEAD
           const byteArray = new Uint8Array(byteNumbers);
           const blob = new Blob([byteArray], { type: historyItem.inputImageType });
           const restoredFile = new File([blob], historyItem.inputImageName || 'restored-input.png', { type: historyItem.inputImageType });
@@ -2045,11 +2561,45 @@ const App: React.FC = () => {
           setActiveFileIndex(0);
         } catch (e) {
           console.warn('恢复输入图片失败:', e);
+=======
+        } else {
+          // 没有输入图片
+>>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
           setFiles([]);
           setActiveFileIndex(null);
         }
+        
+        // 恢复创意库配置
+        setActiveSmartTemplate(null);
+        setActiveSmartPlusTemplate(null);
+        setActiveBPTemplate(null);
+        setActiveCreativeIdea(null);
+        setBpInputs({});
+        setSmartPlusOverrides(JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
+        
+        if (historyItem.creativeTemplateType && historyItem.creativeTemplateType !== 'none' && historyItem.creativeTemplateId) {
+          const template = creativeIdeas.find(idea => idea.id === historyItem.creativeTemplateId);
+          if (template) {
+            // 设置当前使用的创意库（用于扣费）
+            setActiveCreativeIdea(template);
+            
+            if (historyItem.creativeTemplateType === 'bp') {
+              setActiveBPTemplate(template);
+              if (historyItem.bpInputs) {
+                setBpInputs(historyItem.bpInputs);
+              }
+            } else if (historyItem.creativeTemplateType === 'smartPlus') {
+              setActiveSmartPlusTemplate(template);
+              if (historyItem.smartPlusOverrides) {
+                setSmartPlusOverrides(historyItem.smartPlusOverrides);
+              }
+            } else if (historyItem.creativeTemplateType === 'smart') {
+              setActiveSmartTemplate(template);
+            }
+          }
+        }
       } else {
-        // 没有输入图片
+        // 找不到历史记录，清空输入
         setFiles([]);
         setActiveFileIndex(null);
       }
@@ -2066,20 +2616,34 @@ const App: React.FC = () => {
 
     // 取消桌面选中，让用户注意力回到编辑区
     setDesktopSelectedIds([]);
-  }, [generationHistory]);
+  }, [generationHistory, creativeIdeas]);
 
-  // 加载桌面数据
+  // 加载桌面数据（并从历史记录恢复空的 imageUrl）
   useEffect(() => {
     const savedDesktopItems = localStorage.getItem('desktop_items');
     if (savedDesktopItems) {
       try {
         const items = JSON.parse(savedDesktopItems) as DesktopItem[];
-        setDesktopItems(items);
+        // 从历史记录中恢复空的 imageUrl
+        const restoredItems = items.map(item => {
+          if (item.type === 'image') {
+            const imageItem = item as DesktopImageItem;
+            if (!imageItem.imageUrl && imageItem.historyId) {
+              // 查找历史记录中的图片
+              const historyEntry = generationHistory.find(h => h.id === imageItem.historyId);
+              if (historyEntry?.imageUrl) {
+                return { ...imageItem, imageUrl: historyEntry.imageUrl };
+              }
+            }
+          }
+          return item;
+        });
+        setDesktopItems(restoredItems);
       } catch (e) {
         console.error('Failed to load desktop items:', e);
       }
     }
-  }, []);
+  }, [generationHistory]);
 
   return (
     <div className="h-screen bg-gray-950 text-gray-100 font-sans flex flex-row overflow-hidden selection:bg-indigo-500/30">
@@ -2101,6 +2665,7 @@ const App: React.FC = () => {
         className="hidden"
         onChange={handleImportIdeas}
       />
+<<<<<<< HEAD
 
       <LeftPanel
         files={files}
@@ -2127,6 +2692,94 @@ const App: React.FC = () => {
                   : 'local-gemini'
         }
       />
+=======
+      
+      {/* 左侧面板 - 画布模式下点击按钮弹出，其他模式正常显示 */}
+      {view !== 'canvas' ? (
+        <div className="flex-shrink-0">
+          <LeftPanel 
+            files={files}
+            activeFileIndex={activeFileIndex}
+            onFileSelection={handleFileSelection}
+            onFileRemove={handleFileRemove}
+            onFileSelect={setActiveFileIndex}
+            onTriggerUpload={() => fileInputRef.current?.click()}
+            currentUser={currentUser}
+            onLoginClick={() => setAuthModalOpen(true)}
+            onLogout={handleLogout}
+            onRechargeClick={() => setRechargeModalOpen(true)}
+            onSettingsClick={() => setSettingsModalOpen(true)}
+            currentApiMode={
+              thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey && thirdPartyApiConfig.baseUrl
+                ? 'local-thirdparty'
+                : !thirdPartyApiConfig.enabled && apiKey
+                  ? 'local-gemini'
+                  : currentUser && thirdPartyApiConfig.enabled
+                    ? 'cloud'
+                    : currentUser
+                      ? 'cloud'
+                      : 'local-gemini'
+            }
+          />
+        </div>
+      ) : (
+        /* 画布模式下的浮动左侧面板 */
+        <>
+          {/* 展开/收起按钮 - 固定在左边 */}
+          <button
+            onClick={() => setIsLeftPanelCollapsed(!isLeftPanelCollapsed)}
+            className="fixed left-3 top-3 z-50 w-10 h-10 rounded-xl bg-gray-900/90 backdrop-blur-xl border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800 transition-all shadow-lg"
+            title={isLeftPanelCollapsed ? '展开导航' : '收起导航'}
+          >
+            <svg className={`w-5 h-5 transition-transform ${isLeftPanelCollapsed ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          
+          {/* 浮动面板 */}
+          <div 
+            className={`fixed left-0 top-0 h-full z-40 transition-all duration-300 ease-out ${
+              isLeftPanelCollapsed 
+                ? '-translate-x-full opacity-0 pointer-events-none' 
+                : 'translate-x-0 opacity-100'
+            }`}
+          >
+            <LeftPanel 
+              files={files}
+              activeFileIndex={activeFileIndex}
+              onFileSelection={handleFileSelection}
+              onFileRemove={handleFileRemove}
+              onFileSelect={setActiveFileIndex}
+              onTriggerUpload={() => fileInputRef.current?.click()}
+              currentUser={currentUser}
+              onLoginClick={() => setAuthModalOpen(true)}
+              onLogout={handleLogout}
+              onRechargeClick={() => setRechargeModalOpen(true)}
+              onSettingsClick={() => setSettingsModalOpen(true)}
+              currentApiMode={
+                thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey && thirdPartyApiConfig.baseUrl
+                  ? 'local-thirdparty'
+                  : !thirdPartyApiConfig.enabled && apiKey
+                    ? 'local-gemini'
+                    : currentUser && thirdPartyApiConfig.enabled
+                      ? 'cloud'
+                      : currentUser
+                        ? 'cloud'
+                        : 'local-gemini'
+              }
+            />
+          </div>
+          
+          {/* 点击遮罩关闭面板 */}
+          {!isLeftPanelCollapsed && (
+            <div 
+              className="fixed inset-0 z-30 bg-black/30 backdrop-blur-sm"
+              onClick={() => setIsLeftPanelCollapsed(true)}
+            />
+          )}
+        </>
+      )}
+>>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
       <div className="relative flex-1 flex min-w-0">
         <Canvas
           view={view}
@@ -2149,6 +2802,8 @@ const App: React.FC = () => {
           onEditAgain={handleEditAgain}
           onRegenerate={handleRegenerate}
           onDismissResult={handleDismissResult}
+          prompt={prompt}
+          imageSize={imageSize}
           history={generationHistory}
           onHistorySelect={handleHistorySelect}
           onHistoryDelete={handleHistoryDelete}
@@ -2161,10 +2816,18 @@ const App: React.FC = () => {
           openFolderId={openFolderId}
           onFolderOpen={setOpenFolderId}
           onFolderClose={() => setOpenFolderId(null)}
+          openStackId={openStackId}
+          onStackOpen={setOpenStackId}
+          onStackClose={() => setOpenStackId(null)}
           onRenameItem={handleRenameItem}
           onDesktopImagePreview={handleDesktopImagePreview}
           onDesktopImageEditAgain={handleDesktopImageEditAgain}
           onDesktopImageRegenerate={handleDesktopImageRegenerate}
+          onGenerateFromFlow={handleGenerateFromFlow}
+          onSaveImageFromFlow={handleSaveImageFromFlow}
+          onCanvasClick={() => {
+            setIsLeftPanelCollapsed(true);
+          }}
         />
         {view === 'editor' && (
           <div className="absolute left-1/2 -translate-x-1/2 z-30 transition-all duration-300 bottom-6">
@@ -2176,6 +2839,7 @@ const App: React.FC = () => {
           </div>
         )}
       </div>
+<<<<<<< HEAD
 
       {/* RunningHub 生成器全屏覆盖层 */}
       {activeRunningHubIdea && view === 'editor' && (
@@ -2261,6 +2925,38 @@ const App: React.FC = () => {
         onClearTemplate={handleClearTemplate}
       />
 
+=======
+      {/* 右侧面板 - 画布模式下完全不显示，其他模式正常显示 */}
+      {view !== 'canvas' && (
+        <div className="flex-shrink-0">
+          <RightPanel 
+            prompt={prompt}
+            setPrompt={handleSetPrompt}
+            activeSmartTemplate={activeSmartTemplate}
+            activeSmartPlusTemplate={activeSmartPlusTemplate}
+            activeBPTemplate={activeBPTemplate}
+            bpInputs={bpInputs}
+            setBpInput={handleBpInputChange}
+            smartPlusOverrides={smartPlusOverrides}
+            setSmartPlusOverrides={setSmartPlusOverrides}
+            handleGenerateSmartPrompt={handleGenerateSmartPrompt}
+            canGenerateSmartPrompt={canGenerateSmartPrompt}
+            smartPromptGenStatus={smartPromptGenStatus}
+            creativeIdeas={creativeIdeas}
+            handleUseCreativeIdea={handleUseCreativeIdea}
+            setAddIdeaModalOpen={() => setAddIdeaModalOpen(true)}
+            setView={setView}
+            aspectRatio={aspectRatio}
+            setAspectRatio={setAspectRatio}
+            imageSize={imageSize}
+            setImageSize={setImageSize}
+            isThirdPartyApiEnabled={thirdPartyApiConfig.enabled}
+            onClearTemplate={handleClearTemplate}
+          />
+        </div>
+      )}
+      
+>>>>>>> 3005df7b0ae0bbf38990549f47f4621534c90e49
       <style>{`
         @keyframes fade-in {
             from { opacity: 0; transform: translateY(-10px); }

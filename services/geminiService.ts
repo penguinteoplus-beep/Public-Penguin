@@ -598,13 +598,13 @@ export const processBPTemplate = async (
         
         // 执行Agent
         try {
-            console.log(`[BP Agent] 执行 ${agentName}, 指令: ${instruction.substring(0, 100)}...`);
+            console.log(`[BP Agent] 执行 ${agentName}...`);
             const result = await runBPAgentTask(file, instruction, field.agentConfig.model);
-            console.log(`[BP Agent] ${agentName} 完成, 结果: ${result.substring(0, 100)}...`);
+            console.log(`[BP Agent] ${agentName} 完成`);
             agentResults[agentName] = result;
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
-            console.error(`[BP Agent] ${agentName} 失败:`, errorMsg);
+            console.error(`[BP Agent] ${agentName} 失败`);
             // 显示更详细的错误信息
             agentResults[agentName] = `[Agent错误: ${errorMsg}]`;
         }

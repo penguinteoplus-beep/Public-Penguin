@@ -37,7 +37,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   // 确定当前模式 - 根据实际配置自动选择
   const getCurrentMode = (): ApiMode => {
     // 优先级：
-    // 1. 如果本地配置了第三方API（有apiKey和baseUrl），用本地第三方
+    // 1. 如果本地配置了贞贞API（有apiKey和baseUrl），用本地贞贞
     if (thirdPartyConfig.enabled && thirdPartyConfig.apiKey && thirdPartyConfig.baseUrl) {
       return 'local-thirdparty';
     }
@@ -119,7 +119,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       apiKey: localThirdPartyKey,
       baseUrl: localThirdPartyUrl,
     });
-    setSaveSuccessMessage('第三方 API 配置已保存 ✅');
+    setSaveSuccessMessage('贞贞 API 配置已保存 ✅');
     setTimeout(() => setSaveSuccessMessage(null), 2000);
   };
 
@@ -225,7 +225,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               )}
             </div>
 
-            {/* 本地第三方 API 模式 */}
+            {/* 本地贞贞 API 模式 */}
             <div
               onClick={() => handleModeChange('local-thirdparty')}
               className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${
@@ -241,9 +241,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <span className="text-xl">🔌</span>
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-white">第三方 API</h4>
+                  <h4 className="text-sm font-semibold text-white">贞贞 API</h4>
                   <p className="text-xs text-gray-400 mt-1">
-                    使用自己的第三方 API (如 nano-banana)，直接从浏览器请求
+                    使用贞贞 API，支持 nano-banana 等模型
                   </p>
                 </div>
               </div>
@@ -256,7 +256,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               )}
             </div>
 
-            {/* 本地第三方 API 配置表单 */}
+            {/* 本地贞贞 API 配置表单 */}
             {activeMode === 'local-thirdparty' && (
               <div className="ml-14 space-y-3 animate-fade-in">
                 <div>
@@ -265,7 +265,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     type="text"
                     value={localThirdPartyUrl}
                     onChange={(e) => setLocalThirdPartyUrl(e.target.value)}
-                    placeholder="https://api.example.com"
+                    placeholder="https://ai.t8star.cn"
                     className="w-full px-3 py-2 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
                   />
                 </div>

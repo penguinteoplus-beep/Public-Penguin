@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 // 主题类型定义
-export type ThemeName = 'default' | 'christmas' | 'cyberpunk' | 'ocean';
+export type ThemeName = 'dark' | 'light' | 'christmas' | 'cyberpunk' | 'ocean';
 
 export interface ThemeColors {
   // 主色调
@@ -60,31 +60,64 @@ export interface Theme {
   decorations: ThemeDecorations;
 }
 
-// 默认主题
-const defaultTheme: Theme = {
-  name: 'default',
-  displayName: '默认',
-  icon: '🎨',
+// 黑暗主题 - 默认
+const darkTheme: Theme = {
+  name: 'dark',
+  displayName: '深色',
+  icon: '🌙',
+  colors: {
+    primary: '#6366f1',
+    primaryLight: '#a5b4fc',
+    primaryDark: '#4f46e5',
+    accent: '#06b6d4',
+    accentLight: '#22d3ee',
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgTertiary: '#1a1a24',
+    bgPanel: 'rgba(18, 18, 26, 0.95)',
+    textPrimary: '#ffffff',
+    textSecondary: '#a1a1aa',
+    textMuted: '#71717a',
+    border: 'rgba(255, 255, 255, 0.08)',
+    borderLight: 'rgba(255, 255, 255, 0.04)',
+    gradientStart: '#6366f1',
+    gradientMiddle: '#8b5cf6',
+    gradientEnd: '#ec4899',
+    glow: 'rgba(99, 102, 241, 0.4)',
+    shadow: 'rgba(0, 0, 0, 0.4)',
+  },
+  decorations: {
+    snowflakes: false,
+    particles: false,
+    sparkles: false,
+  }
+};
+
+// 明亮主题
+const lightTheme: Theme = {
+  name: 'light',
+  displayName: '浅色',
+  icon: '☀️',
   colors: {
     primary: '#6366f1',
     primaryLight: '#818cf8',
     primaryDark: '#4f46e5',
-    accent: '#14b8a6',
-    accentLight: '#2dd4bf',
-    bgPrimary: '#030712',
-    bgSecondary: '#111827',
-    bgTertiary: '#1f2937',
-    bgPanel: 'rgba(0, 0, 0, 0.4)',
-    textPrimary: '#f9fafb',
-    textSecondary: '#d1d5db',
-    textMuted: '#6b7280',
-    border: 'rgba(255, 255, 255, 0.1)',
-    borderLight: 'rgba(255, 255, 255, 0.05)',
+    accent: '#0891b2',
+    accentLight: '#06b6d4',
+    bgPrimary: '#f8fafc',
+    bgSecondary: '#f1f5f9',
+    bgTertiary: '#e2e8f0',
+    bgPanel: 'rgba(255, 255, 255, 0.95)',
+    textPrimary: '#0f172a',
+    textSecondary: '#475569',
+    textMuted: '#94a3b8',
+    border: 'rgba(0, 0, 0, 0.08)',
+    borderLight: 'rgba(0, 0, 0, 0.04)',
     gradientStart: '#6366f1',
     gradientMiddle: '#8b5cf6',
-    gradientEnd: '#a855f7',
-    glow: 'rgba(99, 102, 241, 0.5)',
-    shadow: 'rgba(0, 0, 0, 0.5)',
+    gradientEnd: '#ec4899',
+    glow: 'rgba(99, 102, 241, 0.2)',
+    shadow: 'rgba(0, 0, 0, 0.1)',
   },
   decorations: {
     snowflakes: false,
@@ -197,7 +230,8 @@ const oceanTheme: Theme = {
 
 // 所有可用主题
 export const themes: Record<ThemeName, Theme> = {
-  default: defaultTheme,
+  dark: darkTheme,
+  light: lightTheme,
   christmas: christmasTheme,
   cyberpunk: cyberpunkTheme,
   ocean: oceanTheme,
@@ -226,7 +260,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     if (!saved && now.getMonth() === 11) { // 11 = December
       return 'christmas';
     }
-    return (saved as ThemeName) || 'default';
+    // 处理旧版本的 'default' 主题名
+    if (saved === 'default') return 'dark';
+    return (saved as ThemeName) || 'dark';
   });
 
   const theme = themes[themeName];

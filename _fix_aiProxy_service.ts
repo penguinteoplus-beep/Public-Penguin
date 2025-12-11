@@ -34,7 +34,7 @@ export async function generateImage(request: NanoBananaRequest): Promise<NanoBan
   const config = getApiConfig();
   
   if (!config.enabled || !config.baseUrl || !config.apiKey) {
-    throw new Error('后端第三方 API 未配置。请在后端 .env 文件中设置 THIRD_PARTY_BASE_URL 和 THIRD_PARTY_API_KEY');
+    throw new Error('后端贞贞 API 未配置。请在后端 .env 文件中设置 THIRD_PARTY_BASE_URL 和 THIRD_PARTY_API_KEY');
   }
 
   try {
@@ -73,7 +73,7 @@ export async function chatCompletion(request: OpenAIChatRequest): Promise<OpenAI
   const config = getApiConfig();
   
   if (!config.enabled || !config.baseUrl || !config.apiKey) {
-    throw new Error('后端第三方 API 未配置。请在后端 .env 文件中设置 THIRD_PARTY_BASE_URL 和 THIRD_PARTY_API_KEY');
+    throw new Error('后端贞贞 API 未配置。请在后端 .env 文件中设置 THIRD_PARTY_BASE_URL 和 THIRD_PARTY_API_KEY');
   }
 
   try {

@@ -35,9 +35,9 @@ interface DesktopProps {
 const GRID_SIZE = 100; // 网格大小
 const ICON_SIZE = 80; // 图标大小
 const DRAG_THRESHOLD = 5; // 拖拽阈值，超过此距离才认为是拖拽
-export const TOP_OFFSET = 140; // 顶部偏移（切换标签+搜索框的空间）
-export const DESKTOP_COLS = 7; // 固定7列
-export const DESKTOP_ROWS = 5; // 固定5行
+export const TOP_OFFSET = 120; // 顶部偏移（切换标签+搜索框的空间）
+export const DESKTOP_COLS = 8; // 固定8列
+export const DESKTOP_ROWS = 6; // 固定6行
 
 // 生成唯一ID
 const generateId = () => Math.random().toString(36).substring(2, 15);

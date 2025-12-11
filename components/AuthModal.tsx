@@ -73,7 +73,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
         {/* 头部 */}
         <div className="p-6 border-b border-white/10 bg-gradient-to-r from-indigo-600/20 to-purple-600/20">
           <h2 className="text-xl font-bold text-white">
-            🐧 {mode === 'login' ? '登录艾洛魔法世界' : '加入艾洛魔法世界'}
+            🐧 {mode === 'login' ? '登录 Pebbling UI' : '加入 Pebbling UI'}
           </h2>
           <p className="text-sm text-gray-400 mt-1">
             {mode === 'login' ? '欢迎回来，继续你的创作之旅' : '注册账号，开启AI创作之旅'}

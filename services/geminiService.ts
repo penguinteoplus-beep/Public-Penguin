@@ -6,7 +6,7 @@ import { post, isLoggedIn } from './api';
 
 let ai: GoogleGenAI | null = null;
 
-// 第三方API配置存储
+// 贞贞API配置存储
 let thirdPartyConfig: ThirdPartyApiConfig | null = null;
 
 export const setThirdPartyConfig = (config: ThirdPartyApiConfig | null) => {
@@ -115,9 +115,9 @@ const convertAspectRatio = (ratio: string): NanoBananaRequest['aspect_ratio'] | 
   return ratio as NanoBananaRequest['aspect_ratio'];
 };
 
-// 第三方API图片生成 - 支持文生图和图生图（支持多图）
+// 贞贞API图片生成 - 支持文生图和图生图（支持多图）
 // 如果已登录，通过后端代理调用（会自动扣费）
-// 如果未登录，直接调用第三方API（不扣费）
+// 如果未登录，直接调用贞贞API（不扣费）
 export const editImageWithThirdPartyApi = async (
   files: File[], // 支持多图，空数组为文生图模式
   prompt: string, 
@@ -125,7 +125,7 @@ export const editImageWithThirdPartyApi = async (
   creativeIdeaCost?: number // 创意库定义的扣费金额
 ): Promise<GeneratedContent> => {
   if (!thirdPartyConfig || !thirdPartyConfig.enabled) {
-    throw new Error("第三方API未启用");
+    throw new Error("贞贞API未启用");
   }
   
   // 云模式（已登录）：直接走后端代理，不需要前端 API Key
@@ -135,10 +135,10 @@ export const editImageWithThirdPartyApi = async (
   if (!isCloudMode) {
     // 本地模式才需要检查前端 API 配置
     if (!thirdPartyConfig.apiKey) {
-      throw new Error("请先配置第三方API Key");
+      throw new Error("请先配置贞贞API Key");
     }
     if (!thirdPartyConfig.baseUrl) {
-      throw new Error("请先配置第三方API Base URL");
+      throw new Error("请先配置贞贞API Base URL");
     }
   }
   
@@ -198,7 +198,7 @@ export const editImageWithThirdPartyApi = async (
     return result;
   }
   
-  // 未登录：直接调用第三方API（不扣费）
+  // 未登录：直接调用贞贞API（不扣费）
   const url = `${thirdPartyConfig.baseUrl.replace(/\/$/, '')}/v1/images/generations`;
   
   const response = await withRetry(async () => {
@@ -242,16 +242,16 @@ export const editImageWithThirdPartyApi = async (
   return result;
 };
 
-// 第三方API文字处理/图片分析 (Chat Completions)
+// 贞贞API文字处理/图片分析 (Chat Completions)
 // 如果已登录，通过后端代理调用（会自动扣费）
-// 如果未登录，直接调用第三方API（不扣费）
+// 如果未登录，直接调用贞贞API（不扣费）
 export const chatWithThirdPartyApi = async (
   systemPrompt: string,
   userMessage: string,
   imageFile?: File
 ): Promise<string> => {
   if (!thirdPartyConfig || !thirdPartyConfig.enabled) {
-    throw new Error("第三方API未启用");
+    throw new Error("贞贞API未启用");
   }
   
   // 云模式（已登录）：直接走后端代理，不需要前端 API Key
@@ -261,10 +261,10 @@ export const chatWithThirdPartyApi = async (
   if (!isCloudMode) {
     // 本地模式才需要检查前端 API 配置
     if (!thirdPartyConfig.apiKey) {
-      throw new Error("请先配置第三方API Key");
+      throw new Error("请先配置贞贞API Key");
     }
     if (!thirdPartyConfig.baseUrl) {
-      throw new Error("请先配置第三方API Base URL");
+      throw new Error("请先配置贞贞API Base URL");
     }
   }
   
@@ -318,7 +318,7 @@ export const chatWithThirdPartyApi = async (
     throw new Error("Chat API 未返回有效响应");
   }
   
-  // 未登录：直接调用第三方API（不扣费）
+  // 未登录：直接调用贞贞API（不扣费）
   const url = `${thirdPartyConfig.baseUrl.replace(/\/$/, '')}/v1/chat/completions`;
   
   const response = await withRetry(async () => {
@@ -348,7 +348,7 @@ export const chatWithThirdPartyApi = async (
 };
 
 export const editImageWithGemini = async (files: File[], prompt: string, config: ImageEditConfig, creativeIdeaCost?: number): Promise<GeneratedContent> => {
-  // 如果启用了第三方API，使用第三方API
+  // 如果启用了贞贞API，使用贞贞API
   if (thirdPartyConfig && thirdPartyConfig.enabled) {
     return editImageWithThirdPartyApi(files, prompt, config, creativeIdeaCost);
   }
@@ -428,7 +428,7 @@ export const editImageWithGemini = async (files: File[], prompt: string, config:
 
 // --- BP Agent Logic ---
 
-// 第三方API的BP Agent任务（分析图片或纯文本）
+// 贞贞API的BP Agent任务（分析图片或纯文本）
 const runBPAgentTaskWithThirdParty = async (file: File | null, instruction: string): Promise<string> => {
   const systemInstruction = file 
     ? `You are an AI analysis agent. 
@@ -442,18 +442,18 @@ Output Rule: Return ONLY the result string. Do not include labels, markdown, or 
 };
 
 const runBPAgentTask = async (file: File | null, instruction: string, model: BPAgentModel): Promise<string> => {
-    // 如果启用了第三方API，使用第三方Chat API
+    // 如果启用了贞贞API，使用贞贞Chat API
     if (thirdPartyConfig && thirdPartyConfig.enabled) {
         // 检查是否登录或有本地API Key
         const isCloud = isLoggedIn();
         if (!isCloud && !thirdPartyConfig.apiKey) {
-            throw new Error("请先配置第三方API Key或登录账户");
+            throw new Error("请先配置贞贞API Key或登录账户");
         }
         return runBPAgentTaskWithThirdParty(file, instruction);
     }
     
     // 使用 Gemini API
-    if (!ai) throw new Error("请先设置 Gemini API Key 或启用第三方API");
+    if (!ai) throw new Error("请先设置 Gemini API Key 或启用贞贞API");
     
     // 构建内容部分
     const parts: Part[] = [];
@@ -671,11 +671,11 @@ export const generateCreativePromptFromImage = async ({
     keyword = '',
     smartPlusConfig,
 }: GeneratePromptParams): Promise<string> => {
-  // 如果启用了第三方API，使用第三方API
+  // 如果启用了贞贞API，使用贞贞API
   const useThirdParty = thirdPartyConfig && thirdPartyConfig.enabled && thirdPartyConfig.apiKey;
   
   if (!useThirdParty && !ai) {
-    throw new Error("请先设置 Gemini API Key 或配置第三方API");
+    throw new Error("请先设置 Gemini API Key 或配置贞贞API");
   }
   
   const model = 'gemini-3-pro-preview';
@@ -741,7 +741,7 @@ ${keyword}
   
   userMessage += "\n\nNow, based on the provided image and all the rules, generate the final, synthesized prompt.";
   
-  // 使用第三方API进行图片分析
+  // 使用贞贞API进行图片分析
   if (useThirdParty) {
     return chatWithThirdPartyApi(systemInstruction, userMessage, file);
   }

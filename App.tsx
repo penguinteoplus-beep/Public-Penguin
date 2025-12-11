@@ -260,7 +260,13 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
   onSettingsClick,
   currentApiMode,
 }) => {
-  const { theme } = useTheme();
+  const { theme, themeName, setTheme } = useTheme();
+  
+  // 明暗切换
+  const toggleDarkMode = () => {
+    setTheme(themeName === 'light' ? 'dark' : 'light');
+  };
+  const isDark = themeName !== 'light';
   
   // 根据模式获取显示信息
   const getModeDisplay = () => {
@@ -268,20 +274,20 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       case 'cloud':
         return {
           icon: '☁️',
-          text: '云端模式 - 已连接',
-          bgClass: 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30',
+          text: '云端已连接',
+          bgClass: 'modern-badge primary',
         };
       case 'local-thirdparty':
         return {
           icon: '🔌',
-          text: '本地模式 - 第三方API',
-          bgClass: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
+          text: '贞贞API',
+          bgClass: 'modern-badge warning',
         };
       case 'local-gemini':
         return {
           icon: '💎',
-          text: '本地模式 - Gemini',
-          bgClass: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
+          text: 'Gemini本地',
+          bgClass: 'modern-badge success',
         };
     }
   };
@@ -289,102 +295,132 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
   const modeDisplay = getModeDisplay();
   
   return (
-  <aside className="w-[280px] backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-r z-20" style={{ backgroundColor: theme.colors.bgPanel, borderColor: theme.colors.border }}>
-      {/* 顶部导航栏 */}
-      <div className="p-4 border-b border-white/10 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🐧</span>
-            <div>
-              <h1 className="text-lg font-black bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-indigo-400 to-purple-500 tracking-tight">
-                艾洛魔法
-              </h1>
-            </div>
+  <aside className="w-[260px] flex-shrink-0 flex flex-col h-full modern-panel border-r z-20">
+      {/* 顶部导航栏 - 精简 */}
+      <div className="modern-panel-section flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
+            <span className="text-base">🐧</span>
           </div>
-          
+          <div>
+            <h1 className="text-sm font-semibold gradient-text">Pebbling UI</h1>
+            <p className="text-[9px]" style={{ color: theme.colors.textMuted }}>AI 创意工具</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-1">
+          {/* 明暗切换 */}
+          <button
+            onClick={toggleDarkMode}
+            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105"
+            style={{ 
+              background: theme.colors.bgTertiary,
+              color: theme.colors.textSecondary 
+            }}
+            title={isDark ? '切换到浅色模式' : '切换到深色模式'}
+          >
+            {isDark ? (
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            ) : (
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
+          </button>
           {/* 设置按钮 */}
           <button
             onClick={onSettingsClick}
-            className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all"
+            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105"
+            style={{ 
+              background: theme.colors.bgTertiary,
+              color: theme.colors.textSecondary 
+            }}
             title="设置"
           >
-            <SettingsIcon className="w-4 h-4" />
+            <SettingsIcon className="w-3.5 h-3.5" />
           </button>
         </div>
-        
-        {/* API 状态指示器 - 单独一行 */}
-        <div 
-          className={`mt-3 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2 ${modeDisplay.bgClass}`}
-        >
-          <span className="text-base">{modeDisplay.icon}</span>
-          <span>{modeDisplay.text}</span>
-        </div>
-        
-        {/* 用户信息栏 */}
-        <div className="mt-3 flex items-center justify-between">
+      </div>
+      
+      {/* 用户信息栏 - 紧凑 */}
+      <div className="px-4 py-3" style={{ borderBottom: `1px solid ${theme.colors.borderLight}` }}>
+        <div className="flex items-center gap-2.5">
           {currentUser ? (
-            <div className="flex items-center gap-2 flex-1">
+            <>
               {/* 头像 */}
               <div className="relative group">
-                <button className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-xs shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform">
+                <button className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium text-xs shadow-md hover:scale-105 transition-transform">
                   {currentUser.nickname?.[0] || currentUser.username[0].toUpperCase()}
                 </button>
                 {/* 下拉菜单 */}
-                <div className="absolute left-0 top-full mt-2 w-36 bg-gray-900 border border-white/10 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                  <div className="p-2 border-b border-white/10">
-                    <p className="text-xs font-medium text-white truncate">{currentUser.nickname || currentUser.username}</p>
-                    <p className="text-[10px] text-gray-500 truncate">{currentUser.email}</p>
+                <div className="absolute left-0 top-full mt-1.5 w-36 modern-card p-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 animate-scale-in">
+                  <div className="p-2.5" style={{ borderBottom: `1px solid ${theme.colors.borderLight}` }}>
+                    <p className="text-xs font-medium truncate" style={{ color: theme.colors.textPrimary }}>{currentUser.nickname || currentUser.username}</p>
+                    <p className="text-[10px] truncate mt-0.5" style={{ color: theme.colors.textMuted }}>{currentUser.email}</p>
                   </div>
                   <button
                     onClick={onLogout}
-                    className="w-full px-2 py-1.5 text-left text-xs text-red-400 hover:bg-red-500/10 transition-colors rounded-b-xl"
+                    className="w-full px-2.5 py-1.5 mt-1 text-left text-[11px] text-red-400 hover:bg-red-500/10 transition-colors rounded-md flex items-center gap-1.5"
                   >
-                    退出登录
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    退出
                   </button>
                 </div>
               </div>
               
-              {/* 用户名 */}
-              <span className="text-xs text-gray-300 truncate flex-1">
-                {currentUser.nickname || currentUser.username}
-              </span>
+              {/* 用户信息 */}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium truncate" style={{ color: theme.colors.textPrimary }}>
+                  {currentUser.nickname || currentUser.username}
+                </p>
+                <div className={modeDisplay.bgClass}>
+                  <span className="text-[10px]">{modeDisplay.icon}</span>
+                  <span>{modeDisplay.text}</span>
+                </div>
+              </div>
               
-              {/* Pebbling 鹅卵石余额 */}
+              {/* 鹅卵石余额 */}
               <button 
                 onClick={onRechargeClick}
-                className="flex items-center gap-1 px-2 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-lg hover:bg-yellow-500/20 transition-colors"
-                title="点击充值 Pebbling 鹅卵石"
+                className="flex items-center gap-1 px-2 py-1 modern-card hover:border-yellow-500/20 transition-all"
+                title="充值"
               >
                 <span className="text-xs">🪙</span>
-                <span className="text-xs font-bold text-yellow-400">{currentUser.coins || 0}</span>
+                <span className="text-xs font-semibold text-yellow-400">{currentUser.coins || 0}</span>
               </button>
-            </div>
+            </>
           ) : (
             <button
               onClick={onLoginClick}
-              className="flex-1 py-2 text-xs font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all flex items-center justify-center gap-2"
+              className="flex-1 py-2 text-xs font-medium text-white modern-btn w-full"
             >
-              <span>☁️</span>
-              登录使用云服务
+              <span className="text-sm">☁️</span>
+              登录云服务
             </button>
           )}
         </div>
       </div>
       
-      {/* 公告区域 - 登录下方 */}
-      <div className="mx-4 mt-3 px-4 py-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
-        <div className="flex items-start gap-2">
-          <span className="text-base">📢</span>
-          <div className="text-xs text-indigo-200">
-            <p className="font-medium text-indigo-100">欢迎使用企鹅艾洛魔法世界！</p>
-            <p className="mt-1 opacity-80">单击图片查看预览，拖拽整理位置。</p>
+      {/* 公告区域 - 简洁卡片 */}
+      <div className="mx-4 mt-3 p-3 modern-card">
+        <div className="flex items-start gap-2.5">
+          <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99, 102, 241, 0.15)' }}>
+            <span className="text-xs">📣</span>
+          </div>
+          <div className="flex-1">
+            <p className="text-xs font-medium" style={{ color: theme.colors.textPrimary }}>欢迎使用</p>
+            <p className="text-[10px] mt-0.5" style={{ color: theme.colors.textMuted }}>单击预览，拖拽整理</p>
           </div>
         </div>
       </div>
       
       {/* 资源素材区域 */}
       <div className="flex-grow p-4 flex flex-col min-h-0 overflow-hidden">
-        <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1 mb-3">资源素材</h2>
+        <h2 className="modern-title mb-3">资源素材</h2>
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           <ImageUploader 
             files={files}
@@ -398,9 +434,9 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       </div>
       
       {/* 免责声明 - 底部 */}
-      <div className="mx-4 mb-4 px-4 py-3 rounded-xl bg-black/30 border border-white/5">
-        <p className="text-[10px] text-gray-500 leading-relaxed">
-          ⚠️ 免责声明：本站内容由 AI 模型生成，仅供学习与测试。用户请勿生成或上传色情、政治等违规内容，违者将封禁账号并上报。
+      <div className="mx-4 mb-4 px-3 py-2 rounded-lg" style={{ background: theme.colors.bgSecondary, border: `1px solid ${theme.colors.borderLight}` }}>
+        <p className="text-[9px] leading-relaxed" style={{ color: theme.colors.textMuted }}>
+          ⚠️ AI 内容仅供学习测试
         </p>
       </div>
   </aside>
@@ -434,11 +470,17 @@ const SmartPlusDirector: React.FC<{
     }
 
     return (
-        <div className="flex flex-col gap-3 p-4 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md">
-            <h3 className="text-sm font-bold text-teal-400 uppercase tracking-wider mb-1">导演模式</h3>
+        <div className="modern-card p-3">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-5 h-5 rounded bg-teal-500/15 flex items-center justify-center">
+                <LightbulbIcon className="w-3 h-3 text-teal-400"/>
+              </div>
+              <h3 className="text-xs font-medium text-white">导演模式</h3>
+            </div>
+            <div className="space-y-3">
             {visibleComponents.map(component => (
-                <div key={component.id} className="flex items-start gap-3 group">
-                    <label className="relative inline-flex items-center cursor-pointer pt-1" htmlFor={`smart-plus-override-${component.id}`}>
+                <div key={component.id} className="flex items-start gap-2">
+                    <label className="relative inline-flex items-center cursor-pointer pt-0.5" htmlFor={`smart-plus-override-${component.id}`}>
                         <input
                             type="checkbox"
                             id={`smart-plus-override-${component.id}`}
@@ -446,24 +488,25 @@ const SmartPlusDirector: React.FC<{
                             checked={component.enabled}
                             onChange={(e) => handleConfigChange(component.id, 'enabled', e.target.checked)}
                         />
-                         <div className="w-8 h-4 bg-gray-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-teal-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-teal-500 transition-colors"></div>
+                         <div className="w-7 h-4 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-teal-500 transition-colors"></div>
                     </label>
                     <div className="flex-grow">
-                        <label htmlFor={`smart-plus-override-${component.id}-features`} className="text-xs font-medium text-gray-400 group-hover:text-gray-300 transition-colors mb-1 block">
+                        <label htmlFor={`smart-plus-override-${component.id}-features`} className="text-[10px] font-medium text-gray-500 mb-1 block">
                             {component.label}
                         </label>
                         <textarea
                             id={`smart-plus-override-${component.id}-features`}
                             value={component.features}
                             onChange={(e) => handleConfigChange(component.id, 'features', e.target.value)}
-                            className="w-full text-xs p-2 bg-black/40 border border-white/10 rounded-lg focus:ring-1 focus:ring-teal-500 focus:border-teal-500 disabled:opacity-50 disabled:cursor-not-allowed resize-none transition-all text-gray-300 placeholder-gray-600"
-                            placeholder={component.enabled ? '描述特征...' : '自动创意'}
+                            className="w-full text-xs p-2 modern-input rounded-md resize-none"
+                            placeholder={component.enabled ? '描述...' : '自动'}
                             disabled={!component.enabled}
                             rows={2}
                         />
                     </div>
                 </div>
             ))}
+            </div>
         </div>
     );
 };
@@ -480,31 +523,40 @@ const BPModePanel: React.FC<{
     if (manualFields.length === 0 && agentFields.length === 0) return null;
 
     return (
-        <div className="flex flex-col gap-3 p-4 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md mb-4">
-             <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-bold text-yellow-400 uppercase tracking-wider">BP 模式</h3>
-                <span className="text-[10px] text-gray-500 flex items-center gap-1">
-                    {agentFields.length > 0 && <span className="flex items-center gap-1"><LightbulbIcon className="w-3 h-3 text-indigo-400"/> {agentFields.length} 智能体</span>}
-                </span>
+        <div className="modern-card p-3 mb-3">
+             <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded bg-yellow-500/15 flex items-center justify-center">
+                    <span className="text-[10px]">⚡</span>
+                  </div>
+                  <h3 className="text-xs font-medium text-white">BP 模式</h3>
+                </div>
+                {agentFields.length > 0 && (
+                  <span className="modern-badge warning">
+                    <LightbulbIcon className="w-2.5 h-2.5"/> {agentFields.length}
+                  </span>
+                )}
              </div>
              
+             <div className="space-y-2">
              {manualFields.length > 0 ? manualFields.map(v => (
                  <div key={v.id}>
-                     <label className="text-xs font-medium text-gray-400 mb-1 flex justify-between">
+                     <label className="text-[10px] font-medium text-gray-500 mb-1 flex justify-between">
                         <span>{v.label}</span>
-                        <span className="text-[10px] text-yellow-600 font-mono">/{v.name}</span>
+                        <span className="text-[9px] text-yellow-500/60 font-mono">/{v.name}</span>
                      </label>
                      <input 
                         type="text"
                         value={inputs[v.id] || ''}
                         onChange={(e) => onInputChange(v.id, e.target.value)}
-                        className="w-full text-sm p-2 bg-black/40 border border-white/10 rounded-lg focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 text-gray-200 placeholder-gray-700 transition-colors"
+                        className="w-full text-xs p-2 modern-input rounded-md focus:border-yellow-500/40"
                         placeholder={`输入 ${v.label}...`}
                      />
                  </div>
              )) : (
-                 <p className="text-xs text-gray-500 italic">此模板仅包含智能体，点击企鹅按钮自动运行。</p>
+                 <p className="text-[10px] text-gray-500 italic p-2 bg-white/3 rounded text-center">仅含智能体，点击生成自动运行</p>
              )}
+             </div>
         </div>
     );
 }
@@ -543,43 +595,41 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const canEditPrompt = activeTemplate?.allowEditPrompt !== false; // 默认true
   
   return (
-  <aside className="w-[380px] bg-black/40 backdrop-blur-2xl flex-shrink-0 flex flex-col h-full border-l border-white/10 z-20">
-     <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+  <aside className="w-[320px] flex-shrink-0 flex flex-col h-full modern-panel border-l z-20">
+     <div className="p-4 space-y-4 overflow-y-auto custom-scrollbar">
         {/* Prompt Section */}
         <div>
           <div className="flex items-center justify-between mb-3">
-             <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+             <h2 className="modern-title">
                 {hasActiveTemplate ? '关键词' : '提示词'}
              </h2>
-             <div className="flex items-center gap-2">
+             <div className="flex items-center gap-1.5">
                {/* 当前模板标识 + 卸载按钮 */}
                {hasActiveTemplate && (
                  <div className="flex items-center gap-1">
-                   <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                   <span className={`modern-badge ${
                      activeBPTemplate 
-                       ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
+                       ? 'warning'
                        : activeSmartPlusTemplate
-                       ? 'bg-teal-500/20 text-teal-300 border-teal-500/30'
-                       : 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                       ? 'success'
+                       : 'primary'
                    }`}>
                      {activeTemplateName}
                    </span>
                    <button
                      onClick={onClearTemplate}
-                     className="text-gray-500 hover:text-red-400 transition-colors p-0.5 rounded hover:bg-red-500/10"
-                     title="卸载创意库 (Esc)"
+                     className="w-5 h-5 rounded flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                     title="卸载 (Esc)"
                    >
-                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                      </svg>
                    </button>
                  </div>
                )}
-               {isThirdPartyApiEnabled ? (
-                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30">Nano-banana-2</span>
-               ) : (
-                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Gemini 3 Pro</span>
-               )}
+               <span className={`modern-badge ${isThirdPartyApiEnabled ? 'warning' : 'primary'}`}>
+                 {isThirdPartyApiEnabled ? 'Nano' : 'Gemini'}
+               </span>
              </div>
           </div>
           
@@ -591,7 +641,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                />
            )}
 
-           {/* 提示词输入区域 - 根据权限显示 */}
+           {/* 提示词输入区域 - 精致设计 */}
            {canViewPrompt ? (
              <div className="relative group">
               <textarea
@@ -599,29 +649,29 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder={
                     activeBPTemplate
-                      ? "生成的提示词将显示在这里..."
+                      ? "生成的提示词显示在这里..."
                       : activeSmartTemplate
-                      ? `"${activeSmartTemplate.title}" 的关键词...\n例如: '钢铁侠'`
+                      ? `“${activeSmartTemplate.title}” 关键词...`
                       : activeSmartPlusTemplate
-                      ? `(可选) 场景关键词...\n例如: '微笑着, 霓虹灯光'`
-                      : "描述你想要生成的画面..."
+                      ? `场景关键词 (可选)...`
+                      : "描述想生成的画面..."
                   }
-                  readOnly={!!activeBPTemplate || !canEditPrompt} // BP模式或不允许编辑时只读
-                  className={`w-full h-40 p-4 pr-12 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 resize-none text-sm text-gray-200 shadow-inner placeholder-gray-600 custom-scrollbar ${
-                      activeBPTemplate ? 'focus:ring-yellow-500/50 focus:border-yellow-500/50' : 'focus:ring-indigo-500/50 focus:border-indigo-500/50'
-                  } ${!canEditPrompt ? 'cursor-not-allowed opacity-75' : ''}`}
+                  readOnly={!!activeBPTemplate || !canEditPrompt}
+                  className={`w-full h-28 p-3 pr-11 modern-input rounded-lg resize-none text-xs transition-all ${
+                      activeBPTemplate ? 'focus:border-yellow-500/40' : 'focus:border-indigo-500/40'
+                  } ${!canEditPrompt ? 'cursor-not-allowed opacity-60' : ''}`}
                 />
                 <button
                   onClick={smartPromptGenStatus === ApiStatus.Loading ? onCancelSmartPrompt : handleGenerateSmartPrompt}
                   disabled={smartPromptGenStatus !== ApiStatus.Loading && !canGenerateSmartPrompt}
-                  className={`absolute top-3 right-3 p-2 text-white rounded-xl shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95 ${
+                  className={`absolute top-2 right-2 w-8 h-8 rounded-lg text-white shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 flex items-center justify-center ${
                       smartPromptGenStatus === ApiStatus.Loading
-                      ? 'bg-gradient-to-br from-red-500 to-red-600 hover:shadow-red-500/30'
+                      ? 'bg-gradient-to-br from-red-500 to-red-600'
                       : activeBPTemplate 
-                      ? 'bg-gradient-to-br from-yellow-500 to-orange-600 hover:shadow-yellow-500/30' 
-                      : 'bg-gradient-to-br from-indigo-500 to-purple-600 hover:shadow-indigo-500/30'
+                      ? 'bg-gradient-to-br from-yellow-500 to-orange-600' 
+                      : 'bg-gradient-to-br from-indigo-500 to-purple-600'
                   }`}
-                  title={smartPromptGenStatus === ApiStatus.Loading ? "点击取消" : (activeBPTemplate ? "运行智能体 & 编译 Prompt" : "生成/更新提示词")}
+                  title={smartPromptGenStatus === ApiStatus.Loading ? "取消" : "生成"}
                 >
                     {smartPromptGenStatus === ApiStatus.Loading ? (
                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -633,16 +683,18 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 </button>
              </div>
            ) : (
-             /* 不允许查看提示词时显示提示信息 */
-             <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl">
+             /* 不允许查看提示词 */
+             <div className="p-3 modern-card border-orange-500/15">
                <div className="flex items-center gap-2 text-orange-300 mb-2">
-                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                 </svg>
-                 <span className="text-sm font-medium">提示词已加密</span>
+                 <div className="w-6 h-6 rounded-md bg-orange-500/15 flex items-center justify-center">
+                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                   </svg>
+                 </div>
+                 <span className="text-xs font-medium">提示词已加密</span>
                </div>
-               <p className="text-xs text-gray-400">
-                 此创意库不允许查看提示词内容。填写上方输入框后，点击生成即可。
+               <p className="text-[10px] text-gray-500">
+                 填写输入框后点击生成即可
                </p>
              </div>
            )}
@@ -656,59 +708,77 @@ const RightPanel: React.FC<RightPanelProps> = ({
             />
         )}
 
-        <div className="space-y-4 pt-4 border-t border-white/10">
-             {/* Model Config Card */}
-             <div className="bg-white/5 backdrop-blur-md rounded-2xl p-5 border border-white/10">
-                 <div className="flex items-center gap-2 mb-4 text-gray-400">
-                    <ImageIcon className="w-4 h-4"/>
-                    <h3 className="text-xs font-bold uppercase tracking-wider">模型参数</h3>
-                 </div>
-                 
-                 <div className="space-y-5">
-                    <div>
-                        <div className="flex justify-between mb-2">
-                             <span className="text-[10px] font-semibold text-gray-500 uppercase">画面比例</span>
-                             <span className="text-[10px] text-indigo-400 font-mono">{aspectRatio}</span>
-                        </div>
-                        <div className="grid grid-cols-6 gap-1.5">
-                            {['Auto', '1:1', '3:4', '4:3', '9:16', '16:9', '2:3', '3:2', '4:5', '5:4', '21:9'].map(ratio => (
-                                <button
-                                    key={ratio}
-                                    onClick={() => setAspectRatio(ratio)}
-                                    className={`py-1.5 text-[10px] font-semibold rounded-lg border transition-all ${
-                                        aspectRatio === ratio
-                                            ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-900/50'
-                                            : 'bg-black/20 border-white/10 text-gray-400 hover:bg-white/10 hover:text-gray-200'
-                                    }`}
-                                >
-                                    {ratio}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                    <div>
-                        <div className="flex justify-between mb-2">
-                             <span className="text-[10px] font-semibold text-gray-500 uppercase">分辨率</span>
-                             <span className="text-[10px] text-teal-400 font-mono">{imageSize}</span>
-                        </div>
-                        <div className="grid grid-cols-3 gap-2">
-                             {['1K', '2K', '4K'].map(size => (
-                                <button
-                                    key={size}
-                                    onClick={() => setImageSize(size)}
-                                    className={`py-1.5 text-[10px] font-semibold rounded-lg border transition-all ${
-                                        imageSize === size
-                                            ? 'bg-teal-600 border-teal-500 text-white shadow-lg shadow-teal-900/50'
-                                            : 'bg-black/20 border-white/10 text-gray-400 hover:bg-white/10 hover:text-gray-200'
-                                    }`}
-                                >
-                                    {size}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                 </div>
-             </div>
+        {/* 模型参数卡片 - 紧凑设计 */}
+        <div className="modern-card p-3">
+           <div className="flex items-center gap-2 mb-3">
+              <div className="w-5 h-5 rounded bg-indigo-500/15 flex items-center justify-center">
+                <ImageIcon className="w-3 h-3 text-indigo-400"/>
+              </div>
+              <h3 className="text-xs font-medium text-white">参数</h3>
+           </div>
+           
+           <div className="space-y-3">
+              {/* 画面比例 */}
+              <div>
+                  <div className="flex justify-between mb-2">
+                       <span className="modern-title">比例</span>
+                       <span className="text-[10px] text-indigo-400 font-mono">{aspectRatio}</span>
+                  </div>
+                  <div className="grid grid-cols-6 gap-1">
+                      {['Auto', '1:1', '3:4', '4:3', '9:16', '16:9'].map(ratio => (
+                          <button
+                              key={ratio}
+                              onClick={() => setAspectRatio(ratio)}
+                              className={`py-1.5 text-[10px] font-medium rounded transition-all ${
+                                  aspectRatio === ratio
+                                      ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-sm'
+                                      : 'bg-white/4 text-gray-500 hover:bg-white/8 hover:text-gray-300'
+                              }`}
+                          >
+                              {ratio}
+                          </button>
+                      ))}
+                  </div>
+                  <div className="grid grid-cols-5 gap-1 mt-1">
+                      {['2:3', '3:2', '4:5', '5:4', '21:9'].map(ratio => (
+                          <button
+                              key={ratio}
+                              onClick={() => setAspectRatio(ratio)}
+                              className={`py-1.5 text-[10px] font-medium rounded transition-all ${
+                                  aspectRatio === ratio
+                                      ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-sm'
+                                      : 'bg-white/4 text-gray-500 hover:bg-white/8 hover:text-gray-300'
+                              }`}
+                          >
+                              {ratio}
+                          </button>
+                      ))}
+                  </div>
+              </div>
+              
+              {/* 分辨率 */}
+              <div>
+                  <div className="flex justify-between mb-2">
+                       <span className="modern-title">分辨率</span>
+                       <span className="text-[10px] text-cyan-400 font-mono">{imageSize}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1">
+                       {['1K', '2K', '4K'].map(size => (
+                          <button
+                              key={size}
+                              onClick={() => setImageSize(size)}
+                              className={`py-1.5 text-[10px] font-medium rounded transition-all ${
+                                  imageSize === size
+                                      ? 'bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-sm'
+                                      : 'bg-white/4 text-gray-500 hover:bg-white/8 hover:text-gray-300'
+                              }`}
+                          >
+                              {size}
+                          </button>
+                      ))}
+                  </div>
+              </div>
+           </div>
         </div>
      </div>
   </aside>
@@ -761,7 +831,8 @@ const Canvas: React.FC<CanvasProps> = ({
   onSaveImageFromFlow,
   onCanvasClick,
 }) => {
-  const { theme } = useTheme();
+  const { theme, themeName } = useTheme();
+  const isDark = themeName !== 'light';
   
   return (
    <main 
@@ -769,51 +840,55 @@ const Canvas: React.FC<CanvasProps> = ({
      style={{ backgroundColor: theme.colors.bgPrimary }}
      onDragStart={(e) => e.preventDefault()}
    >
-      {/* Background Gradient */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/10 via-gray-950 to-gray-950 pointer-events-none"></div>
+      {/* 背景效果 - 适配明暗主题 */}
+      {isDark ? (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/20 via-gray-950 to-purple-950/10 pointer-events-none"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.15),transparent)] pointer-events-none"></div>
+        </>
+      ) : (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30 pointer-events-none"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.08),transparent)] pointer-events-none"></div>
+        </>
+      )}
       
-      {/* 顶部切换标签 */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 p-1 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-lg">
+      {/* 顶部切换标签 - 紧凑精致 */}
+      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 modern-tabs">
         <button
           onClick={() => setView('editor')}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${
-            view === 'editor'
-              ? 'bg-indigo-500/80 text-white shadow-lg shadow-indigo-500/30'
-              : 'text-gray-400 hover:text-white hover:bg-white/10'
+          className={`modern-tab flex items-center gap-1.5 ${
+            view === 'editor' ? 'active' : ''
           }`}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
           桌面
         </button>
         <button
           onClick={() => setView('library')}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${
-            view === 'library'
-              ? 'bg-purple-500/80 text-white shadow-lg shadow-purple-500/30'
-              : 'text-gray-400 hover:text-white hover:bg-white/10'
+          className={`modern-tab flex items-center gap-1.5 ${
+            view === 'library' ? 'active' : ''
           }`}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
           创意库
           {creativeIdeas.length > 0 && (
-            <span className="ml-1 px-1.5 py-0.5 text-[10px] rounded-full bg-white/20">
+            <span className="px-1 py-0.5 text-[9px] rounded bg-white/20 font-medium">
               {creativeIdeas.length}
             </span>
           )}
         </button>
         <button
           onClick={() => setView('canvas')}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${
-            view === 'canvas'
-              ? 'bg-cyan-500/80 text-white shadow-lg shadow-cyan-500/30'
-              : 'text-gray-400 hover:text-white hover:bg-white/10'
+          className={`modern-tab flex items-center gap-1.5 ${
+            view === 'canvas' ? 'active' : ''
           }`}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
           </svg>
           画布
@@ -869,17 +944,19 @@ const Canvas: React.FC<CanvasProps> = ({
             creativeIdeas={creativeIdeas}
           />
           
-          {/* 生成结果浮层 */}
+          {/* 生成结果浮层 - 现代化设计 */}
           {(status === ApiStatus.Loading || (status === ApiStatus.Success && content) || (status === ApiStatus.Error && error)) && (
-            <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-40 bg-gray-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10 p-4">
+            <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-40 modern-card p-5 animate-scale-in">
               {/* 关闭按钮 */}
               {status !== ApiStatus.Loading && onDismissResult && (
                 <button
                   onClick={onDismissResult}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-colors border border-white/20"
+                  className="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 rounded-xl flex items-center justify-center text-gray-300 hover:text-white transition-all shadow-lg border border-white/10"
                   title="关闭"
                 >
-                  ×
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               )}
               <GeneratedImageDisplay
@@ -955,7 +1032,7 @@ const App: React.FC = () => {
 
   const [autoSave, setAutoSave] = useState(false);
   
-  // 第三方API配置状态
+  // 贞贞API配置状态
   const [thirdPartyApiConfig, setThirdPartyApiConfig] = useState<ThirdPartyApiConfig>({
     enabled: false,
     baseUrl: '',
@@ -995,16 +1072,31 @@ const App: React.FC = () => {
       initializeAiClient(savedApiKey);
     }
     
-    // 加载第三方API配置
+    // 加载贞贞API配置
     const savedThirdPartyConfig = localStorage.getItem('third_party_api_config');
     if (savedThirdPartyConfig) {
       try {
         const config = JSON.parse(savedThirdPartyConfig) as ThirdPartyApiConfig;
+        // 如果没有baseUrl，设置默认值
+        if (!config.baseUrl) {
+          config.baseUrl = 'https://ai.t8star.cn';
+        }
         setThirdPartyApiConfig(config);
         setThirdPartyConfig(config);
       } catch (e) {
         console.error('Failed to parse third party API config:', e);
       }
+    } else {
+      // 默认配置
+      const defaultConfig: ThirdPartyApiConfig = {
+        enabled: false,
+        baseUrl: 'https://ai.t8star.cn',
+        apiKey: '',
+        model: 'nano-banana-2',
+        chatModel: 'gemini-2.5-pro'
+      };
+      setThirdPartyApiConfig(defaultConfig);
+      setThirdPartyConfig(defaultConfig);
     }
     
     // 检查登录状态并加载数据
@@ -1181,7 +1273,7 @@ const App: React.FC = () => {
     localStorage.setItem('auto_save_enabled', JSON.stringify(enabled));
   };
   
-  // 第三方API配置变更处理
+  // 贞贞API配置变更处理
   const handleThirdPartyConfigChange = (config: ThirdPartyApiConfig) => {
     setThirdPartyApiConfig(config);
     setThirdPartyConfig(config);
@@ -1636,7 +1728,7 @@ const App: React.FC = () => {
       return;
     }
 
-    // 检查API配置：要么有Gemini Key，要么启用了第三方API
+    // 检查API配置：要么有Gemini Key，要么启用了贞贞API
     const hasValidApi = apiKey || (thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey);
 
     // 创建新的 AbortController
@@ -1650,7 +1742,7 @@ const App: React.FC = () => {
       if (activeBPTemplate) {
           // BP Mode Logic (New Orchestration)
           if (!hasValidApi) {
-             alert('BP 模式运行智能体需要配置 API Key（Gemini 或第三方API）');
+             alert('BP 模式运行智能体需要配置 API Key（Gemini 或贞贞API）');
              setSmartPromptGenStatus(ApiStatus.Idle);
              return;
           }
@@ -1661,7 +1753,7 @@ const App: React.FC = () => {
       } else {
           // Standard/Smart Logic (Legacy)
           if (!hasValidApi) {
-             alert('智能提示词生成需要配置 API Key（Gemini 或第三方API）');
+             alert('智能提示词生成需要配置 API Key（Gemini 或贞贞API）');
              setSmartPromptGenStatus(ApiStatus.Idle);
              return;
           }
@@ -1839,8 +1931,8 @@ const App: React.FC = () => {
   const handleGenerateClick = useCallback(async () => {
     // 检查API配置
     // 优先级：
-    // 1. 已登录 + 启用第三方API → 使用云端（不需要本地key）
-    // 2. 未登录 + 启用第三方API + 有本地key → 使用本地第三方
+    // 1. 已登录 + 启用贞贞API → 使用云端（不需要本地key）
+    // 2. 未登录 + 启用贞贞API + 有本地key → 使用本地贞贞
     // 3. 有 Gemini key → 使用本地Gemini
     // 4. 都没有 → 提示配置
     const isCloud = isLoggedIn();
@@ -1853,7 +1945,7 @@ const App: React.FC = () => {
       if (isCloud) {
         setError('请在设置中启用云端服务');
       } else {
-        setError('请先配置 API Key（第三方API 或 Gemini）或登录使用云服务');
+        setError('请先配置 API Key（贞贞API 或 Gemini）或登录使用云服务');
       }
       setStatus(ApiStatus.Error);
       return;

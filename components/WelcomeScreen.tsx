@@ -14,7 +14,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onUploadClick }) =
           <SparklesIcon className="w-8 h-8 text-white" />
         </div>
         <h2 className="text-3xl font-bold text-white mb-2">
-          欢迎来到艾洛魔法世界
+          欢迎来到 Pebbling UI
         </h2>
         <p className="text-base text-gray-400 mb-6">
           直接输入提示词生成图片，或上传图片进行编辑创作

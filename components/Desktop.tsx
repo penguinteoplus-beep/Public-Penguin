@@ -6,6 +6,16 @@ import { ZoomInIcon } from './icons/ZoomInIcon';
 import { DownloadIcon } from './icons/DownloadIcon';
 import { EditIcon } from './icons/EditIcon';
 import { RefreshIcon } from './icons/RefreshIcon';
+import { FolderIcon, FolderOpenIcon } from './icons/FolderIcon';
+import { StackIcon, StackExpandIcon, UnstackIcon } from './icons/StackIcon';
+import { SearchIcon } from './icons/SearchIcon';
+import { EyeIcon, EyeOffIcon } from './icons/EyeIcon';
+import { CopyIcon, ScissorsIcon, ClipboardIcon } from './icons/CopyIcon';
+import { ChevronLeftIcon } from './icons/ChevronLeftIcon';
+import { PackageIcon } from './icons/PackageIcon';
+import { MoveOutIcon } from './icons/MoveOutIcon';
+import { RenameIcon } from './icons/RenameIcon';
+import { LayersIcon } from './icons/GridIcon';
 import JSZip from 'jszip';
 
 interface DesktopProps {
@@ -35,9 +45,9 @@ interface DesktopProps {
 const GRID_SIZE = 100; // 网格大小
 const ICON_SIZE = 80; // 图标大小
 const DRAG_THRESHOLD = 5; // 拖拽阈值，超过此距离才认为是拖拽
-export const TOP_OFFSET = 120; // 顶部偏移（切换标签+搜索框的空间）
-export const DESKTOP_COLS = 8; // 固定8列
-export const DESKTOP_ROWS = 6; // 固定6行
+export const TOP_OFFSET = 80; // 顶部偏移（搜索框+工具栏）
+const PADDING = 24; // 桌面内边距
+// 不再使用固定行列，改为动态计算
 
 // 生成唯一ID
 const generateId = () => Math.random().toString(36).substring(2, 15);
@@ -72,6 +82,7 @@ export const Desktop: React.FC<DesktopProps> = ({
   const isLight = themeName === 'light';
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState<DesktopPosition | null>(null);
   const [dragCurrentPos, setDragCurrentPos] = useState<DesktopPosition | null>(null);
@@ -125,23 +136,27 @@ export const Desktop: React.FC<DesktopProps> = ({
       )
     : baseItems;
 
-  // 监听容器宽度变化（响应式布局）
+  // 监听容器尺寸变化（响应式布局）
   useEffect(() => {
     if (!containerRef.current) return;
-    const updateWidth = () => {
+    const updateSize = () => {
       if (containerRef.current) {
         setContainerWidth(containerRef.current.clientWidth);
+        setContainerHeight(containerRef.current.clientHeight);
       }
     };
-    updateWidth();
-    const observer = new ResizeObserver(updateWidth);
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
 
-  // 计算居中偏移量：固定7列，左右留边距
-  const gridContentWidth = DESKTOP_COLS * gridSize; // 7列的宽度
-  const horizontalPadding = Math.max(20, (containerWidth - gridContentWidth) / 2); // 左右边距，居中
+  // 动态计算最大边界，不再固定行列
+  const maxX = Math.max(0, Math.floor((containerWidth - PADDING * 2 - ICON_SIZE) / gridSize) * gridSize);
+  const maxY = Math.max(0, Math.floor((containerHeight - TOP_OFFSET - ICON_SIZE - PADDING) / gridSize) * gridSize);
+  
+  // 左右边距，简单的固定边距
+  const horizontalPadding = PADDING;
 
   // 吸附到网格
   const snapToGrid = (pos: DesktopPosition): DesktopPosition => {
@@ -221,12 +236,9 @@ export const Desktop: React.FC<DesktopProps> = ({
         const mouseY = e.clientY - rect.top + containerRef.current.scrollTop;
         
         // 查找鼠标下的文件夹（排除已选中的项目）
-        const gridContentWidth = DESKTOP_COLS * gridSize;
-        const hPadding = Math.max(20, (containerRef.current.clientWidth - gridContentWidth) / 2);
-        
         const targetFolder = currentItems.find(item => {
           if (item.type !== 'folder' || selectedIds.includes(item.id)) return false;
-          const folderX = hPadding + item.position.x;
+          const folderX = horizontalPadding + item.position.x;
           const folderY = TOP_OFFSET + item.position.y;
           return mouseX >= folderX && mouseX <= folderX + ICON_SIZE &&
                  mouseY >= folderY && mouseY <= folderY + ICON_SIZE;
@@ -263,10 +275,9 @@ export const Desktop: React.FC<DesktopProps> = ({
         // 找到拖动的基准项目（被点击的那个）
         const baseItem = items.find(i => i.id === dragItemId);
         if (baseItem) {
-          // 计算固定边界
-          const cHeight = containerRef.current?.clientHeight || 600;
-          const fixedMaxX = (DESKTOP_COLS - 1) * gridSize;
-          const fixedMaxY = Math.max(0, Math.floor((cHeight - TOP_OFFSET - ICON_SIZE - 40) / gridSize) * gridSize);
+          // 使用动态计算的边界
+          const fixedMaxX = maxX;
+          const fixedMaxY = maxY;
           
           // 单个项目拖拽：使用 findNearestFreePosition 避免重叠
           if (selectedIds.length === 1) {
@@ -443,18 +454,14 @@ export const Desktop: React.FC<DesktopProps> = ({
       if (selectionBox && containerRef.current) {
         // 计算选区内的项目
         const minX = Math.min(selectionBox.start.x, selectionBox.end.x);
-        const maxX = Math.max(selectionBox.start.x, selectionBox.end.x);
+        const selMaxX = Math.max(selectionBox.start.x, selectionBox.end.x);
         const minY = Math.min(selectionBox.start.y, selectionBox.end.y);
-        const maxY = Math.max(selectionBox.start.y, selectionBox.end.y);
-        
-        // 计算偏移量
-        const gridContentWidth = DESKTOP_COLS * gridSize;
-        const hPadding = Math.max(20, (containerRef.current.clientWidth - gridContentWidth) / 2);
+        const selMaxY = Math.max(selectionBox.start.y, selectionBox.end.y);
 
         const selectedInBox = currentItems.filter(item => {
-          const centerX = hPadding + item.position.x + ICON_SIZE / 2;
+          const centerX = horizontalPadding + item.position.x + ICON_SIZE / 2;
           const centerY = TOP_OFFSET + item.position.y + ICON_SIZE / 2;
-          return centerX >= minX && centerX <= maxX && centerY >= minY && centerY <= maxY;
+          return centerX >= minX && centerX <= selMaxX && centerY >= minY && centerY <= selMaxY;
         }).map(item => item.id);
 
         onSelectionChange(selectedInBox);
@@ -506,10 +513,6 @@ export const Desktop: React.FC<DesktopProps> = ({
       const relativeX = contextMenu.x - rect.left - horizontalPadding;
       const relativeY = contextMenu.y - rect.top - TOP_OFFSET;
       
-      // 确保在可视范围内
-      const maxX = (DESKTOP_COLS - 1) * gridSize;
-      const maxY = (DESKTOP_ROWS - 1) * gridSize;
-      
       pos = {
         x: Math.min(maxX, Math.max(0, relativeX)),
         y: Math.min(maxY, Math.max(0, relativeY)),
@@ -518,8 +521,8 @@ export const Desktop: React.FC<DesktopProps> = ({
     
     const snappedPos = findNearestFreePosition(pos);
     // 再次确保在可视边界内
-    snappedPos.x = Math.min((DESKTOP_COLS - 1) * gridSize, Math.max(0, snappedPos.x));
-    snappedPos.y = Math.min((DESKTOP_ROWS - 1) * gridSize, Math.max(0, snappedPos.y));
+    snappedPos.x = Math.min(maxX, Math.max(0, snappedPos.x));
+    snappedPos.y = Math.min(maxY, Math.max(0, snappedPos.y));
     
     const newFolder: DesktopFolderItem = {
       id: generateId(),
@@ -723,8 +726,6 @@ export const Desktop: React.FC<DesktopProps> = ({
       const rect = containerRef.current.getBoundingClientRect();
       const relativeX = contextMenu.x - rect.left - horizontalPadding;
       const relativeY = contextMenu.y - rect.top - TOP_OFFSET;
-      const maxX = (DESKTOP_COLS - 1) * gridSize;
-      const maxY = (DESKTOP_ROWS - 1) * gridSize;
       pastePos = {
         x: Math.min(maxX, Math.max(0, relativeX)),
         y: Math.min(maxY, Math.max(0, relativeY)),
@@ -1073,10 +1074,6 @@ export const Desktop: React.FC<DesktopProps> = ({
     }
   };
 
-  // 计算固定的桌面边界（不允许扩展）- 7列5行
-  const maxGridX = (DESKTOP_COLS - 1) * gridSize; // 最大X坐标（第7列起始位置）
-  const maxGridY = (DESKTOP_ROWS - 1) * gridSize; // 最大Y坐标（第5行起始位置）
-
   return (
     <div
       ref={containerRef}
@@ -1093,107 +1090,93 @@ export const Desktop: React.FC<DesktopProps> = ({
       onContextMenu={(e) => handleContextMenu(e)}
       onDragStart={(e) => e.preventDefault()}
     >
-      {/* 搜索框 - 居中，切换标签下方 */}
-      <div className="absolute top-[70px] left-1/2 -translate-x-1/2 z-20">
+      {/* 搜索框 + 自动叠放 + 隐藏文件名按钮 - 右上角 */}
+      <div className="absolute top-5 right-6 z-20 flex items-center gap-2">
+        {/* 搜索框 */}
         <div className="relative">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜索图片或文件夹..."
-            className="w-72 px-4 py-2.5 pl-10 text-sm backdrop-blur-xl border rounded-xl transition-all focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            placeholder="搜索..."
+            className="w-44 px-3 py-2 pl-8 text-xs backdrop-blur-xl border rounded-lg transition-all focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 focus:w-64"
             style={{
-              background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.5)',
-              borderColor: isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.2)',
+              background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(18,18,26,0.95)',
+              borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)',
               color: isLight ? '#0f172a' : 'white'
             }}
             onMouseDown={(e) => e.stopPropagation()}
           />
-          <svg 
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" 
-            style={{ color: isLight ? '#64748b' : '#9ca3af' }}
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          <SearchIcon 
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" 
+            style={{ color: isLight ? '#94a3b8' : '#71717a' }}
+          />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2"
+              className="absolute right-2 top-1/2 -translate-y-1/2"
               style={{ color: isLight ? '#64748b' : '#9ca3af' }}
               onMouseDown={(e) => e.stopPropagation()}
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           )}
         </div>
-        {/* 搜索结果提示 */}
-        {searchQuery && (
-          <div className="text-center mt-2 text-xs" style={{ color: isLight ? '#64748b' : '#9ca3af' }}>
-            找到 {currentItems.length} 个结果
-          </div>
-        )}
-      </div>
-      
-      {/* 隐藏文件名按钮 和 自动叠放按钮 - 右上角 */}
-      <div className="absolute top-[76px] right-6 z-20 flex items-center gap-2">
         <button
           onClick={handleAutoStackByCreative}
-          className="px-3 py-2 text-xs font-medium rounded-xl backdrop-blur-xl border transition-all"
+          className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg backdrop-blur-xl border transition-all hover:scale-105"
           style={{
-            background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.5)',
-            borderColor: isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.2)',
-            color: isLight ? '#475569' : '#9ca3af'
+            background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(18,18,26,0.95)',
+            borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)',
+            color: isLight ? '#475569' : '#a1a1aa'
           }}
           title="将同创意库生成的图片自动叠放在一起"
           onMouseDown={(e) => e.stopPropagation()}
         >
-          📚 自动叠放
+          <LayersIcon className="w-3.5 h-3.5" />
+          <span>自动叠放</span>
         </button>
         <button
           onClick={() => setHideFileNames(!hideFileNames)}
-          className={`px-3 py-2 text-xs font-medium rounded-xl backdrop-blur-xl border transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg backdrop-blur-xl border transition-all hover:scale-105 ${
             hideFileNames
-              ? 'bg-indigo-500/30 border-indigo-500/50 text-indigo-200'
+              ? 'bg-indigo-500/20 border-indigo-500/30'
               : ''
           }`}
           style={!hideFileNames ? {
-            background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.5)',
-            borderColor: isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.2)',
-            color: isLight ? '#475569' : '#9ca3af'
-          } : {}}
+            background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(18,18,26,0.95)',
+            borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)',
+            color: isLight ? '#475569' : '#a1a1aa'
+          } : { color: '#a5b4fc' }}
           title={hideFileNames ? '显示文件名' : '隐藏文件名'}
           onMouseDown={(e) => e.stopPropagation()}
         >
-          {hideFileNames ? '👁️ 显示文件名' : '👁️‍🗨️ 隐藏文件名'}
+          {hideFileNames ? <EyeIcon className="w-3.5 h-3.5" /> : <EyeOffIcon className="w-3.5 h-3.5" />}
+          <span>{hideFileNames ? '显示名称' : '隐藏名称'}</span>
         </button>
       </div>
       {/* 面包屑导航（在文件夹或叠放内时显示） */}
       {(openFolderId || openStackId) && (
         <div 
-          className="absolute top-[76px] left-6 z-20 flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-xl border"
+          className="absolute top-5 left-6 z-20 flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-xl border"
           style={{
-            background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.4)',
-            borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'
+            background: isLight ? 'rgba(255,255,255,0.95)' : 'rgba(18,18,26,0.95)',
+            borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'
           }}
         >
           <button
             onClick={openFolderId ? onFolderClose : onStackClose}
-            className="text-sm transition-colors flex items-center gap-1"
-            style={{ color: isLight ? '#475569' : '#d1d5db' }}
+            className="text-[13px] transition-colors flex items-center gap-1.5 hover:text-indigo-400"
+            style={{ color: isLight ? '#475569' : '#a1a1aa' }}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            返回桌面
+            <ChevronLeftIcon className="w-4 h-4" />
+            <span>返回</span>
           </button>
-          <span style={{ color: isLight ? '#94a3b8' : '#6b7280' }}>/</span>
-          <span className="text-sm font-medium flex items-center gap-1" style={{ color: isLight ? '#0f172a' : 'white' }}>
-            {openFolderId ? '📁' : '📚'}
+          <span style={{ color: isLight ? '#cbd5e1' : '#52525b' }}>/</span>
+          <span className="text-[13px] font-medium flex items-center gap-1.5" style={{ color: isLight ? '#0f172a' : 'white' }}>
+            {openFolderId ? <FolderOpenIcon className="w-4 h-4 text-yellow-500" /> : <StackIcon className="w-4 h-4 text-indigo-400" />}
             {openFolderId 
               ? (items.find(i => i.id === openFolderId)?.name || '文件夹')
               : (items.find(i => i.id === openStackId)?.name || '叠放')
@@ -1287,8 +1270,8 @@ export const Desktop: React.FC<DesktopProps> = ({
                   </div>
                 </div>
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-4xl">
-                  {(item as DesktopFolderItem).icon || '📁'}
+                <div className="w-full h-full flex items-center justify-center">
+                  <FolderIcon className="w-10 h-10 text-yellow-500/80" />
                 </div>
               )}
               
@@ -1486,12 +1469,12 @@ export const Desktop: React.FC<DesktopProps> = ({
       {/* 右键菜单 */}
       {contextMenu && (
         <div
-          className="fixed z-50 min-w-[180px] py-2 rounded-xl shadow-2xl border"
+          className="fixed z-50 min-w-[180px] py-1.5 rounded-xl shadow-2xl border backdrop-blur-xl"
           style={{
             left: contextMenu.x,
             top: contextMenu.y,
-            backgroundColor: theme.colors.bgSecondary,
-            borderColor: theme.colors.border,
+            background: isLight ? 'rgba(255,255,255,0.95)' : 'rgba(18,18,26,0.95)',
+            borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)',
           }}
         >
           {/* 无项目时的菜单 */}
@@ -1499,28 +1482,31 @@ export const Desktop: React.FC<DesktopProps> = ({
             <>
               <button
                 onClick={handleCreateFolder}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
                 style={{ color: theme.colors.textPrimary }}
               >
-                📁 新建文件夹
+                <FolderIcon className="w-4 h-4 text-yellow-500" />
+                <span>新建文件夹</span>
               </button>
               {/* 选中多个图片时可以叠放 */}
               {selectedIds.length >= 2 && selectedIds.every(id => items.find(i => i.id === id)?.type === 'image') && (
                 <button
                   onClick={handleCreateStack}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
                   style={{ color: theme.colors.textPrimary }}
                 >
-                  📚 叠放选中图片 ({selectedIds.length})
+                  <LayersIcon className="w-4 h-4 text-indigo-400" />
+                  <span>叠放选中图片 ({selectedIds.length})</span>
                 </button>
               )}
               {clipboard && clipboard.items.length > 0 && (
                 <button
                   onClick={handlePaste}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
                   style={{ color: theme.colors.textPrimary }}
                 >
-                  📋 粘贴 ({clipboard.items.length})
+                  <ClipboardIcon className="w-4 h-4 text-teal-400" />
+                  <span>粘贴 ({clipboard.items.length})</span>
                 </button>
               )}
             </>
@@ -1537,19 +1523,23 @@ export const Desktop: React.FC<DesktopProps> = ({
                       handleToggleStack(contextMenu.itemId!);
                       setContextMenu(null);
                     }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    {(items.find(i => i.id === contextMenu.itemId) as DesktopStackItem)?.isExpanded ? '📦 收起叠放' : '📤 展开叠放'}
+                    {(items.find(i => i.id === contextMenu.itemId) as DesktopStackItem)?.isExpanded 
+                      ? <><StackIcon className="w-4 h-4 text-indigo-400" /><span>收起叠放</span></>
+                      : <><StackExpandIcon className="w-4 h-4 text-indigo-400" /><span>展开叠放</span></>
+                    }
                   </button>
                   <button
                     onClick={() => handleUnstack(contextMenu.itemId!)}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    💭 解散叠放
+                    <UnstackIcon className="w-4 h-4 text-purple-400" />
+                    <span>解散叠放</span>
                   </button>
-                  <div className="h-px bg-white/10 my-1" />
+                  <div className="h-px my-1" style={{ background: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)' }} />
                   {/* 叠放导出选项 */}
                   <button
                     onClick={async () => {
@@ -1558,10 +1548,11 @@ export const Desktop: React.FC<DesktopProps> = ({
                       await handleExportAsZip(container?.name || '叠放', images);
                     }}
                     disabled={isExporting}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    📦 {isExporting ? '导出中...' : '导出压缩包'}
+                    <PackageIcon className="w-4 h-4 text-orange-400" />
+                    <span>{isExporting ? '导出中...' : '导出压缩包'}</span>
                   </button>
                   <button
                     onClick={async () => {
@@ -1569,12 +1560,13 @@ export const Desktop: React.FC<DesktopProps> = ({
                       await handleBatchDownload(images);
                     }}
                     disabled={isExporting}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    ⬇️ {isExporting ? '下载中...' : '批量下载'}
+                    <DownloadIcon className="w-4 h-4 text-teal-400" />
+                    <span>{isExporting ? '下载中...' : '批量下载'}</span>
                   </button>
-                  <div className="h-px bg-white/10 my-1" />
+                  <div className="h-px my-1" style={{ background: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)' }} />
                 </>
               ) : items.find(i => i.id === contextMenu.itemId)?.type === 'folder' ? (
                 <>
@@ -1584,12 +1576,13 @@ export const Desktop: React.FC<DesktopProps> = ({
                       if (item) handleItemDoubleClick(item);
                       setContextMenu(null);
                     }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    📂 打开
+                    <FolderOpenIcon className="w-4 h-4 text-yellow-500" />
+                    <span>打开</span>
                   </button>
-                  <div className="h-px bg-white/10 my-1" />
+                  <div className="h-px my-1" style={{ background: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)' }} />
                   {/* 文件夹导出选项 */}
                   <button
                     onClick={async () => {
@@ -1598,10 +1591,11 @@ export const Desktop: React.FC<DesktopProps> = ({
                       await handleExportAsZip(container?.name || '文件夹', images);
                     }}
                     disabled={isExporting}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    📦 {isExporting ? '导出中...' : '导出压缩包'}
+                    <PackageIcon className="w-4 h-4 text-orange-400" />
+                    <span>{isExporting ? '导出中...' : '导出压缩包'}</span>
                   </button>
                   <button
                     onClick={async () => {
@@ -1609,12 +1603,13 @@ export const Desktop: React.FC<DesktopProps> = ({
                       await handleBatchDownload(images);
                     }}
                     disabled={isExporting}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    ⬇️ {isExporting ? '下载中...' : '批量下载'}
+                    <DownloadIcon className="w-4 h-4 text-teal-400" />
+                    <span>{isExporting ? '下载中...' : '批量下载'}</span>
                   </button>
-                  <div className="h-px bg-white/10 my-1" />
+                  <div className="h-px my-1" style={{ background: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)' }} />
                 </>
               ) : (
                 <>
@@ -1624,10 +1619,11 @@ export const Desktop: React.FC<DesktopProps> = ({
                       if (item) handleItemDoubleClick(item);
                       setContextMenu(null);
                     }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    👁️ 预览
+                    <EyeIcon className="w-4 h-4 text-blue-400" />
+                    <span>预览</span>
                   </button>
                 </>
               )}
@@ -1640,12 +1636,13 @@ export const Desktop: React.FC<DesktopProps> = ({
                   }
                   setContextMenu(null);
                 }}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors"
+                className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
                 style={{ color: theme.colors.textPrimary }}
               >
-                ✏️ 重命名
+                <RenameIcon className="w-4 h-4 text-amber-400" />
+                <span>重命名</span>
               </button>
-              <div className="h-px bg-white/10 my-1" />
+              <div className="h-px my-1" style={{ background: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)' }} />
             </>
           )}
           
@@ -1654,46 +1651,51 @@ export const Desktop: React.FC<DesktopProps> = ({
             <>
               <button
                 onClick={() => { handleCopy(); setContextMenu(null); }}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
                 style={{ color: theme.colors.textPrimary }}
               >
-                📋 复制
+                <CopyIcon className="w-4 h-4 text-blue-400" />
+                <span>复制</span>
               </button>
               <button
                 onClick={() => { handleCut(); setContextMenu(null); }}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
                 style={{ color: theme.colors.textPrimary }}
               >
-                ✂️ 剪切
+                <ScissorsIcon className="w-4 h-4 text-orange-400" />
+                <span>剪切</span>
               </button>
               {/* 在文件夹内时显示移出选项 */}
               {openFolderId && (
                 <button
                   onClick={handleMoveOutOfFolder}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
                   style={{ color: theme.colors.textPrimary }}
                 >
-                  📤 移出文件夹
+                  <MoveOutIcon className="w-4 h-4 text-purple-400" />
+                  <span>移出文件夹</span>
                 </button>
               )}
               {/* 在叠放内时显示移出选项 */}
               {openStackId && (
                 <button
                   onClick={handleMoveOutOfStack}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
                   style={{ color: theme.colors.textPrimary }}
                 >
-                  📤 移出叠放
+                  <MoveOutIcon className="w-4 h-4 text-purple-400" />
+                  <span>移出叠放</span>
                 </button>
               )}
               {/* 选中多个图片时可以叠放 */}
               {selectedIds.length >= 2 && selectedIds.every(id => items.find(i => i.id === id)?.type === 'image') && (
                 <button
                   onClick={handleCreateStack}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
                   style={{ color: theme.colors.textPrimary }}
                 >
-                  📚 叠放选中图片 ({selectedIds.length})
+                  <LayersIcon className="w-4 h-4 text-indigo-400" />
+                  <span>叠放选中图片 ({selectedIds.length})</span>
                 </button>
               )}
               {/* 选中图片时的导出选项 */}
@@ -1704,30 +1706,32 @@ export const Desktop: React.FC<DesktopProps> = ({
                       await handleExportSelected(true);
                     }}
                     disabled={isExporting}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    📦 {isExporting ? '导出中...' : '导出压缩包'}
+                    <PackageIcon className="w-4 h-4 text-orange-400" />
+                    <span>{isExporting ? '导出中...' : '导出压缩包'}</span>
                   </button>
                   <button
                     onClick={async () => {
                       await handleExportSelected(false);
                     }}
                     disabled={isExporting}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    ⬇️ {isExporting ? '下载中...' : '批量下载'}
+                    <DownloadIcon className="w-4 h-4 text-teal-400" />
+                    <span>{isExporting ? '下载中...' : '批量下载'}</span>
                   </button>
                 </>
               )}
-              <div className="h-px bg-white/10 my-1" />
+              <div className="h-px my-1" style={{ background: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)' }} />
               <button
                 onClick={handleDeleteSelected}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-red-500/20 transition-colors text-red-400 flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-[12px] hover:bg-red-500/10 transition-colors text-red-400 flex items-center gap-2"
               >
                 <TrashIcon className="w-4 h-4" />
-                删除 ({selectedIds.length})
+                <span>删除 ({selectedIds.length})</span>
               </button>
             </>
           )}

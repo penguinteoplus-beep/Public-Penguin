@@ -25,9 +25,8 @@ import * as historyApi from './services/api/history';
 import * as coinsApi from './services/api/coins';
 import { PriceConfig } from './types';
 import { ThemeProvider, useTheme, SnowfallEffect } from './contexts/ThemeContext';
-import { Desktop, createDesktopItemFromHistory, TOP_OFFSET, DESKTOP_COLS } from './components/Desktop';
+import { Desktop, createDesktopItemFromHistory, TOP_OFFSET } from './components/Desktop';
 import { HistoryDock } from './components/HistoryDock';
-import { Canvas as FlowCanvas } from './components/Canvas';
 
 
 interface LeftPanelProps {
@@ -78,8 +77,8 @@ interface RightPanelProps {
 }
 
 interface CanvasProps {
-  view: 'editor' | 'library' | 'canvas';
-  setView: (view: 'editor' | 'library' | 'canvas') => void;
+  view: 'editor' | 'library';
+  setView: (view: 'editor' | 'library') => void;
   files: File[];
   onUploadClick: () => void;
   creativeIdeas: CreativeIdea[];
@@ -123,10 +122,6 @@ interface CanvasProps {
   onDesktopImagePreview?: (item: DesktopImageItem) => void;
   onDesktopImageEditAgain?: (item: DesktopImageItem) => void;
   onDesktopImageRegenerate?: (item: DesktopImageItem) => void;
-  // 画布模式回调
-  onGenerateFromFlow?: (prompt: string, creativeIdea?: CreativeIdea, imageFile?: File) => Promise<GeneratedContent | null>;
-  onSaveImageFromFlow?: (imageUrl: string, name: string) => void;
-  onCanvasClick?: () => void; // 点击画布时收起左右面板
 }
 
 // --- IndexedDB Service ---
@@ -325,36 +320,60 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
   const canEditPrompt = activeTemplate?.allowEditPrompt !== false;
   
   return (
-  <aside className="w-[280px] flex-shrink-0 flex flex-col h-full liquid-panel border-r z-20">
+  <aside 
+    className="w-[280px] flex-shrink-0 flex flex-col h-full z-20 relative"
+    style={{
+      background: isDark 
+        ? 'linear-gradient(180deg, rgba(15,15,23,0.98) 0%, rgba(10,10,15,0.99) 100%)'
+        : 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.99) 100%)',
+      borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+      backdropFilter: 'blur(20px) saturate(180%)',
+    }}
+  >
+      {/* 微妙的内发光效果 */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: isDark 
+            ? 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(99,102,241,0.04) 0%, transparent 50%)'
+            : 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(99,102,241,0.03) 0%, transparent 50%)',
+        }}
+      />
+      
       {/* 顶部导航栏 */}
-      <div className="liquid-panel-section flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-            <span className="text-sm">🐧</span>
+      <div 
+        className="relative px-4 py-3.5 flex items-center justify-between"
+        style={{ 
+          borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` 
+        }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-1 ring-white/10">
+            <span className="text-base">🐧</span>
           </div>
           <div>
-            <h1 className="text-[13px] font-semibold gradient-text">Pebbling</h1>
-            <p className="text-[9px]" style={{ color: theme.colors.textMuted }}>AI Creative</p>
+            <h1 className="text-sm font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Pebbling</h1>
+            <p className="text-[9px] font-medium tracking-wide" style={{ color: isDark ? '#6b7280' : '#9ca3af' }}>AI Creative Studio</p>
           </div>
         </div>
         
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-1">
           {/* 明暗切换 */}
           <button
             onClick={toggleDarkMode}
-            className="w-6 h-6 rounded-md flex items-center justify-center transition-all hover:scale-105 press-scale"
+            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
             style={{ 
-              background: 'var(--glass-bg)',
-              color: theme.colors.textSecondary 
+              background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+              color: isDark ? '#9ca3af' : '#6b7280'
             }}
             title={isDark ? '浅色' : '深色'}
           >
             {isDark ? (
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             ) : (
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
               </svg>
             )}
@@ -362,53 +381,90 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
           {/* 设置按钮 */}
           <button
             onClick={onSettingsClick}
-            className="w-6 h-6 rounded-md flex items-center justify-center transition-all hover:scale-105 press-scale"
+            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
             style={{ 
-              background: 'var(--glass-bg)',
-              color: theme.colors.textSecondary 
+              background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+              color: isDark ? '#9ca3af' : '#6b7280'
             }}
             title="设置"
           >
-            <SettingsIcon className="w-3 h-3" />
+            <SettingsIcon className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
       
       {/* 用户信息栏 */}
-      <div className="px-3 py-2.5" style={{ borderBottom: `1px solid ${theme.colors.borderLight}` }}>
-        <div className="flex items-center gap-2">
+      <div 
+        className="relative mx-3 mt-3 p-3 rounded-xl"
+        style={{ 
+          background: isDark 
+            ? 'linear-gradient(135deg, rgba(30,30,40,0.8) 0%, rgba(25,25,35,0.9) 100%)'
+            : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.95) 100%)',
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+          boxShadow: isDark 
+            ? '0 4px 24px -4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.02)'
+            : '0 4px 24px -4px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)',
+        }}
+      >
+        <div className="flex items-center gap-2.5">
           {currentUser ? (
             <>
               {/* 头像 */}
               <div className="relative group">
-                <button className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium text-[10px] shadow-md hover:scale-105 transition-transform">
+                <button 
+                  className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-xs shadow-lg ring-2 ring-white/10 hover:ring-white/20 hover:scale-105 transition-all"
+                >
                   {currentUser.nickname?.[0] || currentUser.username[0].toUpperCase()}
                 </button>
                 {/* 下拉菜单 */}
-                <div className="absolute left-0 top-full mt-1 w-32 liquid-card p-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 animate-scale-in">
-                  <div className="p-2.5" style={{ borderBottom: `1px solid ${theme.colors.borderLight}` }}>
-                    <p className="text-xs font-medium truncate" style={{ color: theme.colors.textPrimary }}>{currentUser.nickname || currentUser.username}</p>
-                    <p className="text-[10px] truncate mt-0.5" style={{ color: theme.colors.textMuted }}>{currentUser.email}</p>
+                <div 
+                  className="absolute left-0 top-full mt-2 w-36 p-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 rounded-xl"
+                  style={{
+                    background: isDark ? 'rgba(20,20,28,0.98)' : 'rgba(255,255,255,0.98)',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                    boxShadow: isDark 
+                      ? '0 10px 40px -10px rgba(0,0,0,0.5)'
+                      : '0 10px 40px -10px rgba(0,0,0,0.15)',
+                    backdropFilter: 'blur(20px)',
+                  }}
+                >
+                  <div className="p-2.5" style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                    <p className="text-xs font-semibold truncate" style={{ color: isDark ? '#fff' : '#0f172a' }}>{currentUser.nickname || currentUser.username}</p>
+                    <p className="text-[10px] truncate mt-0.5" style={{ color: isDark ? '#6b7280' : '#9ca3af' }}>{currentUser.email}</p>
                   </div>
                   <button
                     onClick={onLogout}
-                    className="w-full px-2.5 py-1.5 mt-1 text-left text-[11px] text-red-400 hover:bg-red-500/10 transition-colors rounded-md flex items-center gap-1.5"
+                    className="w-full px-2.5 py-2 mt-1 text-left text-[11px] font-medium text-red-400 hover:bg-red-500/10 transition-colors rounded-lg flex items-center gap-2"
                   >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
-                    退出
+                    退出登录
                   </button>
                 </div>
               </div>
               
               {/* 用户信息 */}
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium truncate" style={{ color: theme.colors.textPrimary }}>
+                <p className="text-xs font-semibold truncate" style={{ color: isDark ? '#fff' : '#0f172a' }}>
                   {currentUser.nickname || currentUser.username}
                 </p>
-                <div className={modeDisplay.bgClass}>
-                  <span className="text-[10px]">{modeDisplay.icon}</span>
+                <div 
+                  className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium"
+                  style={{
+                    background: currentApiMode === 'cloud' 
+                      ? 'rgba(99,102,241,0.15)' 
+                      : currentApiMode === 'local-thirdparty'
+                      ? 'rgba(245,158,11,0.15)'
+                      : 'rgba(34,197,94,0.15)',
+                    color: currentApiMode === 'cloud'
+                      ? '#a5b4fc'
+                      : currentApiMode === 'local-thirdparty'
+                      ? '#fcd34d'
+                      : '#86efac',
+                  }}
+                >
+                  <span className="text-[8px]">{modeDisplay.icon}</span>
                   <span>{modeDisplay.text}</span>
                 </div>
               </div>
@@ -416,43 +472,40 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
               {/* 鹅卵石余额 */}
               <button 
                 onClick={onRechargeClick}
-                className="flex items-center gap-1 px-2 py-1 modern-card hover:border-yellow-500/20 transition-all"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all hover:scale-105 active:scale-95"
+                style={{
+                  background: isDark ? 'rgba(251,191,36,0.1)' : 'rgba(251,191,36,0.08)',
+                  border: `1px solid ${isDark ? 'rgba(251,191,36,0.2)' : 'rgba(251,191,36,0.15)'}`,
+                }}
                 title="充值"
               >
-                <span className="text-xs">🪙</span>
-                <span className="text-xs font-semibold text-yellow-400">{currentUser.coins || 0}</span>
+                <span className="text-sm">🪙</span>
+                <span className="text-xs font-bold text-amber-400">{currentUser.coins || 0}</span>
               </button>
             </>
           ) : (
             <button
               onClick={onLoginClick}
-              className="flex-1 py-1.5 text-[11px] font-medium text-white liquid-btn w-full"
+              className="flex-1 py-2.5 text-xs font-semibold text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
+                boxShadow: '0 4px 15px -3px rgba(99,102,241,0.4)',
+              }}
             >
-              <span className="text-xs">☁️</span>
-              登录云服务
+              <span className="flex items-center justify-center gap-2">
+                <span>☁️</span>
+                登录云端服务
+              </span>
             </button>
           )}
         </div>
       </div>
       
-      {/* 公告区域 */}
-      <div className="mx-3 mt-2.5 p-2.5 liquid-card">
-        <div className="flex items-start gap-2">
-          <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99, 102, 241, 0.15)' }}>
-            <span className="text-[10px]">📣</span>
-          </div>
-          <div className="flex-1">
-            <p className="text-[11px] font-medium" style={{ color: theme.colors.textPrimary }}>欢迎使用</p>
-            <p className="text-[9px] mt-0.5" style={{ color: theme.colors.textMuted }}>单击预览，拖拽整理</p>
-          </div>
-        </div>
-      </div>
-      
       {/* 可滚动内容区域 */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-3 space-y-3">
         {/* 资源素材区域 */}
         <div>
-          <h2 className="liquid-title mb-2">资源素材</h2>
+          <h2 className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: isDark ? '#6b7280' : '#9ca3af' }}>资源素材</h2>
           <ImageUploader 
             files={files}
             activeFileIndex={activeFileIndex}
@@ -464,45 +517,53 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
         </div>
         
         {/* 模型参数卡片 */}
-        <div className="liquid-card p-2.5">
-           <div className="flex items-center gap-1.5 mb-2">
-              <div className="w-4 h-4 rounded bg-indigo-500/15 flex items-center justify-center">
-                <ImageIcon className="w-2.5 h-2.5 text-indigo-400"/>
+        <div 
+          className="p-3 rounded-xl"
+          style={{
+            background: isDark 
+              ? 'linear-gradient(135deg, rgba(30,30,40,0.6) 0%, rgba(25,25,35,0.7) 100%)'
+              : 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(248,250,252,0.9) 100%)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
+          }}
+        >
+           <div className="flex items-center gap-2 mb-3">
+              <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-indigo-500/20">
+                <ImageIcon className="w-3 h-3 text-indigo-400"/>
               </div>
-              <h3 className="text-[11px] font-medium" style={{ color: theme.colors.textPrimary }}>参数</h3>
+              <h3 className="text-[11px] font-semibold" style={{ color: isDark ? '#fff' : '#0f172a' }}>参数配置</h3>
            </div>
            
-           <div className="space-y-2.5">
+           <div className="space-y-3">
               {/* 画面比例 */}
               <div>
-                  <div className="flex justify-between mb-1.5">
-                       <span className="liquid-title">比例</span>
-                       <span className="text-[9px] text-indigo-400 font-mono">{aspectRatio}</span>
+                  <div className="flex justify-between mb-2">
+                       <span className="text-[10px] font-medium" style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>画面比例</span>
+                       <span className="text-[10px] font-mono font-semibold text-indigo-400">{aspectRatio}</span>
                   </div>
-                  <div className="grid grid-cols-6 gap-0.5">
+                  <div className="grid grid-cols-6 gap-1">
                       {['Auto', '1:1', '3:4', '4:3', '9:16', '16:9'].map(ratio => (
                           <button
                               key={ratio}
                               onClick={() => setAspectRatio(ratio)}
-                              className={`py-1 text-[9px] font-medium rounded transition-all ${
+                              className={`py-1.5 text-[9px] font-semibold rounded-lg transition-all ${
                                   aspectRatio === ratio
-                                      ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-sm'
-                                      : 'bg-white/4 text-gray-500 hover:bg-white/8 hover:text-gray-300'
+                                      ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/25 ring-1 ring-white/20'
+                                      : `${isDark ? 'bg-white/[0.03] text-gray-500 hover:bg-white/[0.06]' : 'bg-black/[0.03] text-gray-500 hover:bg-black/[0.06]'} hover:text-indigo-400`
                               }`}
                           >
                               {ratio}
                           </button>
                       ))}
                   </div>
-                  <div className="grid grid-cols-5 gap-0.5 mt-0.5">
+                  <div className="grid grid-cols-5 gap-1 mt-1">
                       {['2:3', '3:2', '4:5', '5:4', '21:9'].map(ratio => (
                           <button
                               key={ratio}
                               onClick={() => setAspectRatio(ratio)}
-                              className={`py-1 text-[9px] font-medium rounded transition-all ${
+                              className={`py-1.5 text-[9px] font-semibold rounded-lg transition-all ${
                                   aspectRatio === ratio
-                                      ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-sm'
-                                      : 'bg-white/4 text-gray-500 hover:bg-white/8 hover:text-gray-300'
+                                      ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/25 ring-1 ring-white/20'
+                                      : `${isDark ? 'bg-white/[0.03] text-gray-500 hover:bg-white/[0.06]' : 'bg-black/[0.03] text-gray-500 hover:bg-black/[0.06]'} hover:text-indigo-400`
                               }`}
                           >
                               {ratio}
@@ -513,19 +574,19 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
               
               {/* 分辨率 */}
               <div>
-                  <div className="flex justify-between mb-1.5">
-                       <span className="liquid-title">分辨率</span>
-                       <span className="text-[9px] text-cyan-400 font-mono">{imageSize}</span>
+                  <div className="flex justify-between mb-2">
+                       <span className="text-[10px] font-medium" style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>分辨率</span>
+                       <span className="text-[10px] font-mono font-semibold text-cyan-400">{imageSize}</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-0.5">
+                  <div className="grid grid-cols-3 gap-1">
                        {['1K', '2K', '4K'].map(size => (
                           <button
                               key={size}
                               onClick={() => setImageSize(size)}
-                              className={`py-1 text-[9px] font-medium rounded transition-all ${
+                              className={`py-1.5 text-[10px] font-semibold rounded-lg transition-all ${
                                   imageSize === size
-                                      ? 'bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-sm'
-                                      : 'bg-white/4 text-gray-500 hover:bg-white/8 hover:text-gray-300'
+                                      ? 'bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-md shadow-cyan-500/25 ring-1 ring-white/20'
+                                      : `${isDark ? 'bg-white/[0.03] text-gray-500 hover:bg-white/[0.06]' : 'bg-black/[0.03] text-gray-500 hover:bg-black/[0.06]'} hover:text-cyan-400`
                               }`}
                           >
                               {size}
@@ -539,33 +600,50 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
         {/* 提示词区域 */}
         <div>
           <div className="flex items-center justify-between mb-2">
-             <h2 className="liquid-title">
+             <h2 className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: isDark ? '#6b7280' : '#9ca3af' }}>
                 {hasActiveTemplate ? '关键词' : '提示词'}
              </h2>
-             <div className="flex items-center gap-1">
+             <div className="flex items-center gap-1.5">
                {hasActiveTemplate && (
-                 <div className="flex items-center gap-0.5">
-                   <span className={`liquid-badge ${
-                     activeBPTemplate 
-                       ? 'warning'
-                       : activeSmartPlusTemplate
-                       ? 'success'
-                       : 'primary'
-                   }`}>
+                 <div className="flex items-center gap-1">
+                   <span 
+                     className="px-2 py-0.5 rounded-md text-[9px] font-semibold"
+                     style={{
+                       background: activeBPTemplate 
+                         ? 'rgba(245,158,11,0.15)'
+                         : activeSmartPlusTemplate
+                         ? 'rgba(34,197,94,0.15)'
+                         : 'rgba(99,102,241,0.15)',
+                       color: activeBPTemplate
+                         ? '#fcd34d'
+                         : activeSmartPlusTemplate
+                         ? '#86efac'
+                         : '#a5b4fc',
+                     }}
+                   >
                      {activeTemplateName}
                    </span>
                    <button
                      onClick={onClearTemplate}
-                     className="w-5 h-5 rounded flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                     className="w-5 h-5 rounded-md flex items-center justify-center transition-all hover:scale-110"
+                     style={{ 
+                       color: isDark ? '#6b7280' : '#9ca3af',
+                     }}
                      title="卸载 (Esc)"
                    >
-                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <svg className="w-3 h-3 hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                      </svg>
                    </button>
                  </div>
                )}
-               <span className={`liquid-badge ${isThirdPartyApiEnabled ? 'warning' : 'primary'}`}>
+               <span 
+                 className="px-2 py-0.5 rounded-md text-[9px] font-semibold"
+                 style={{
+                   background: isThirdPartyApiEnabled ? 'rgba(245,158,11,0.12)' : 'rgba(99,102,241,0.12)',
+                   color: isThirdPartyApiEnabled ? '#fbbf24' : '#a5b4fc',
+                 }}
+               >
                  {isThirdPartyApiEnabled ? 'Nano' : 'Gemini'}
                </span>
              </div>
@@ -594,42 +672,56 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
                      : "描述想生成的画面..."
                  }
                  readOnly={!!activeBPTemplate || !canEditPrompt}
-                 className={`w-full h-20 p-2.5 pr-10 liquid-input rounded-lg resize-none text-[11px] transition-all ${
-                     activeBPTemplate ? 'focus:border-yellow-500/40' : 'focus:border-indigo-500/40'
-                 } ${!canEditPrompt ? 'cursor-not-allowed opacity-60' : ''}`}
+                 className={`w-full h-24 p-3 pr-11 rounded-xl resize-none text-[11px] transition-all ${
+                     !canEditPrompt ? 'cursor-not-allowed opacity-60' : ''
+                 }`}
+                 style={{
+                   background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                   border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                   color: isDark ? '#fff' : '#0f172a',
+                 }}
                />
                <button
                  onClick={smartPromptGenStatus === ApiStatus.Loading ? onCancelSmartPrompt : handleGenerateSmartPrompt}
                  disabled={smartPromptGenStatus !== ApiStatus.Loading && !canGenerateSmartPrompt}
-                 className={`absolute top-1.5 right-1.5 w-7 h-7 rounded-md text-white shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 flex items-center justify-center ${
+                 className={`absolute top-2 right-2 w-8 h-8 rounded-lg text-white shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 flex items-center justify-center ring-1 ring-white/20 ${
                      smartPromptGenStatus === ApiStatus.Loading
-                     ? 'bg-gradient-to-br from-red-500 to-red-600'
+                     ? 'bg-gradient-to-br from-red-500 to-red-600 shadow-red-500/30'
                      : activeBPTemplate 
-                     ? 'bg-gradient-to-br from-yellow-500 to-orange-600' 
-                     : 'bg-gradient-to-br from-indigo-500 to-purple-600'
+                     ? 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/30' 
+                     : 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-500/30'
                  }`}
                  title={smartPromptGenStatus === ApiStatus.Loading ? "取消" : "生成"}
                >
                    {smartPromptGenStatus === ApiStatus.Loading ? (
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                    ) : (
-                     <PenguinIcon className="w-3.5 h-3.5" />
+                     <PenguinIcon className="w-4 h-4" />
                    )}
                </button>
             </div>
           ) : (
-            <div className="p-2.5 liquid-card border-orange-500/15">
-              <div className="flex items-center gap-1.5 text-orange-300 mb-1.5">
-                <div className="w-5 h-5 rounded bg-orange-500/15 flex items-center justify-center">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div 
+              className="p-3 rounded-xl"
+              style={{
+                background: isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.06)',
+                border: `1px solid ${isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.1)'}`,
+              }}
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <div 
+                  className="w-6 h-6 rounded-lg flex items-center justify-center"
+                  style={{ background: 'rgba(245,158,11,0.15)' }}
+                >
+                  <svg className="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
-                <span className="text-xs font-medium">提示词已加密</span>
+                <span className="text-xs font-semibold text-amber-400">提示词已加密</span>
               </div>
-              <p className="text-[10px] text-gray-500">
+              <p className="text-[10px]" style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>
                 填写输入框后点击生成即可
               </p>
             </div>
@@ -645,9 +737,15 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
         )}
       </div>
       
-      {/* 免责声明 - 底部 */}
-      <div className="mx-3 mb-3 px-2.5 py-1.5 rounded-md" style={{ background: theme.colors.bgSecondary, border: `1px solid ${theme.colors.borderLight}` }}>
-        <p className="text-[8px] leading-relaxed" style={{ color: theme.colors.textMuted }}>
+      {/* 底部免责声明 - 更简洁 */}
+      <div 
+        className="mx-3 mb-3 px-3 py-2 rounded-lg text-center"
+        style={{ 
+          background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`,
+        }}
+      >
+        <p className="text-[9px] font-medium" style={{ color: isDark ? '#4b5563' : '#9ca3af' }}>
           ⚠️ AI 内容仅供学习测试
         </p>
       </div>
@@ -1032,17 +1130,7 @@ const Canvas: React.FC<CanvasProps> = ({
             </span>
           )}
         </button>
-        <button
-          onClick={() => setView('canvas')}
-          className={`liquid-tab flex items-center gap-1 ${
-            view === 'canvas' ? 'active' : ''
-          }`}
-        >
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-          </svg>
-          画布
-        </button>
+
       </div>
       
       {view === 'library' ? (
@@ -1057,18 +1145,6 @@ const Canvas: React.FC<CanvasProps> = ({
             onExport={onExportIdeas}
             onImport={onImportIdeas}
             onReorder={onReorderIdeas}
-          />
-        </div>
-      ) : view === 'canvas' ? (
-        /* 画布模式 - 可视化工作流编辑器 */
-        <div className="relative z-10 flex-1 overflow-hidden pt-14">
-          <FlowCanvas
-            creativeIdeas={creativeIdeas}
-            desktopImages={desktopItems.filter((item): item is DesktopImageItem => item.type === 'image')}
-            onGenerateFromFlow={onGenerateFromFlow}
-            onSaveImage={onSaveImageFromFlow}
-            isGenerating={status === ApiStatus.Loading}
-            onPaneClick={onCanvasClick}
           />
         </div>
       ) : (
@@ -1158,7 +1234,7 @@ const App: React.FC = () => {
   const [apiKey, setApiKey] = useState<string>('');
   const [creativeIdeas, setCreativeIdeas] = useState<CreativeIdea[]>([]);
   
-  const [view, setView] = useState<'editor' | 'library' | 'canvas'>('editor'); // 默认编辑器模式（显示桌面）
+  const [view, setView] = useState<'editor' | 'library'>('editor'); // 默认桌面模式
   const [isAddIdeaModalOpen, setAddIdeaModalOpen] = useState(false);
   const [editingIdea, setEditingIdea] = useState<CreativeIdea | null>(null);
   
@@ -1207,10 +1283,6 @@ const App: React.FC = () => {
   const [desktopSelectedIds, setDesktopSelectedIds] = useState<string[]>([]);
   const [openFolderId, setOpenFolderId] = useState<string | null>(null);
   const [openStackId, setOpenStackId] = useState<string | null>(null); // 叠放打开状态
-  
-  // 画布模式下左右面板收起状态
-  const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
-  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importIdeasInputRef = useRef<HTMLInputElement>(null);
@@ -2024,7 +2096,7 @@ const App: React.FC = () => {
       setDesktopItems(prevItems => {
         // 在最新状态上查找空闲位置
         const gridSize = 100;
-        const maxCols = DESKTOP_COLS; // 固定7列
+        const maxCols = 8; // 固定8列
         
         // 位置从0开始（渲染时会自动加上居中偏移）
         const occupiedPositions = new Set(
@@ -2272,126 +2344,6 @@ const App: React.FC = () => {
     setBpInputs({});
     setSmartPlusOverrides(JSON.parse(JSON.stringify(defaultSmartPlusConfig)));
   }, []);
-
-  // 画布模式生成函数 - 用于可视化工作流，与外部保持一致的BP逻辑
-  const handleGenerateFromFlow = useCallback(async (
-    flowPrompt: string, 
-    creativeIdea?: CreativeIdea, 
-    imageFile?: File,
-    bpInputValues?: Record<string, string> // BP模式的变量输入值
-  ): Promise<GeneratedContent | null> => {
-    console.log('[handleGenerateFromFlow] 开始执行', { flowPrompt, creativeIdea: creativeIdea?.title, hasImage: !!imageFile, bpInputValues });
-    
-    // 检查API配置
-    const isCloud = isLoggedIn();
-    const hasValidApi = 
-      (isCloud && thirdPartyApiConfig.enabled) ||
-      (!isCloud && thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey) ||
-      apiKey;
-    
-    if (!hasValidApi) {
-      console.error('[handleGenerateFromFlow] 没有有效的API配置');
-      throw new Error('请先配置 API Key 或登录使用云服务');
-    }
-    
-    // 处理提示词
-    let finalPrompt = flowPrompt || '';
-    
-    if (creativeIdea) {
-      console.log('[handleGenerateFromFlow] 处理创意库:', creativeIdea.title, 'isBP:', creativeIdea.isBP);
-      
-      // BP模式 - 使用processBPTemplate处理，与外部保持一致
-      if (creativeIdea.isBP) {
-        console.log('[handleGenerateFromFlow] BP模式 - 调用processBPTemplate');
-        try {
-          // 使用与外部一致的BP处理逻辑
-          finalPrompt = await processBPTemplate(
-            imageFile || null,  // 传入图片用于智能体分析
-            creativeIdea,
-            bpInputValues || {}  // 用户在画布节点中输入的变量值
-          );
-          console.log('[handleGenerateFromFlow] BP处理完成, 提示词:', finalPrompt.slice(0, 150));
-        } catch (e: any) {
-          console.error('[handleGenerateFromFlow] BP处理失败:', e);
-          throw new Error(`BP处理失败: ${e?.message || '未知错误'}`);
-        }
-      } else if (creativeIdea.isSmartPlus) {
-        // SmartPlus模式 - 直接使用提示词模板
-        finalPrompt = creativeIdea.prompt || '';
-        if (flowPrompt) {
-          finalPrompt = `${finalPrompt} ${flowPrompt}`;
-        }
-        console.log('[handleGenerateFromFlow] SmartPlus模式提示词:', finalPrompt.slice(0, 100));
-      } else if (creativeIdea.prompt) {
-        // 普通模式：将用户输入替换占位符或追加
-        finalPrompt = creativeIdea.prompt.replace(/\{[^}]*\}/g, flowPrompt || '');
-        // 如果没有占位符且有用户输入，追加到末尾
-        if (finalPrompt === creativeIdea.prompt && flowPrompt) {
-          finalPrompt = `${creativeIdea.prompt} ${flowPrompt}`;
-        }
-        console.log('[handleGenerateFromFlow] 普通模式提示词:', finalPrompt.slice(0, 100));
-      }
-    }
-    
-    // 如果没有提示词也没有创意库
-    if (!finalPrompt && !creativeIdea) {
-      console.error('[handleGenerateFromFlow] 没有提示词也没有创意库');
-      throw new Error('请输入提示词或选择创意库');
-    }
-    
-    // 如果有创意库但没有提示词，使用创意库的提示词
-    if (!finalPrompt && creativeIdea?.prompt) {
-      finalPrompt = creativeIdea.prompt;
-      console.log('[handleGenerateFromFlow] 使用创意库原始提示词');
-    }
-    
-    if (!finalPrompt) {
-      console.error('[handleGenerateFromFlow] 最终提示词为空');
-      throw new Error('无法生成：提示词为空');
-    }
-    
-    // 应用创意库建议的宽高比和分辨率
-    const effectiveAspectRatio = creativeIdea?.suggestedAspectRatio || aspectRatio;
-    const effectiveImageSize = creativeIdea?.suggestedResolution || imageSize;
-    
-    const files = imageFile ? [imageFile] : [];
-    const creativeIdeaCost = creativeIdea?.cost;
-    
-    console.log('[handleGenerateFromFlow] 开始调用API', { 
-      promptLength: finalPrompt.length, 
-      hasFiles: files.length > 0,
-      cost: creativeIdeaCost,
-      aspectRatio: effectiveAspectRatio,
-      imageSize: effectiveImageSize
-    });
-    
-    try {
-      const result = await editImageWithGemini(files, finalPrompt, { aspectRatio: effectiveAspectRatio, imageSize: effectiveImageSize }, creativeIdeaCost);
-      console.log('[handleGenerateFromFlow] 生成成功', { hasImage: !!result?.imageUrl });
-      return result;
-    } catch (e: any) {
-      console.error('[handleGenerateFromFlow] 生成失败:', e);
-      throw new Error(e?.message || '生成失败');
-    }
-  }, [apiKey, thirdPartyApiConfig, aspectRatio, imageSize]);
-
-  // 画布保存图片到桌面
-  const handleSaveImageFromFlow = useCallback((imageUrl: string, name: string) => {
-    const freePos = findNextFreePosition();
-    const desktopItem: DesktopImageItem = {
-      id: `img-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
-      type: 'image',
-      name: name.slice(0, 15) + (name.length > 15 ? '...' : ''),
-      position: freePos,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      imageUrl: imageUrl,
-      prompt: '画布生成',
-      model: thirdPartyApiConfig.enabled ? 'nano-banana-2' : 'Gemini',
-      isThirdParty: thirdPartyApiConfig.enabled,
-    };
-    handleAddToDesktop(desktopItem);
-  }, [findNextFreePosition, handleAddToDesktop, thirdPartyApiConfig.enabled]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -2680,10 +2632,9 @@ const App: React.FC = () => {
         onChange={handleImportIdeas}
       />
       
-      {/* 左侧面板 - 画布模式下点击按钮弹出，其他模式正常显示 */}
-      {view !== 'canvas' ? (
-        <div className="flex-shrink-0">
-          <LeftPanel 
+      {/* 左侧面板 */}
+      <div className="flex-shrink-0">
+        <LeftPanel 
             files={files}
             activeFileIndex={activeFileIndex}
             onFileSelection={handleFileSelection}
@@ -2727,82 +2678,6 @@ const App: React.FC = () => {
             onClearTemplate={handleClearTemplate}
           />
         </div>
-      ) : (
-        /* 画布模式下的浮动左侧面板 */
-        <>
-          {/* 展开/收起按钮 - 固定在左边 */}
-          <button
-            onClick={() => setIsLeftPanelCollapsed(!isLeftPanelCollapsed)}
-            className="fixed left-3 top-3 z-50 w-10 h-10 rounded-xl bg-gray-900/90 backdrop-blur-xl border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800 transition-all shadow-lg"
-            title={isLeftPanelCollapsed ? '展开导航' : '收起导航'}
-          >
-            <svg className={`w-5 h-5 transition-transform ${isLeftPanelCollapsed ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-          
-          {/* 浮动面板 */}
-          <div 
-            className={`fixed left-0 top-0 h-full z-40 transition-all duration-300 ease-out ${
-              isLeftPanelCollapsed 
-                ? '-translate-x-full opacity-0 pointer-events-none' 
-                : 'translate-x-0 opacity-100'
-            }`}
-          >
-            <LeftPanel 
-              files={files}
-              activeFileIndex={activeFileIndex}
-              onFileSelection={handleFileSelection}
-              onFileRemove={handleFileRemove}
-              onFileSelect={setActiveFileIndex}
-              onTriggerUpload={() => fileInputRef.current?.click()}
-              currentUser={currentUser}
-              onLoginClick={() => setAuthModalOpen(true)}
-              onLogout={handleLogout}
-              onRechargeClick={() => setRechargeModalOpen(true)}
-              onSettingsClick={() => setSettingsModalOpen(true)}
-              currentApiMode={
-                thirdPartyApiConfig.enabled && thirdPartyApiConfig.apiKey && thirdPartyApiConfig.baseUrl
-                  ? 'local-thirdparty'
-                  : !thirdPartyApiConfig.enabled && apiKey
-                    ? 'local-gemini'
-                    : currentUser && thirdPartyApiConfig.enabled
-                      ? 'cloud'
-                      : currentUser
-                        ? 'cloud'
-                        : 'local-gemini'
-              }
-              prompt={prompt}
-              setPrompt={handleSetPrompt}
-              activeSmartTemplate={activeSmartTemplate}
-              activeSmartPlusTemplate={activeSmartPlusTemplate}
-              activeBPTemplate={activeBPTemplate}
-              bpInputs={bpInputs}
-              setBpInput={handleBpInputChange}
-              smartPlusOverrides={smartPlusOverrides}
-              setSmartPlusOverrides={setSmartPlusOverrides}
-              handleGenerateSmartPrompt={handleGenerateSmartPrompt}
-              canGenerateSmartPrompt={canGenerateSmartPrompt}
-              smartPromptGenStatus={smartPromptGenStatus}
-              onCancelSmartPrompt={handleCancelSmartPrompt}
-              aspectRatio={aspectRatio}
-              setAspectRatio={setAspectRatio}
-              imageSize={imageSize}
-              setImageSize={setImageSize}
-              isThirdPartyApiEnabled={thirdPartyApiConfig.enabled}
-              onClearTemplate={handleClearTemplate}
-            />
-          </div>
-          
-          {/* 点击遮罩关闭面板 */}
-          {!isLeftPanelCollapsed && (
-            <div 
-              className="fixed inset-0 z-30 bg-black/30 backdrop-blur-sm"
-              onClick={() => setIsLeftPanelCollapsed(true)}
-            />
-          )}
-        </>
-      )}
       <div className="relative flex-1 flex min-w-0">
         <Canvas 
           view={view}
@@ -2846,11 +2721,6 @@ const App: React.FC = () => {
           onDesktopImagePreview={handleDesktopImagePreview}
           onDesktopImageEditAgain={handleDesktopImageEditAgain}
           onDesktopImageRegenerate={handleDesktopImageRegenerate}
-          onGenerateFromFlow={handleGenerateFromFlow}
-          onSaveImageFromFlow={handleSaveImageFromFlow}
-          onCanvasClick={() => {
-            setIsLeftPanelCollapsed(true);
-          }}
         />
         {view === 'editor' && (
              <div className="absolute left-1/2 -translate-x-1/2 z-30 transition-all duration-300 bottom-6">
@@ -2862,19 +2732,17 @@ const App: React.FC = () => {
              </div>
         )}
       </div>
-      {/* 右侧面板 - 画布模式下完全不显示，其他模式正常显示 */}
-      {view !== 'canvas' && (
-        <div className="flex-shrink-0">
-          <RightPanel 
-            creativeIdeas={creativeIdeas}
-            handleUseCreativeIdea={handleUseCreativeIdea}
-            setAddIdeaModalOpen={() => setAddIdeaModalOpen(true)}
-            setView={setView}
-            onDeleteIdea={handleDeleteCreativeIdea}
-            onEditIdea={handleStartEditIdea}
-          />
-        </div>
-      )}
+      {/* 右侧面板 */}
+      <div className="flex-shrink-0">
+        <RightPanel 
+          creativeIdeas={creativeIdeas}
+          handleUseCreativeIdea={handleUseCreativeIdea}
+          setAddIdeaModalOpen={() => setAddIdeaModalOpen(true)}
+          setView={setView}
+          onDeleteIdea={handleDeleteCreativeIdea}
+          onEditIdea={handleStartEditIdea}
+        />
+      </div>
       
       <style>{`
         @keyframes fade-in {

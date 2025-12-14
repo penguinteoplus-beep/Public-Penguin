@@ -63,6 +63,10 @@ export interface CreativeIdea {
   suggestedAspectRatio?: AspectRatioType;
   suggestedResolution?: ImageSizeType;
 
+  // 权限设置（用于BP/SmartPlus模式）
+  allowViewPrompt?: boolean;  // 是否允许查看提示词
+  allowEditPrompt?: boolean;  // 是否允许编辑提示词
+
   // Deprecated but kept for type compatibility during migration if needed
   bpVariables?: any[];
 }

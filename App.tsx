@@ -502,9 +502,9 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       </div>
       
       {/* 可滚动内容区域 */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-3 space-y-3">
-        {/* 资源素材区域 */}
-        <div>
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-3 flex flex-col min-h-0">
+        {/* 固定内容区域 - 资源素材 */}
+        <div className="flex-shrink-0 mb-3">
           <h2 className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: isDark ? '#6b7280' : '#9ca3af' }}>资源素材</h2>
           <ImageUploader 
             files={files}
@@ -518,7 +518,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
         
         {/* 模型参数卡片 */}
         <div 
-          className="p-3 rounded-xl"
+          className="flex-shrink-0 p-3 rounded-xl mb-3"
           style={{
             background: isDark 
               ? 'linear-gradient(135deg, rgba(30,30,40,0.6) 0%, rgba(25,25,35,0.7) 100%)'
@@ -597,8 +597,8 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
            </div>
         </div>
         
-        {/* 提示词区域 */}
-        <div>
+        {/* 提示词区域 - 自动扩展到底部 */}
+        <div className="flex-1 flex flex-col min-h-[150px]">
           <div className="flex items-center justify-between mb-2">
              <h2 className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: isDark ? '#6b7280' : '#9ca3af' }}>
                 {hasActiveTemplate ? '关键词' : '提示词'}
@@ -658,7 +658,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
           )}
 
           {canViewPrompt ? (
-            <div className="relative group">
+            <div className="relative group flex-1 flex flex-col">
              <textarea
                  value={prompt}
                  onChange={(e) => setPrompt(e.target.value)}
@@ -672,7 +672,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
                      : "描述想生成的画面..."
                  }
                  readOnly={!!activeBPTemplate || !canEditPrompt}
-                 className={`w-full h-24 p-3 pr-11 rounded-xl resize-none text-[11px] transition-all ${
+                 className={`w-full flex-1 min-h-[100px] p-3 pr-11 rounded-xl resize-none text-[11px] transition-all ${
                      !canEditPrompt ? 'cursor-not-allowed opacity-60' : ''
                  }`}
                  style={{
@@ -727,14 +727,6 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
             </div>
           )}
         </div>
-        
-        {activeSmartPlusTemplate && (
-            <SmartPlusDirector 
-                config={smartPlusOverrides} 
-                onConfigChange={setSmartPlusOverrides}
-                templateConfig={activeSmartPlusTemplate.smartPlusConfig}
-            />
-        )}
       </div>
       
       {/* 底部免责声明 - 更简洁 */}
@@ -758,6 +750,9 @@ const SmartPlusDirector: React.FC<{
     onConfigChange: (config: SmartPlusConfig) => void;
     templateConfig?: SmartPlusConfig;
 }> = ({ config, onConfigChange, templateConfig }) => {
+    const { themeName } = useTheme();
+    const isDark = themeName !== 'light';
+    
     const handleConfigChange = (
         id: number,
         field: 'enabled' | 'features',
@@ -780,12 +775,20 @@ const SmartPlusDirector: React.FC<{
     }
 
     return (
-        <div className="modern-card p-3">
+        <div 
+          className="p-3 rounded-xl"
+          style={{
+            background: isDark 
+              ? 'linear-gradient(135deg, rgba(20,184,166,0.08) 0%, rgba(20,184,166,0.04) 100%)'
+              : 'rgba(20,184,166,0.06)',
+            border: `1px solid ${isDark ? 'rgba(20,184,166,0.15)' : 'rgba(20,184,166,0.1)'}`,
+          }}
+        >
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-5 h-5 rounded bg-teal-500/15 flex items-center justify-center">
+              <div className="w-5 h-5 rounded-lg bg-teal-500/20 flex items-center justify-center">
                 <LightbulbIcon className="w-3 h-3 text-teal-400"/>
               </div>
-              <h3 className="text-xs font-medium text-white">导演模式</h3>
+              <h3 className="text-xs font-semibold" style={{ color: isDark ? '#fff' : '#0f172a' }}>导演模式</h3>
             </div>
             <div className="space-y-3">
             {visibleComponents.map(component => (
@@ -798,17 +801,29 @@ const SmartPlusDirector: React.FC<{
                             checked={component.enabled}
                             onChange={(e) => handleConfigChange(component.id, 'enabled', e.target.checked)}
                         />
-                         <div className="w-7 h-4 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-teal-500 transition-colors"></div>
+                         <div 
+                           className="w-7 h-4 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-teal-500 transition-colors"
+                           style={{ background: isDark ? '#374151' : '#d1d5db' }}
+                         ></div>
                     </label>
                     <div className="flex-grow">
-                        <label htmlFor={`smart-plus-override-${component.id}-features`} className="text-[10px] font-medium text-gray-500 mb-1 block">
+                        <label 
+                          htmlFor={`smart-plus-override-${component.id}-features`} 
+                          className="text-[10px] font-medium mb-1 block"
+                          style={{ color: isDark ? '#9ca3af' : '#6b7280' }}
+                        >
                             {component.label}
                         </label>
                         <textarea
                             id={`smart-plus-override-${component.id}-features`}
                             value={component.features}
                             onChange={(e) => handleConfigChange(component.id, 'features', e.target.value)}
-                            className="w-full text-xs p-2 modern-input rounded-md resize-none"
+                            className="w-full text-xs p-2 rounded-lg resize-none transition-all"
+                            style={{
+                              background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                              border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                              color: isDark ? '#fff' : '#0f172a',
+                            }}
                             placeholder={component.enabled ? '描述...' : '自动'}
                             disabled={!component.enabled}
                             rows={2}
@@ -826,6 +841,9 @@ const BPModePanel: React.FC<{
     inputs: Record<string, string>;
     onInputChange: (id: string, value: string) => void;
 }> = ({ template, inputs, onInputChange }) => {
+    const { themeName } = useTheme();
+    const isDark = themeName !== 'light';
+    
     // Only show manual inputs (type === 'input')
     const manualFields = template.bpFields?.filter(f => f.type === 'input') || [];
     const agentFields = template.bpFields?.filter(f => f.type === 'agent') || [];
@@ -833,16 +851,30 @@ const BPModePanel: React.FC<{
     if (manualFields.length === 0 && agentFields.length === 0) return null;
 
     return (
-        <div className="modern-card p-3 mb-3">
+        <div 
+          className="p-3 mb-3 rounded-xl"
+          style={{
+            background: isDark 
+              ? 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(245,158,11,0.04) 100%)'
+              : 'rgba(245,158,11,0.06)',
+            border: `1px solid ${isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.1)'}`,
+          }}
+        >
              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded bg-yellow-500/15 flex items-center justify-center">
+                  <div className="w-5 h-5 rounded-lg bg-amber-500/20 flex items-center justify-center">
                     <span className="text-[10px]">⚡</span>
                   </div>
-                  <h3 className="text-xs font-medium text-white">BP 模式</h3>
+                  <h3 className="text-xs font-semibold" style={{ color: isDark ? '#fff' : '#0f172a' }}>BP 模式</h3>
                 </div>
                 {agentFields.length > 0 && (
-                  <span className="modern-badge warning">
+                  <span 
+                    className="px-1.5 py-0.5 rounded text-[9px] font-medium flex items-center gap-1"
+                    style={{
+                      background: 'rgba(99,102,241,0.15)',
+                      color: '#a5b4fc',
+                    }}
+                  >
                     <LightbulbIcon className="w-2.5 h-2.5"/> {agentFields.length}
                   </span>
                 )}
@@ -851,20 +883,36 @@ const BPModePanel: React.FC<{
              <div className="space-y-2">
              {manualFields.length > 0 ? manualFields.map(v => (
                  <div key={v.id}>
-                     <label className="text-[10px] font-medium text-gray-500 mb-1 flex justify-between">
+                     <label 
+                       className="text-[10px] font-medium mb-1 flex justify-between"
+                       style={{ color: isDark ? '#9ca3af' : '#6b7280' }}
+                     >
                         <span>{v.label}</span>
-                        <span className="text-[9px] text-yellow-500/60 font-mono">/{v.name}</span>
+                        <span className="text-[9px] font-mono" style={{ color: 'rgba(245,158,11,0.6)' }}>/{v.name}</span>
                      </label>
                      <input 
                         type="text"
                         value={inputs[v.id] || ''}
                         onChange={(e) => onInputChange(v.id, e.target.value)}
-                        className="w-full text-xs p-2 modern-input rounded-md focus:border-yellow-500/40"
+                        className="w-full text-xs p-2.5 rounded-lg transition-all"
+                        style={{
+                          background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                          border: `1px solid ${isDark ? 'rgba(245,158,11,0.2)' : 'rgba(245,158,11,0.15)'}`,
+                          color: isDark ? '#fff' : '#0f172a',
+                        }}
                         placeholder={`输入 ${v.label}...`}
                      />
                  </div>
              )) : (
-                 <p className="text-[10px] text-gray-500 italic p-2 bg-white/3 rounded text-center">仅含智能体，点击生成自动运行</p>
+                 <p 
+                   className="text-[10px] italic p-2 rounded text-center"
+                   style={{ 
+                     background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                     color: isDark ? '#6b7280' : '#9ca3af',
+                   }}
+                 >
+                   仅含智能体，点击生成自动运行
+                 </p>
              )}
              </div>
         </div>

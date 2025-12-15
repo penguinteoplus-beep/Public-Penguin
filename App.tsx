@@ -1377,6 +1377,18 @@ const App: React.FC = () => {
           const userResult = await getCurrentUser();
           if (userResult.success && userResult.data) {
             setCurrentUser(userResult.data);
+            
+            // ✅ 重要：已登录时自动启用云端模式，使用后端配置的API
+            const cloudConfig: ThirdPartyApiConfig = {
+              enabled: true,
+              baseUrl: '',  // 空表示使用后端配置
+              apiKey: '',   // 空表示使用后端配置
+              model: 'nano-banana-2',
+              chatModel: 'gemini-2.5-pro'
+            };
+            setThirdPartyApiConfig(cloudConfig);
+            setThirdPartyConfig(cloudConfig);
+            
             // 已登录，从后端API加载数据
             await loadDataFromBackend();
           } else {

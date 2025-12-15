@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { ImageUploader } from './components/ImageUploader';
 import { GeneratedImageDisplay } from './components/GeneratedImageDisplay';
 import { editImageWithGemini, generateCreativePromptFromImage, initializeAiClient, processBPTemplate, setThirdPartyConfig } from './services/geminiService';
@@ -71,17 +71,20 @@ interface RightPanelProps {
   creativeIdeas: CreativeIdea[];
   handleUseCreativeIdea: (idea: CreativeIdea) => void;
   setAddIdeaModalOpen: (isOpen: boolean) => void;
-  setView: (view: 'editor' | 'library') => void;
+  setView: (view: 'editor' | 'local-library' | 'cloud-library') => void;
   onDeleteIdea: (id: number) => void;
   onEditIdea: (idea: CreativeIdea) => void;
 }
 
 interface CanvasProps {
-  view: 'editor' | 'library';
-  setView: (view: 'editor' | 'library') => void;
+  view: 'editor' | 'local-library' | 'cloud-library';
+  setView: (view: 'editor' | 'local-library' | 'cloud-library') => void;
   files: File[];
   onUploadClick: () => void;
   creativeIdeas: CreativeIdea[];
+  localCreativeIdeas: CreativeIdea[];
+  cloudCreativeIdeas: CreativeIdea[];
+  currentUser: User | null;
   onBack: () => void;
   onAdd: () => void;
   onDelete: (id: number) => void;
@@ -1087,6 +1090,9 @@ const Canvas: React.FC<CanvasProps> = ({
   files,
   onUploadClick,
   creativeIdeas,
+  localCreativeIdeas,
+  cloudCreativeIdeas,
+  currentUser,
   onBack,
   onAdd,
   onDelete,
@@ -1163,28 +1169,45 @@ const Canvas: React.FC<CanvasProps> = ({
           桌面
         </button>
         <button
-          onClick={() => setView('library')}
+          onClick={() => setView('local-library')}
           className={`liquid-tab flex items-center gap-1 ${
-            view === 'library' ? 'active' : ''
+            view === 'local-library' ? 'active' : ''
           }`}
         >
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
-          创意库
-          {creativeIdeas.length > 0 && (
+          本地创意
+          {localCreativeIdeas.length > 0 && (
             <span className="px-1 py-0.5 text-[8px] rounded bg-white/20 font-medium">
-              {creativeIdeas.length}
+              {localCreativeIdeas.length}
             </span>
           )}
         </button>
-
+        {currentUser && (
+          <button
+            onClick={() => setView('cloud-library')}
+            className={`liquid-tab flex items-center gap-1 ${
+              view === 'cloud-library' ? 'active' : ''
+            }`}
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+            </svg>
+            云端创意
+            {cloudCreativeIdeas.length > 0 && (
+              <span className="px-1 py-0.5 text-[8px] rounded bg-white/20 font-medium">
+                {cloudCreativeIdeas.length}
+              </span>
+            )}
+          </button>
+        )}
       </div>
       
-      {view === 'library' ? (
+      {view === 'local-library' || view === 'cloud-library' ? (
         <div className="relative z-10 w-full flex-1 p-8 pt-16 flex flex-col overflow-hidden">
           <CreativeLibrary
-            ideas={creativeIdeas}
+            ideas={view === 'local-library' ? localCreativeIdeas : cloudCreativeIdeas}
             onBack={onBack}
             onAdd={onAdd}
             onDelete={onDelete}
@@ -1280,9 +1303,19 @@ const App: React.FC = () => {
   }, [abortController]);
 
   const [apiKey, setApiKey] = useState<string>('');
-  const [creativeIdeas, setCreativeIdeas] = useState<CreativeIdea[]>([]);
   
-  const [view, setView] = useState<'editor' | 'library'>('editor'); // 默认桌面模式
+  // 创意库状态：本地和云端分开存储
+  const [localCreativeIdeas, setLocalCreativeIdeas] = useState<CreativeIdea[]>([]);
+  const [cloudCreativeIdeas, setCloudCreativeIdeas] = useState<CreativeIdea[]>([]);
+  
+  // 合并后的创意库（用于其他地方使用）
+  const creativeIdeas = useMemo(() => {
+    const cloudIdSet = new Set(cloudCreativeIdeas.map(idea => idea.id));
+    const uniqueLocal = localCreativeIdeas.filter(idea => !cloudIdSet.has(idea.id));
+    return [...cloudCreativeIdeas, ...uniqueLocal].sort((a, b) => (b.order || 0) - (a.order || 0));
+  }, [localCreativeIdeas, cloudCreativeIdeas]);
+  
+  const [view, setView] = useState<'editor' | 'local-library' | 'cloud-library'>('editor'); // 默认桌面模式
   const [isAddIdeaModalOpen, setAddIdeaModalOpen] = useState(false);
   const [editingIdea, setEditingIdea] = useState<CreativeIdea | null>(null);
   
@@ -1413,15 +1446,26 @@ const App: React.FC = () => {
     }
   }, []);
   
-  // 从后端API加载数据
+  // 从后端API加载数据（同时合并本地创意库，按ID去重，云端优先）
   const loadDataFromBackend = async () => {
     try {
-      // 加载创意库
-      const ideasResult = await creativeIdeasApi.getAllCreativeIdeas();
-      if (ideasResult.success && ideasResult.data) {
-        const ideas = ideasResult.data.sort((a, b) => (b.order || 0) - (a.order || 0));
-        setCreativeIdeas(ideas);
-      }
+      // 同时加载云端和本地创意库
+      const [ideasResult, localIdeas] = await Promise.all([
+        creativeIdeasApi.getAllCreativeIdeas(),
+        getAllFromDB().catch(() => [] as CreativeIdea[])
+      ]);
+      
+      // 合并创意库：云端优先，按ID去重
+      const cloudIdeas = ideasResult.success && ideasResult.data ? ideasResult.data : [];
+      const cloudIdSet = new Set(cloudIdeas.map(idea => idea.id));
+      
+      // 本地创意中排除与云端ID相同的项
+      const uniqueLocalIdeas = localIdeas.filter(localIdea => !cloudIdSet.has(localIdea.id));
+      
+      // 合并并排序
+      const mergedIdeas = [...cloudIdeas, ...uniqueLocalIdeas].sort((a, b) => (b.order || 0) - (a.order || 0));
+      setCloudCreativeIdeas(cloudIdeas);
+      setLocalCreativeIdeas(uniqueLocalIdeas);
       
       // 加载历史记录
       const historyResult = await historyApi.getAllHistory();
@@ -1445,7 +1489,7 @@ const App: React.FC = () => {
     try {
       let ideas = await getAllFromDB();
       ideas.sort((a, b) => (b.order || 0) - (a.order || 0)); 
-      setCreativeIdeas(ideas);
+      setLocalCreativeIdeas(ideas);
     } catch (e) {
       console.error("Failed to load creative ideas from DB", e);
     }
@@ -1816,7 +1860,7 @@ const App: React.FC = () => {
                     await importToDB(ideas as CreativeIdea[]);
                     const allIdeas = await getAllFromDB();
                     allIdeas.sort((a, b) => (b.order || 0) - (a.order || 0));
-                    setCreativeIdeas(allIdeas);
+                    setLocalCreativeIdeas(allIdeas);
                     alert(`已导入 ${ideas.length} 个创意!`);
                   }
               } else {
@@ -1885,7 +1929,7 @@ const App: React.FC = () => {
           updatedIdeas.map(i => ({ id: i.id, ratio: i.suggestedAspectRatio, res: i.suggestedResolution }))
         );
         
-        setCreativeIdeas(updatedIdeas);
+        setLocalCreativeIdeas(updatedIdeas);
       }
 
       setAddIdeaModalOpen(false);
@@ -1910,7 +1954,7 @@ const App: React.FC = () => {
         await deleteFromDB(id);
         const updatedIdeas = await getAllFromDB();
         updatedIdeas.sort((a, b) => (b.order || 0) - (a.order || 0));
-        setCreativeIdeas(updatedIdeas);
+        setLocalCreativeIdeas(updatedIdeas);
       }
     } catch (e) {
       console.error("Failed to delete creative idea:", e);
@@ -1934,7 +1978,7 @@ const App: React.FC = () => {
             ...idea,
             order: reorderedIdeas.length - index,
         }));
-        setCreativeIdeas(ideasToUpdate);
+        setLocalCreativeIdeas(ideasToUpdate);
         
         if (currentUser) {
           // 登录状态，使用后端API
@@ -2745,6 +2789,9 @@ const App: React.FC = () => {
           files={files}
           onUploadClick={() => fileInputRef.current?.click()}
           creativeIdeas={creativeIdeas}
+          localCreativeIdeas={localCreativeIdeas}
+          cloudCreativeIdeas={cloudCreativeIdeas}
+          currentUser={currentUser}
           onBack={() => setView('editor')}
           onAdd={handleAddNewIdea}
           onDelete={handleDeleteCreativeIdea}

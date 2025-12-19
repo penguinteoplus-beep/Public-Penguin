@@ -14,7 +14,7 @@ const ImageNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       className={`rounded-2xl border-2 overflow-hidden transition-all backdrop-blur-xl min-w-[180px]`}
       style={{
         borderColor: selected ? '#60a5fa' : 'rgba(59, 130, 246, 0.4)',
-        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(6, 182, 212, 0.15))',
+        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.15))',
         boxShadow: selected ? '0 10px 40px -10px rgba(59, 130, 246, 0.4)' : '0 4px 20px -4px rgba(0,0,0,0.5)',
       }}
     >
@@ -34,7 +34,7 @@ const ImageNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         <span className="text-sm font-bold text-blue-300 flex-1">上传图片</span>
         <button
           onClick={() => nodeData.onDelete?.(id)}
-          className="w-6 h-6 rounded-lg bg-white/10 hover:bg-red-500/30 flex items-center justify-center text-gray-400 hover:text-red-400 transition-all"
+          className="w-6 h-6 rounded-lg bg-white/10 hover:bg-gray-500/30 flex items-center justify-center text-gray-400 hover:text-gray-300 transition-all"
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

@@ -19,8 +19,8 @@ const Toast: React.FC<{ message: string; type: 'success' | 'error'; onClose: () 
       px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md border
       flex items-center gap-3 min-w-[280px] max-w-[400px]
       ${type === 'success'
-                ? 'bg-green-900/90 border-green-500/50 text-green-100'
-                : 'bg-red-900/90 border-red-500/50 text-red-100'}
+                ? 'bg-blue-900/90 border-blue-500/50 text-blue-100'
+                : 'bg-gray-900/90 border-gray-500/50 text-gray-100'}
     `}>
             <span className="text-xl">{type === 'success' ? '✅' : '❌'}</span>
             <p className="flex-1 text-sm font-medium">{message}</p>
@@ -102,27 +102,27 @@ export const RunningHubProgress: React.FC = () => {
             {visibleTasks.length > 0 && (
                 <div className={`mx-3 mb-3 transition-all duration-300 ${isExpanded ? 'fixed inset-4 z-50 m-0' : ''}`}>
                     <div className={`
-                        bg-gradient-to-br from-purple-900/60 via-indigo-900/50 to-purple-800/60
+                        bg-gradient-to-br from-gray-900/80 via-gray-900/70 to-gray-800/80
                         backdrop-blur-xl backdrop-saturate-150
                         rounded-xl 
-                        border-2 border-purple-400/40
-                        shadow-[0_0_20px_rgba(168,85,247,0.3),0_0_40px_rgba(139,92,246,0.15)]
-                        ring-1 ring-purple-500/20 ring-offset-0
+                        border-2 border-blue-400/40
+                        shadow-[0_0_15px_rgba(59,130,246,0.25)]
+                        ring-1 ring-blue-500/20 ring-offset-0
                         overflow-hidden
                         ${isExpanded ? 'h-full flex flex-col' : ''}
                     `}>
                         {/* 标题栏 */}
-                        <div className="px-3 py-2 border-b border-purple-500/10 flex items-center justify-between">
+                        <div className="px-3 py-2 border-b border-blue-500/10 flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                                <span className="text-xs font-medium text-purple-300">云端任务</span>
-                                <span className="text-[10px] text-purple-400">({visibleTasks.length})</span>
+                                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                <span className="text-xs font-medium text-blue-300">云端任务</span>
+                                <span className="text-[10px] text-blue-400">({visibleTasks.length})</span>
                             </div>
                             <div className="flex items-center gap-1">
                                 {/* 最小化/展开按钮 */}
                                 <button
                                     onClick={() => setIsMinimized(!isMinimized)}
-                                    className="w-6 h-6 rounded flex items-center justify-center text-purple-400 hover:text-purple-300 hover:bg-purple-500/20 transition-colors"
+                                    className="w-6 h-6 rounded flex items-center justify-center text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 transition-colors"
                                     title={isMinimized ? '展开任务' : '最小化'}
                                 >
                                     {isMinimized ? (
@@ -138,7 +138,7 @@ export const RunningHubProgress: React.FC = () => {
                                 {/* 放大/缩小按钮 */}
                                 <button
                                     onClick={() => setIsExpanded(!isExpanded)}
-                                    className="w-6 h-6 rounded flex items-center justify-center text-purple-400 hover:text-purple-300 hover:bg-purple-500/20 transition-colors"
+                                    className="w-6 h-6 rounded flex items-center justify-center text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 transition-colors"
                                     title={isExpanded ? '缩小' : '放大'}
                                 >
                                     {isExpanded ? (
@@ -227,31 +227,31 @@ const TaskItem: React.FC<{ task: RunningHubTask; onDismiss: () => void; isExpand
             case 'generating':
                 return (
                     <div className="relative">
-                        <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
                         <span className="absolute inset-0 flex items-center justify-center text-[8px]">🎨</span>
                     </div>
                 );
             case 'completed':
-                return <span className="text-green-400 text-sm">✓</span>;
+                return <span className="text-blue-400 text-sm">✓</span>;
             case 'failed':
-                return <span className="text-red-400 text-sm">✗</span>;
+                return <span className="text-gray-400 text-sm">✗</span>;
         }
     };
 
     const getStatusColor = () => {
         switch (task.status) {
             case 'uploading': return 'text-blue-300';
-            case 'generating': return 'text-purple-300';
-            case 'completed': return 'text-green-300';
-            case 'failed': return 'text-red-300';
+            case 'generating': return 'text-blue-300';
+            case 'completed': return 'text-blue-300';
+            case 'failed': return 'text-gray-300';
         }
     };
 
     return (
         <div className={`
       p-2 rounded-lg bg-black/20 border transition-all
-      ${task.status === 'completed' ? 'border-green-500/30' :
-                task.status === 'failed' ? 'border-red-500/30' : 'border-white/5'}
+      ${task.status === 'completed' ? 'border-blue-500/30' :
+                task.status === 'failed' ? 'border-gray-500/30' : 'border-white/5'}
       ${isExpanded ? 'p-4' : ''}
     `}>
             <div className="flex items-start gap-2">
@@ -284,7 +284,7 @@ const TaskItem: React.FC<{ task: RunningHubTask; onDismiss: () => void; isExpand
                     <div
                         className={`h-full rounded-full transition-all duration-1000 ${task.status === 'uploading'
                             ? 'bg-blue-500 w-1/4'
-                            : 'bg-gradient-to-r from-purple-500 to-pink-500 animate-progress-indeterminate'
+                            : 'bg-blue-400 animate-progress-indeterminate'
                             }`}
                     ></div>
                 </div>
@@ -303,7 +303,7 @@ const TaskItem: React.FC<{ task: RunningHubTask; onDismiss: () => void; isExpand
 
             {/* 失败显示错误 */}
             {task.status === 'failed' && task.error && (
-                <p className="text-[10px] text-red-400 mt-1 line-clamp-2">{task.error}</p>
+                <p className="text-[10px] text-gray-400 mt-1 line-clamp-2">{task.error}</p>
             )}
         </div>
     );

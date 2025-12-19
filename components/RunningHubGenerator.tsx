@@ -193,17 +193,17 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
 
         return (
             <div key={field.id} className="col-span-1 min-h-[240px]">
-                <label className="block text-sm font-medium text-purple-200 mb-2 flex items-center gap-2">
+                <label className="block text-sm font-medium text-blue-200 mb-2 flex items-center gap-2">
                     {field.label}
-                    {field.required && <span className="text-pink-500 text-xs bg-pink-500/10 px-1.5 py-0.5 rounded border border-pink-500/20">必填</span>}
+                    {field.required && <span className="text-blue-500 text-xs bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/20">必填</span>}
                 </label>
 
                 <div
                     className={`
                 relative w-full h-64 rounded-2xl border-2 border-dashed transition-all duration-300 group overflow-hidden
                 ${preview
-                            ? 'border-purple-500/50 bg-gray-900/50'
-                            : 'border-gray-600 bg-gray-800/30 hover:border-purple-400 hover:bg-gray-800/50'
+                            ? 'border-blue-500/50 bg-gray-900/50'
+                            : 'border-gray-600 bg-gray-800/30 hover:border-blue-400 hover:bg-gray-800/50'
                         }
             `}
                 >
@@ -226,7 +226,7 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
                                 </button>
                                 <button
                                     onClick={() => handleFileChange(field.id, null)}
-                                    className="p-3 bg-red-500/80 hover:bg-red-500 text-white rounded-full backdrop-blur-md shadow-lg transition-all hover:scale-110"
+                                    className="p-3 bg-gray-500/80 hover:bg-gray-500 text-white rounded-full backdrop-blur-md shadow-lg transition-all hover:scale-110"
                                     title="删除图片"
                                 >
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -238,7 +238,7 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
                             {/* 上传状态遮罩 */}
                             {isUploading && (
                                 <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center z-10 backdrop-blur-sm">
-                                    <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                                    <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
                                     <span className="text-white text-sm font-medium">上传中...</span>
                                 </div>
                             )}
@@ -248,8 +248,8 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
                             htmlFor={`file-${field.id}`}
                             className="flex flex-col items-center justify-center w-full h-full cursor-pointer"
                         >
-                            <div className="p-4 bg-gray-800/50 rounded-full mb-3 group-hover:scale-110 transition-transform duration-300 group-hover:bg-purple-500/20">
-                                <svg className="w-8 h-8 text-gray-400 group-hover:text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <div className="p-4 bg-gray-800/50 rounded-full mb-3 group-hover:scale-110 transition-transform duration-300 group-hover:bg-blue-500/20">
+                                <svg className="w-8 h-8 text-gray-400 group-hover:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                             </div>
@@ -280,8 +280,8 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
         <div className="flex w-full h-full text-white overflow-hidden bg-[#0f1115] relative">
             {/* 动态背景 */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-purple-900/10 via-transparent to-blue-900/10 z-0"></div>
-                <div className="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] rounded-full bg-purple-600/5 blur-[120px]"></div>
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-900/10 via-transparent to-gray-900/10 z-0"></div>
+                <div className="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] rounded-full bg-blue-600/5 blur-[120px]"></div>
                 <div className="absolute -bottom-[20%] -left-[10%] w-[500px] h-[500px] rounded-full bg-blue-600/5 blur-[100px]"></div>
             </div>
 
@@ -304,7 +304,7 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
                             </h1>
                             {idea.cost && (
                                 <div className="flex items-center gap-1.5 mt-1">
-                                    <span className="text-xs text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20 font-medium flex items-center gap-1">
+                                    <span className="text-xs text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full border border-blue-400/20 font-medium flex items-center gap-1">
                                         💎 消耗 {idea.cost} 鹅卵石
                                     </span>
                                 </div>
@@ -315,9 +315,9 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
                     <div className="flex items-center gap-3">
                         <div className="text-right hidden sm:block">
                             <p className="text-xs text-gray-500">RunningHub Context</p>
-                            <p className="text-xs font-mono text-purple-400">{config.isAIApp ? 'AI Application' : 'ComfyUI Workflow'}</p>
+                            <p className="text-xs font-mono text-blue-400">{config.isAIApp ? 'AI Application' : 'ComfyUI Workflow'}</p>
                         </div>
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+                        <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
                             <span className="text-white font-bold text-xs">RH</span>
                         </div>
                     </div>
@@ -343,7 +343,7 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
                             {imageFields.length > 0 && (
                                 <div>
                                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
                                         图像素材
@@ -368,13 +368,13 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
                                             <div key={field.id} className="bg-gray-800/30 p-4 rounded-xl border border-white/5">
                                                 <label className="block text-sm font-medium text-gray-300 mb-2">
                                                     {field.label}
-                                                    {field.required && <span className="text-pink-400 ml-1">*</span>}
+                                                    {field.required && <span className="text-blue-400 ml-1">*</span>}
                                                 </label>
                                                 {field.type === 'select' ? (
                                                     <select
                                                         value={inputs[field.id] || ''}
                                                         onChange={(e) => handleInputChange(field.id, e.target.value)}
-                                                        className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all outline-none"
+                                                        className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none"
                                                     >
                                                         <option value="">请选择...</option>
                                                         {field.options?.map(opt => (
@@ -387,7 +387,7 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
                                                         value={inputs[field.id] || ''}
                                                         onChange={(e) => handleInputChange(field.id, e.target.value)}
                                                         placeholder={field.placeholder}
-                                                        className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all outline-none placeholder-gray-600"
+                                                        className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none placeholder-gray-600"
                                                     />
                                                 )}
                                             </div>
@@ -406,7 +406,7 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
                                     <div className="space-y-4 mb-8">
                                         <div className="flex justify-between items-center text-sm">
                                             <span className="text-gray-400">预计消耗</span>
-                                            <span className="text-amber-400 font-medium">{idea.cost || 0} 鹅卵石</span>
+                                            <span className="text-blue-400 font-medium">{idea.cost || 0} 鹅卵石</span>
                                         </div>
                                         <div className="flex justify-between items-center text-sm">
                                             <span className="text-gray-400">预计耗时</span>
@@ -416,7 +416,7 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
                                             <div key={f.id} className="flex justify-between items-center text-sm">
                                                 <span className="text-gray-400 flex items-center gap-2">
                                                     {uploadedFiles[f.id] ? (
-                                                        <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                         </svg>
                                                     ) : (
@@ -424,7 +424,7 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
                                                     )}
                                                     {f.label}
                                                 </span>
-                                                <span className={uploadedFiles[f.id] ? "text-green-400" : "text-gray-600"}>
+                                                <span className={uploadedFiles[f.id] ? "text-blue-400" : "text-gray-600"}>
                                                     {uploadedFiles[f.id] ? "已就绪" : "待上传"}
                                                 </span>
                                             </div>
@@ -439,7 +439,7 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
                                     flex items-center justify-center gap-2 group
                                     ${isGenerating
                                                 ? 'bg-gray-700 cursor-not-allowed opacity-80'
-                                                : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 hover:shadow-purple-500/25 hover:translate-y-[-2px] active:translate-y-[0px]'
+                                                : 'bg-blue-500 hover:bg-blue-400 hover:shadow-blue-500/25 hover:translate-y-[-2px] active:translate-y-[0px]'
                                             }
                                 `}
                                     >
@@ -460,14 +460,14 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
 
                                     {isGenerating && (
                                         <div className="mt-4 p-4 bg-black/20 rounded-lg animate-fade-in">
-                                            <p className="text-center text-sm text-purple-300 font-medium mb-2">{progress}</p>
+                                            <p className="text-center text-sm text-blue-300 font-medium mb-2">{progress}</p>
                                             <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                                                <div className="h-full bg-purple-500 rounded-full animate-progress"></div>
+                                                <div className="h-full bg-blue-500 rounded-full animate-progress"></div>
                                             </div>
 
                                             {canGoBackground ? (
                                                 <>
-                                                    <p className="text-center text-xs text-green-400 mt-3 mb-2">
+                                                    <p className="text-center text-xs text-blue-400 mt-3 mb-2">
                                                         ✓ 上传完成！你现在可以返回首页，任务将在后台继续运行
                                                     </p>
                                                     <button
@@ -475,7 +475,7 @@ export const RunningHubGenerator: React.FC<RunningHubGeneratorProps> = ({
                                                             if (onBackgroundRun) onBackgroundRun();
                                                             onBack();
                                                         }}
-                                                        className="w-full py-2.5 bg-green-600/80 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                                                        className="w-full py-2.5 bg-blue-600/80 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />

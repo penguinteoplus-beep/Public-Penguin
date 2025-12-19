@@ -143,7 +143,7 @@ export const HistoryStrip: React.FC<HistoryStripProps> = ({
         </div>
         <button
           onClick={onClear}
-          className="text-xs text-gray-500 hover:text-red-400 transition-colors flex items-center gap-1"
+          className="text-xs text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1"
         >
           <TrashIcon className="w-3 h-3" />
           清空
@@ -161,7 +161,7 @@ export const HistoryStrip: React.FC<HistoryStripProps> = ({
         {showLeftFade && (
           <button
             onClick={() => smoothScroll('left')}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-indigo-600/80 hover:border-indigo-500/50 transition-all opacity-0 group-hover/strip:opacity-100"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-blue-600/80 hover:border-blue-500/50 transition-all opacity-0 group-hover/strip:opacity-100"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -178,7 +178,7 @@ export const HistoryStrip: React.FC<HistoryStripProps> = ({
         {showRightFade && (
           <button
             onClick={() => smoothScroll('right')}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-indigo-600/80 hover:border-indigo-500/50 transition-all opacity-0 group-hover/strip:opacity-100"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-blue-600/80 hover:border-blue-500/50 transition-all opacity-0 group-hover/strip:opacity-100"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -212,8 +212,8 @@ export const HistoryStrip: React.FC<HistoryStripProps> = ({
               <div 
                 className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-300 shadow-lg ${
                   selectedId === item.id 
-                    ? 'border-indigo-500 shadow-indigo-500/30' 
-                    : 'border-white/10 hover:border-indigo-500/50 hover:shadow-indigo-500/20'
+                    ? 'border-blue-500 shadow-blue-500/30' 
+                    : 'border-white/10 hover:border-blue-500/50 hover:shadow-blue-500/20'
                 }`}
               >
                 <img
@@ -239,13 +239,13 @@ export const HistoryStrip: React.FC<HistoryStripProps> = ({
                 {/* 模型标识 */}
                 <div className="absolute top-1.5 left-1.5">
                   <span className={`w-2 h-2 rounded-full block shadow-lg ${
-                    item.isThirdParty ? 'bg-orange-500 shadow-orange-500/50' : 'bg-indigo-500 shadow-indigo-500/50'
+                    item.isThirdParty ? 'bg-blue-500 shadow-blue-500/50' : 'bg-blue-500 shadow-blue-500/50'
                   }`}></span>
                 </div>
                 
                 {/* 扣鹅卵石数显示 */}
                 {item.coinsDeducted && (
-                  <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 px-1.5 py-0.5 bg-black/60 backdrop-blur-sm rounded text-[9px] text-yellow-400 font-medium">
+                  <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 px-1.5 py-0.5 bg-black/60 backdrop-blur-sm rounded text-[9px] text-blue-400 font-medium">
                     <span>🪨</span>{item.coinsDeducted}
                   </div>
                 )}
@@ -256,15 +256,15 @@ export const HistoryStrip: React.FC<HistoryStripProps> = ({
                     e.stopPropagation();
                     onDelete(item.id);
                   }}
-                  className="absolute bottom-1.5 right-1.5 p-1.5 bg-red-500/80 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 hover:scale-110"
+                  className="absolute bottom-1.5 right-1.5 p-1.5 bg-gray-500/80 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-gray-600 hover:scale-110"
                 >
                   <TrashIcon className="w-3 h-3 text-white" />
                 </button>
                 
                 {/* 选中指示器 */}
                 {selectedId === item.id && (
-                  <div className="absolute inset-0 border-2 border-indigo-500 rounded-xl pointer-events-none">
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center">
+                  <div className="absolute inset-0 border-2 border-blue-500 rounded-xl pointer-events-none">
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
                       <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>

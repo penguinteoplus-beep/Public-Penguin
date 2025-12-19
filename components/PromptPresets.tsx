@@ -65,9 +65,9 @@ export const PromptPresets: React.FC<PromptPresetsProps> = ({ presets, onPresets
                     <button
                       key={option}
                       onClick={() => handleSelect(category, option)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-400 ${
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-400 ${
                         isActive
-                          ? 'bg-indigo-600 text-white shadow-md'
+                          ? 'bg-blue-600 text-white shadow-md'
                           : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
                       }`}
                     >

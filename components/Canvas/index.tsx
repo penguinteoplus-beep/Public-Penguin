@@ -112,7 +112,7 @@ const DeletableEdge: React.FC<DeletableEdgeProps> = ({
         >
           <button
             onClick={() => data?.onDelete?.(id)}
-            className="w-5 h-5 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center text-xs transition-all opacity-0 hover:opacity-100 group-hover:opacity-100 shadow-lg border border-red-400/50 hover:scale-110"
+            className="w-5 h-5 rounded-full bg-gray-500/80 hover:bg-gray-500 text-white flex items-center justify-center text-xs transition-all opacity-0 hover:opacity-100 group-hover:opacity-100 shadow-lg border border-gray-400/50 hover:scale-110"
             title="删除连接"
             style={{ opacity: 0.7 }}
             onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
@@ -765,7 +765,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             
             {/* 创意库选择 */}
             <div className="relative group">
-              <button className="w-full px-4 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-300 hover:from-purple-500/30 hover:to-pink-500/30 transition-all flex items-center gap-3">
+              <button className="w-full px-4 py-2.5 text-sm font-medium rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-300 hover:bg-blue-500/30 transition-all flex items-center gap-3">
                 <span className="text-lg">🎨</span>
                 <span>创意库</span>
                 <svg className="w-4 h-4 ml-auto opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -785,7 +785,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                       <button
                         key={idea.id}
                         onClick={() => addCreativeNode(idea)}
-                        className="w-full px-3 py-2.5 text-sm text-left text-gray-300 hover:bg-purple-500/20 rounded-lg transition-colors flex items-center gap-3"
+                        className="w-full px-3 py-2.5 text-sm text-left text-gray-300 hover:bg-blue-500/20 rounded-lg transition-colors flex items-center gap-3"
                       >
                         {idea.imageUrl && (
                           <img src={idea.imageUrl} alt="" className="w-8 h-8 rounded-lg object-cover" />
@@ -804,7 +804,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             {/* 上传图片节点 */}
             <button
               onClick={addEmptyImageNode}
-              className="w-full px-4 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 text-blue-300 hover:from-blue-500/30 hover:to-cyan-500/30 transition-all flex items-center gap-3"
+              className="w-full px-4 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-500/20 to-blue-500/20 border border-blue-500/30 text-blue-300 hover:from-blue-500/30 hover:to-blue-500/30 transition-all flex items-center gap-3"
             >
               <span className="text-lg">📷</span>
               <span>上传图片</span>
@@ -812,7 +812,7 @@ export const Canvas: React.FC<CanvasProps> = ({
 
             <button
               onClick={addPromptNode}
-              className="w-full px-4 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 text-green-300 hover:from-green-500/30 hover:to-emerald-500/30 transition-all flex items-center gap-3"
+              className="w-full px-4 py-2.5 text-sm font-medium rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-300 hover:bg-blue-500/30 transition-all flex items-center gap-3"
             >
               <span className="text-lg">✍️</span>
               <span>提示词</span>
@@ -820,7 +820,7 @@ export const Canvas: React.FC<CanvasProps> = ({
 
             <button
               onClick={addTextNode}
-              className="w-full px-4 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 text-yellow-300 hover:from-yellow-500/30 hover:to-orange-500/30 transition-all flex items-center gap-3"
+              className="w-full px-4 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-500/20 to-blue-500/20 border border-blue-500/30 text-blue-300 hover:from-blue-500/30 hover:to-blue-500/30 transition-all flex items-center gap-3"
             >
               <span className="text-lg">📝</span>
               <span>备注</span>
@@ -828,7 +828,7 @@ export const Canvas: React.FC<CanvasProps> = ({
 
             <button
               onClick={addSaveImageNode}
-              className="w-full px-4 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-indigo-500/20 to-violet-500/20 border border-indigo-500/30 text-indigo-300 hover:from-indigo-500/30 hover:to-violet-500/30 transition-all flex items-center gap-3"
+              className="w-full px-4 py-2.5 text-sm font-medium rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-300 hover:bg-blue-500/30 transition-all flex items-center gap-3"
             >
               <span className="text-lg">💾</span>
               <span>保存图片</span>
@@ -838,7 +838,7 @@ export const Canvas: React.FC<CanvasProps> = ({
 
             {/* 进度显示 */}
             {executionProgress && (
-              <div className="px-3 py-2 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-xs text-indigo-300 text-center">
+              <div className="px-3 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-xs text-blue-300 text-center">
                 {executionProgress}
               </div>
             )}
@@ -847,7 +847,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             {isExecuting ? (
               <button
                 onClick={handleCancelExecution}
-                className="w-full px-4 py-3 text-sm font-bold rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-500/30"
+                className="w-full px-4 py-3 text-sm font-bold rounded-xl bg-gradient-to-r from-blue-500 to-blue-500 text-white hover:from-blue-600 hover:to-blue-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -858,7 +858,7 @@ export const Canvas: React.FC<CanvasProps> = ({
               <button
                 onClick={handleExecuteFlow}
                 disabled={nodes.length === 0}
-                className="w-full px-4 py-3 text-sm font-bold rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30"
+                className="w-full px-4 py-3 text-sm font-bold rounded-xl bg-blue-500 text-white hover:bg-blue-400 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/30"
               >
                 <span>▶️</span>
                 <span>执行流程</span>
@@ -868,7 +868,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             <button
               onClick={handleClearCanvas}
               disabled={nodes.length === 0}
-              className="w-full px-4 py-2 text-sm font-medium rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2 text-sm font-medium rounded-xl bg-gray-500/10 border border-gray-500/30 text-gray-400 hover:bg-gray-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span>🗑️</span>
               <span>清空画布</span>
@@ -888,17 +888,17 @@ export const Canvas: React.FC<CanvasProps> = ({
             </span>
             <span className="w-px h-3 bg-white/20"></span>
             <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
               拖拽连接节点
             </span>
             <span className="w-px h-3 bg-white/20"></span>
             <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
               双击删除连线
             </span>
             <span className="w-px h-3 bg-white/20"></span>
             <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
               右键/中键拖动画布
             </span>
           </div>
@@ -943,7 +943,7 @@ export const Canvas: React.FC<CanvasProps> = ({
           }}
           nodeColor={(node) => {
             switch (node.type) {
-              case 'creative': return '#a855f7';
+              case 'creative': return '#3b82f6';
               case 'image': return '#3b82f6';
               case 'prompt': return '#22c55e';
               case 'text': return '#eab308';

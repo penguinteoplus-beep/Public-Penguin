@@ -18,7 +18,7 @@ const Thumbnail: React.FC<{
   onClick: () => void;
   onRemove: (e: React.MouseEvent) => void;
   isLight: boolean;
-}> = ({ file, isActive, onClick, onRemove, isLight }) => {
+}> = ({ file, isActive, onClick, onRemove }) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,17 +30,16 @@ const Thumbnail: React.FC<{
   return (
     <div
       onClick={onClick}
-      className={`relative group aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${isActive ? 'ring-2 ring-indigo-500' : ''}`}
-      style={{ border: isActive ? undefined : `1px solid ${isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'}` }}
+      className={`relative group aspect-square rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 ${isActive ? 'ring-2 ring-blue-500' : 'border border-white/10 hover:border-white/20'}`}
     >
       {previewUrl && <img src={previewUrl} alt={file.name} className="w-full h-full object-cover" />}
-      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
       <button
         onClick={onRemove}
-        className="absolute top-1 right-1 p-0.5 bg-gray-900/60 text-gray-300 hover:text-white hover:bg-red-600 rounded-full transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
+        className="absolute top-1.5 right-1.5 p-1 bg-black/60 text-white hover:bg-gray-500 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
         aria-label={`移除图片 ${file.name}`}
       >
-        <XCircleIcon className="w-5 h-5" />
+        <XCircleIcon className="w-4 h-4" />
       </button>
     </div>
   );
@@ -48,7 +47,7 @@ const Thumbnail: React.FC<{
 
 
 export const ImageUploader: React.FC<ImageUploaderProps> = ({ files, activeFileIndex, onFileChange, onFileRemove, onFileSelect, onTriggerUpload }) => {
-  const { themeName } = useTheme();
+  const { themeName, theme } = useTheme();
   const isLight = themeName === 'light';
   const [isDragging, setIsDragging] = useState(false);
 
@@ -73,12 +72,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ files, activeFileI
 
   return (
     <div 
-      className={`w-full flex-grow flex flex-col border-2 border-dashed rounded-lg p-3 transition-colors min-h-0 ${
-        isDragging ? 'border-indigo-500' : ''
+      className={`w-full flex-grow flex flex-col border-2 border-dashed rounded-2xl p-4 transition-all duration-200 min-h-0 ${
+        isDragging ? 'border-blue-500 bg-blue-500/5' : ''
       }`}
       style={{
-        background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.03)',
-        borderColor: isDragging ? undefined : isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'
+        background: isDragging ? undefined : theme.colors.bgSecondary,
+        borderColor: isDragging ? undefined : theme.colors.border,
       }}
       onDragEnter={handleDragEvents}
       onDragOver={handleDragEvents}
@@ -90,13 +89,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ files, activeFileI
         <div className="flex-grow flex items-center justify-center">
           <button
             onClick={onTriggerUpload}
-            className="w-24 h-24 rounded-xl flex flex-col items-center justify-center transition-all hover:scale-105 active:scale-95"
+            className="w-24 h-24 rounded-2xl flex flex-col items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 border-2 border-dashed"
             style={{
-              background: isLight 
-                ? 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.08) 100%)' 
-                : 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%)',
-              border: `2px dashed ${isLight ? 'rgba(99,102,241,0.3)' : 'rgba(139,92,246,0.4)'}`,
-              color: isLight ? '#6366f1' : '#a5b4fc'
+              backgroundColor: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)',
+              borderColor: theme.colors.border,
+              color: theme.colors.textMuted
             }}
             aria-label="上传新图片"
           >
@@ -124,10 +121,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ files, activeFileI
           ))}
           <button
             onClick={onTriggerUpload}
-            className="aspect-square rounded-lg flex flex-col items-center justify-center transition-colors hover:scale-105 active:scale-95"
+            className="aspect-square rounded-2xl flex flex-col items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
             style={{
-              background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)',
-              color: isLight ? '#64748b' : '#9ca3af'
+              backgroundColor: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)',
+              color: theme.colors.textMuted
             }}
             aria-label="上传新图片"
           >
@@ -136,7 +133,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ files, activeFileI
           </button>
         </div>
       )}
-      <p className="text-xs mt-3 text-center" style={{ color: isLight ? '#94a3b8' : '#6b7280' }}>
+      <p className="text-xs mt-3 text-center" style={{ color: theme.colors.textMuted }}>
         {isDragging ? "松开即可上传" : "可拖拽图片到此区域"}
       </p>
     </div>

@@ -22,7 +22,7 @@ export const Accordion: React.FC<AccordionProps> = ({ title, icon, children, isO
         aria-expanded={isContentOpen}
       >
         <div className="flex items-center gap-3">
-          <span className="text-indigo-400">{React.cloneElement(icon, { className: "w-5 h-5" })}</span>
+          <span className="text-blue-400">{React.cloneElement(icon, { className: "w-5 h-5" })}</span>
           <h3 className="font-semibold text-gray-200 text-base">{title}</h3>
         </div>
         <ChevronDownIcon 

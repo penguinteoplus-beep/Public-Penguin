@@ -71,7 +71,7 @@ const LoadingSpinner: React.FC<{ prompt?: string; imageSize?: string }> = ({ pro
         <span className="text-lg">{themeEmoji}</span>
         <span>{themeName}主题故事</span>
       </div>
-      <div className="w-20 h-20 border-4 border-dashed rounded-full animate-spin border-indigo-400"></div>
+      <div className="w-20 h-20 border-4 border-dashed rounded-full animate-spin border-blue-400"></div>
       <p className="text-xl text-gray-200 font-semibold mt-2">AI 正在思考...</p>
       <p className="text-base text-gray-400 transition-all duration-500 leading-relaxed px-4 min-h-[4rem]">
         {messages[messageIndex]}
@@ -82,7 +82,7 @@ const LoadingSpinner: React.FC<{ prompt?: string; imageSize?: string }> = ({ pro
           <div
             key={idx}
             className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              idx === messageIndex ? 'bg-indigo-400 scale-125' : 'bg-gray-600'
+              idx === messageIndex ? 'bg-blue-400 scale-125' : 'bg-gray-600'
             }`}
           />
         ))}
@@ -110,8 +110,8 @@ const ErrorDisplay: React.FC<{ message: string }> = ({ message }) => {
       </p>
       
       {/* 实际错误信息 */}
-      <div className="p-3 border-l-4 border-red-500 bg-red-900/20 rounded-r-lg w-full">
-        <p className="text-red-300 text-xs text-left">
+      <div className="p-3 border-l-4 border-gray-500 bg-gray-900/20 rounded-r-lg w-full">
+        <p className="text-gray-300 text-xs text-left">
           <span className="font-semibold">技术详情：</span> {message}
         </p>
       </div>
@@ -227,18 +227,18 @@ export const GeneratedImageDisplay: React.FC<GeneratedImageDisplayProps> = ({
                         <ZoomInIcon className="w-3.5 h-3.5"/>
                         <span>预览</span>
                     </button>
-                    <button onClick={handleDownload} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white font-medium rounded-lg text-xs hover:bg-indigo-500 transition-colors" aria-label="下载">
+                    <button onClick={handleDownload} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg text-xs hover:bg-blue-500 transition-colors" aria-label="下载">
                         <DownloadIcon className="w-3.5 h-3.5"/>
                         <span>下载</span>
                     </button>
                     {onEditAgain && (
-                      <button onClick={onEditAgain} className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 text-white font-medium rounded-lg text-xs hover:bg-teal-500 transition-colors" aria-label="再次编辑">
+                      <button onClick={onEditAgain} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg text-xs hover:bg-blue-500 transition-colors" aria-label="再次编辑">
                           <EditIcon className="w-3.5 h-3.5"/>
                           <span>再编辑</span>
                       </button>
                     )}
                     {onRegenerate && (
-                      <button onClick={onRegenerate} className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-600 text-white font-medium rounded-lg text-xs hover:bg-orange-500 transition-colors" aria-label="重新生成">
+                      <button onClick={onRegenerate} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg text-xs hover:bg-blue-500 transition-colors" aria-label="重新生成">
                           <RefreshIcon className="w-3.5 h-3.5"/>
                           <span>重生成</span>
                       </button>

@@ -82,7 +82,7 @@ export const RechargeModal: React.FC<RechargeModalProps> = ({
             Pebbling 鹅卵石充值
           </h2>
           <p className="text-sm text-gray-400 mt-1">
-            当前余额: <span className="text-yellow-400 font-bold">{currentBalance}</span> 鹅卵石
+            当前余额: <span className="text-blue-400 font-bold">{currentBalance}</span> 鹅卵石
           </p>
         </div>
 
@@ -94,12 +94,12 @@ export const RechargeModal: React.FC<RechargeModalProps> = ({
               onClick={() => setSelectedOption(option)}
               className={`relative p-4 rounded-xl border-2 transition-all ${
                 selectedOption?.coins === option.coins
-                  ? 'border-yellow-500 bg-yellow-500/10'
+                  ? 'border-blue-500 bg-blue-500/10'
                   : 'border-gray-600 bg-gray-700/50 hover:border-gray-500'
               }`}
             >
               {option.popular && (
-                <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-[10px] font-bold rounded-full">
+                <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-gradient-to-r from-blue-500 to-blue-500 text-white text-[10px] font-bold rounded-full">
                   热门
                 </span>
               )}
@@ -108,7 +108,7 @@ export const RechargeModal: React.FC<RechargeModalProps> = ({
                 <span className="text-lg font-bold text-white">{option.coins}</span>
                 <span className="text-xs text-gray-400">鹅卵石</span>
                 <div className="mt-2 px-3 py-1 bg-gray-800 rounded-full">
-                  <span className="text-sm font-bold text-green-400">¥{option.price}</span>
+                  <span className="text-sm font-bold text-blue-400">¥{option.price}</span>
                 </div>
               </div>
             </button>
@@ -135,7 +135,7 @@ export const RechargeModal: React.FC<RechargeModalProps> = ({
             disabled={!selectedOption || isProcessing}
             className={`flex-1 px-4 py-2.5 font-semibold rounded-lg transition-all ${
               selectedOption && !isProcessing
-                ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:from-yellow-400 hover:to-orange-400'
+                ? 'bg-gradient-to-r from-blue-500 to-blue-500 text-white hover:from-blue-400 hover:to-blue-400'
                 : 'bg-gray-600 text-gray-400 cursor-not-allowed'
             }`}
           >

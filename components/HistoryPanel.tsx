@@ -46,7 +46,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
         {history.length > 0 && (
           <button
             onClick={onClear}
-            className="text-[10px] text-red-400 hover:text-red-300 transition-colors"
+            className="text-[10px] text-gray-400 hover:text-gray-300 transition-colors"
           >
             清空
           </button>
@@ -57,7 +57,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
         {history.slice(0, 9).map((item) => (
           <div
             key={item.id}
-            className="group relative aspect-square rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-indigo-500/50 transition-all"
+            className="group relative aspect-square rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-blue-500/50 transition-all"
             onClick={() => onSelect(item)}
           >
             <img
@@ -82,7 +82,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
             
             {/* 模型标识 */}
             <div className="absolute top-1 left-1">
-              <span className={`w-2 h-2 rounded-full block ${item.isThirdParty ? 'bg-orange-500' : 'bg-indigo-500'}`}></span>
+              <span className={`w-2 h-2 rounded-full block ${item.isThirdParty ? 'bg-blue-500' : 'bg-blue-500'}`}></span>
             </div>
             
             {/* 删除按钮 */}
@@ -91,7 +91,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
                 e.stopPropagation();
                 onDelete(item.id);
               }}
-              className="absolute top-1 right-1 p-1 bg-red-500/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+              className="absolute top-1 right-1 p-1 bg-gray-500/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600"
             >
               <TrashIcon className="w-2.5 h-2.5 text-white" />
             </button>

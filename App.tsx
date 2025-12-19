@@ -350,22 +350,17 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
   
   return (
   <aside 
-    className="w-[280px] flex-shrink-0 flex flex-col h-full z-20 relative"
+    className="w-[280px] flex-shrink-0 flex flex-col h-full z-20 relative transition-colors duration-300"
     style={{
-      background: isDark 
-        ? 'linear-gradient(180deg, rgba(15,15,23,0.98) 0%, rgba(10,10,15,0.99) 100%)'
-        : 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.99) 100%)',
-      borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-      backdropFilter: 'blur(20px) saturate(180%)',
+      background: theme.colors.bgPrimary,
+      borderRight: `1px solid ${theme.colors.border}`,
     }}
   >
       {/* 微妙的内发光效果 */}
       <div 
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: isDark 
-            ? 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(99,102,241,0.04) 0%, transparent 50%)'
-            : 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(99,102,241,0.03) 0%, transparent 50%)',
+          background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(59,130,246,0.03) 0%, transparent 50%)',
         }}
       />
       
@@ -373,16 +368,23 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       <div 
         className="relative px-4 py-3.5 flex items-center justify-between"
         style={{ 
-          borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` 
+          borderBottom: `1px solid ${theme.colors.border}` 
         }}
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-1 ring-white/10">
-            <PIcon className="w-5 h-5 text-white" />
+          <div 
+            className="w-8 h-8 rounded-xl flex items-center justify-center shadow-lg ring-1"
+            style={{
+              backgroundColor: isDark ? '#000000' : theme.colors.bgTertiary,
+              boxShadow: isDark ? '0 10px 15px -3px rgba(0,0,0,0.5)' : '0 4px 6px -1px rgba(0,0,0,0.1)',
+              ringColor: theme.colors.border
+            }}
+          >
+            <PIcon className="w-5 h-5" style={{ strokeWidth: 3, color: theme.colors.textPrimary }} />
           </div>
           <div>
-            <h1 className="text-sm font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Pebbling</h1>
-            <p className="text-[9px] font-medium tracking-wide" style={{ color: isDark ? '#6b7280' : '#9ca3af' }}>AI Creative Studio</p>
+            <h1 className="text-sm font-bold" style={{ color: theme.colors.textPrimary }}>Pebbling</h1>
+            <p className="text-[9px] font-medium tracking-wide" style={{ color: theme.colors.textMuted }}>AI Creative Studio</p>
           </div>
         </div>
         
@@ -390,11 +392,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
           {/* 明暗切换 */}
           <button
             onClick={toggleDarkMode}
-            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-            style={{ 
-              background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-              color: isDark ? '#9ca3af' : '#6b7280'
-            }}
+            className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 hover:bg-white/10 text-neutral-400 hover:text-white"
             title={isDark ? '浅色' : '深色'}
           >
             {isDark ? (
@@ -410,11 +408,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
           {/* 设置按钮 */}
           <button
             onClick={onSettingsClick}
-            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-            style={{ 
-              background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-              color: isDark ? '#9ca3af' : '#6b7280'
-            }}
+            className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 hover:bg-white/10 text-neutral-400 hover:text-white"
             title="设置"
           >
             <SettingsIcon className="w-3.5 h-3.5" />
@@ -424,15 +418,11 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       
       {/* 用户信息栏 */}
       <div 
-        className="relative mx-3 mt-3 p-3 rounded-xl"
+        className="relative mx-3 mt-3 p-3 rounded-2xl transition-colors duration-300"
         style={{ 
-          background: isDark 
-            ? 'linear-gradient(135deg, rgba(30,30,40,0.8) 0%, rgba(25,25,35,0.9) 100%)'
-            : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.95) 100%)',
-          border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-          boxShadow: isDark 
-            ? '0 4px 24px -4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.02)'
-            : '0 4px 24px -4px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)',
+          background: theme.colors.bgSecondary,
+          border: `1px solid ${theme.colors.border}`,
+          boxShadow: theme.colors.shadow,
         }}
       >
         <div className="flex items-center gap-2.5">
@@ -441,29 +431,27 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
               {/* 头像 */}
               <div className="relative group">
                 <button 
-                  className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-xs shadow-lg ring-2 ring-white/10 hover:ring-white/20 hover:scale-105 transition-all"
+                  className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center text-black font-bold text-xs shadow-lg ring-2 ring-white/20 hover:ring-white/40 hover:scale-105 transition-all duration-200"
                 >
                   {currentUser.nickname?.[0] || currentUser.username[0].toUpperCase()}
                 </button>
                 {/* 下拉菜单 */}
                 <div 
-                  className="absolute left-0 top-full mt-2 w-36 p-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 rounded-xl"
+                  className="absolute left-0 top-full mt-2 w-36 p-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 rounded-2xl"
                   style={{
-                    background: isDark ? 'rgba(20,20,28,0.98)' : 'rgba(255,255,255,0.98)',
-                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-                    boxShadow: isDark 
-                      ? '0 10px 40px -10px rgba(0,0,0,0.5)'
-                      : '0 10px 40px -10px rgba(0,0,0,0.15)',
+                    background: theme.colors.bgSecondary,
+                    border: `1px solid ${theme.colors.border}`,
+                    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
                     backdropFilter: 'blur(20px)',
                   }}
                 >
-                  <div className="p-2.5" style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                    <p className="text-xs font-semibold truncate" style={{ color: isDark ? '#fff' : '#0f172a' }}>{currentUser.nickname || currentUser.username}</p>
-                    <p className="text-[10px] truncate mt-0.5" style={{ color: isDark ? '#6b7280' : '#9ca3af' }}>{currentUser.email}</p>
+                  <div className="p-2.5" style={{ borderBottom: `1px solid ${theme.colors.border}` }}>
+                    <p className="text-xs font-semibold truncate" style={{ color: theme.colors.textPrimary }}>{currentUser.nickname || currentUser.username}</p>
+                    <p className="text-[10px] truncate mt-0.5" style={{ color: theme.colors.textMuted }}>{currentUser.email}</p>
                   </div>
                   <button
                     onClick={onLogout}
-                    className="w-full px-2.5 py-2 mt-1 text-left text-[11px] font-medium text-red-400 hover:bg-red-500/10 transition-colors rounded-lg flex items-center gap-2"
+                    className="w-full px-2.5 py-2 mt-1 text-left text-[11px] font-medium text-gray-400 hover:bg-white/5 transition-colors duration-200 rounded-xl flex items-center gap-2"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -475,22 +463,22 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
               
               {/* 用户信息 */}
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold truncate" style={{ color: isDark ? '#fff' : '#0f172a' }}>
+                <p className="text-xs font-semibold truncate" style={{ color: theme.colors.textPrimary }}>
                   {currentUser.nickname || currentUser.username}
                 </p>
                 <div 
-                  className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium"
+                  className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-medium"
                   style={{
                     background: currentApiMode === 'cloud' 
-                      ? 'rgba(99,102,241,0.15)' 
+                      ? 'rgba(59,130,246,0.15)' 
                       : currentApiMode === 'local-thirdparty'
-                      ? 'rgba(245,158,11,0.15)'
-                      : 'rgba(34,197,94,0.15)',
+                      ? 'rgba(59,130,246,0.15)'
+                      : 'rgba(59,130,246,0.15)',
                     color: currentApiMode === 'cloud'
-                      ? '#a5b4fc'
+                      ? '#60a5fa'
                       : currentApiMode === 'local-thirdparty'
-                      ? '#fcd34d'
-                      : '#86efac',
+                      ? '#3b82f6'
+                      : '#60a5fa'
                   }}
                 >
                 <span className="text-[8px]">{modeDisplay.icon}</span>
@@ -501,25 +489,21 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
               {/* 鹅卵石余额 */}
               <button 
                 onClick={onRechargeClick}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all hover:scale-105 active:scale-95"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all duration-200 hover:scale-105 active:scale-95"
                 style={{
-                  background: isDark ? 'rgba(251,191,36,0.1)' : 'rgba(251,191,36,0.08)',
-                  border: `1px solid ${isDark ? 'rgba(251,191,36,0.2)' : 'rgba(251,191,36,0.15)'}`,
+                  background: 'rgba(251,191,36,0.1)',
+                  border: '1px solid rgba(251,191,36,0.2)',
                 }}
                 title="充值"
               >
-                <PebbleIcon className="w-4 h-4 text-amber-400" />
-                <span className="text-xs font-bold text-amber-400">{currentUser.coins || 0}</span>
+                <PebbleIcon className="w-4 h-4 text-blue-400" />
+                <span className="text-xs font-bold text-blue-400">{currentUser.coins || 0}</span>
               </button>
             </>
           ) : (
             <button
               onClick={onLoginClick}
-              className="flex-1 py-2.5 text-xs font-semibold text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{
-                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
-                boxShadow: '0 4px 15px -3px rgba(99,102,241,0.4)',
-              }}
+              className="flex-1 py-2.5 text-xs font-semibold text-black rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] btn-primary"
             >
               <span className="flex items-center justify-center gap-2">
                 <CloudIcon className="w-4 h-4" />
@@ -531,10 +515,10 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       </div>
       
       {/* 可滚动内容区域 */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-3 flex flex-col min-h-0">
+      <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col min-h-0">
         {/* 固定内容区域 - 资源素材 */}
-        <div className="flex-shrink-0 mb-3">
-          <h2 className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: isDark ? '#6b7280' : '#9ca3af' }}>资源素材</h2>
+        <div className="flex-shrink-0 mb-4">
+          <h2 className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: theme.colors.textMuted }}>资源素材</h2>
           <ImageUploader 
             files={files}
             activeFileIndex={activeFileIndex}
@@ -547,37 +531,35 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
         
         {/* 模型参数卡片 */}
         <div 
-          className="flex-shrink-0 p-3 rounded-xl mb-3"
+          className="flex-shrink-0 p-4 rounded-2xl mb-4 transition-colors duration-300"
           style={{
-            background: isDark 
-              ? 'linear-gradient(135deg, rgba(30,30,40,0.6) 0%, rgba(25,25,35,0.7) 100%)'
-              : 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(248,250,252,0.9) 100%)',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
+            background: theme.colors.bgSecondary,
+            border: `1px solid ${theme.colors.border}`,
           }}
         >
            <div className="flex items-center gap-2 mb-3">
-              <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-indigo-500/20">
-                <ImageIcon className="w-3 h-3 text-indigo-400"/>
+                <div className="w-6 h-6 rounded-lg bg-blue-500/20 flex items-center justify-center ring-1 ring-blue-500/20">
+                <ImageIcon className="w-3 h-3 text-blue-400"/>
               </div>
-              <h3 className="text-[11px] font-semibold" style={{ color: isDark ? '#fff' : '#0f172a' }}>参数配置</h3>
+              <h3 className="text-[11px] font-semibold" style={{ color: theme.colors.textPrimary }}>参数配置</h3>
            </div>
            
            <div className="space-y-3">
               {/* 画面比例 */}
               <div>
                   <div className="flex justify-between mb-2">
-                       <span className="text-[10px] font-medium" style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>画面比例</span>
-                       <span className="text-[10px] font-mono font-semibold text-indigo-400">{aspectRatio}</span>
+                       <span className="text-[10px] font-medium" style={{ color: theme.colors.textMuted }}>画面比例</span>
+                       <span className="text-[10px] font-mono font-semibold text-blue-400">{aspectRatio}</span>
                   </div>
                   <div className="grid grid-cols-6 gap-1">
                       {['Auto', '1:1', '3:4', '4:3', '9:16', '16:9'].map(ratio => (
                           <button
                               key={ratio}
                               onClick={() => setAspectRatio(ratio)}
-                              className={`py-1.5 text-[9px] font-semibold rounded-lg transition-all ${
+                              className={`py-1.5 text-[9px] font-semibold rounded-lg transition-all duration-200 ${
                                   aspectRatio === ratio
-                                      ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/25 ring-1 ring-white/20'
-                                      : `${isDark ? 'bg-white/[0.03] text-gray-500 hover:bg-white/[0.06]' : 'bg-black/[0.03] text-gray-500 hover:bg-black/[0.06]'} hover:text-indigo-400`
+                                      ? 'bg-blue-500 text-white shadow-md shadow-blue-500/25'
+                                      : 'bg-white/5 text-neutral-500 hover:bg-white/10 hover:text-white'
                               }`}
                           >
                               {ratio}
@@ -589,10 +571,10 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
                           <button
                               key={ratio}
                               onClick={() => setAspectRatio(ratio)}
-                              className={`py-1.5 text-[9px] font-semibold rounded-lg transition-all ${
+                              className={`py-1.5 text-[9px] font-semibold rounded-lg transition-all duration-200 ${
                                   aspectRatio === ratio
-                                      ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/25 ring-1 ring-white/20'
-                                      : `${isDark ? 'bg-white/[0.03] text-gray-500 hover:bg-white/[0.06]' : 'bg-black/[0.03] text-gray-500 hover:bg-black/[0.06]'} hover:text-indigo-400`
+                                      ? 'bg-blue-500 text-white shadow-md shadow-blue-500/25'
+                                      : 'bg-white/5 text-neutral-500 hover:bg-white/10 hover:text-white'
                               }`}
                           >
                               {ratio}
@@ -605,7 +587,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
               <div>
                   <div className="flex justify-between mb-2">
                        <span className="text-[10px] font-medium" style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>分辨率</span>
-                       <span className="text-[10px] font-mono font-semibold text-cyan-400">{imageSize}</span>
+                       <span className="text-[10px] font-mono font-semibold text-blue-400">{imageSize}</span>
                   </div>
                   <div className="grid grid-cols-3 gap-1">
                        {['1K', '2K', '4K'].map(size => (
@@ -614,8 +596,8 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
                               onClick={() => setImageSize(size)}
                               className={`py-1.5 text-[10px] font-semibold rounded-lg transition-all ${
                                   imageSize === size
-                                      ? 'bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-md shadow-cyan-500/25 ring-1 ring-white/20'
-                                      : `${isDark ? 'bg-white/[0.03] text-gray-500 hover:bg-white/[0.06]' : 'bg-black/[0.03] text-gray-500 hover:bg-black/[0.06]'} hover:text-cyan-400`
+                                      ? 'bg-blue-500 text-white shadow-md shadow-blue-500/25 ring-1 ring-white/20'
+                                      : `${isDark ? 'bg-white/[0.03] text-gray-500 hover:bg-white/[0.06]' : 'bg-black/[0.03] text-gray-500 hover:bg-black/[0.06]'} hover:text-blue-400`
                               }`}
                           >
                               {size}
@@ -654,15 +636,15 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
                      className="px-2 py-0.5 rounded-md text-[9px] font-semibold"
                      style={{
                        background: activeBPTemplate 
-                         ? 'rgba(245,158,11,0.15)'
+                         ? 'rgba(59,130,246,0.15)'
                          : activeSmartPlusTemplate
-                         ? 'rgba(34,197,94,0.15)'
-                         : 'rgba(99,102,241,0.15)',
+                         ? 'rgba(59,130,246,0.15)'
+                         : 'rgba(59,130,246,0.15)',
                        color: activeBPTemplate
-                         ? '#fcd34d'
+                         ? '#3b82f6'
                          : activeSmartPlusTemplate
-                         ? '#86efac'
-                         : '#a5b4fc',
+                         ? '#60a5fa'
+                         : '#60a5fa',
                      }}
                    >
                      {activeTemplateName}
@@ -675,7 +657,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
                      }}
                      title="卸载 (Esc)"
                    >
-                     <svg className="w-3 h-3 hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <svg className="w-3 h-3 hover:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                      </svg>
                    </button>
@@ -684,8 +666,8 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
                <span 
                  className="px-2 py-0.5 rounded-md text-[9px] font-semibold"
                  style={{
-                   background: isThirdPartyApiEnabled ? 'rgba(245,158,11,0.12)' : 'rgba(99,102,241,0.12)',
-                   color: isThirdPartyApiEnabled ? '#fbbf24' : '#a5b4fc',
+                   background: isThirdPartyApiEnabled ? 'rgba(59,130,246,0.12)' : 'rgba(59,130,246,0.12)',
+                   color: isThirdPartyApiEnabled ? '#3b82f6' : '#60a5fa'
                  }}
                >
                  {isThirdPartyApiEnabled ? 'Nano' : 'Gemini'}
@@ -730,10 +712,10 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
                  disabled={smartPromptGenStatus !== ApiStatus.Loading && !canGenerateSmartPrompt}
                  className={`absolute top-2 right-2 w-8 h-8 rounded-lg text-white shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 flex items-center justify-center ring-1 ring-white/20 ${
                      smartPromptGenStatus === ApiStatus.Loading
-                     ? 'bg-gradient-to-br from-red-500 to-red-600 shadow-red-500/30'
+                     ? 'bg-gradient-to-br from-gray-500 to-gray-600 shadow-gray-500/30'
                      : activeBPTemplate 
-                     ? 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/30' 
-                     : 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-500/30'
+                     ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-500/30' 
+                     : 'bg-blue-500 shadow-blue-500/30'
                  }`}
                  title={smartPromptGenStatus === ApiStatus.Loading ? "取消" : "生成"}
                >
@@ -750,20 +732,20 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
             <div 
               className="p-3 rounded-xl"
               style={{
-                background: isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.06)',
-                border: `1px solid ${isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.1)'}`,
+                background: isDark ? 'rgba(59,130,246,0.08)' : 'rgba(59,130,246,0.06)',
+                border: `1px solid ${isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.1)'}`,
               }}
             >
               <div className="flex items-center gap-2 mb-1.5">
                 <div 
                   className="w-6 h-6 rounded-lg flex items-center justify-center"
-                  style={{ background: 'rgba(245,158,11,0.15)' }}
+                  style={{ background: 'rgba(59,130,246,0.15)' }}
                 >
-                  <svg className="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
-                <span className="text-xs font-semibold text-amber-400">提示词已加密</span>
+                <span className="text-xs font-semibold text-blue-400">提示词已加密</span>
               </div>
               <p className="text-[10px]" style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>
                 填写输入框后点击生成即可
@@ -812,8 +794,8 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
             {/* 标题栏 */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-indigo-500/20">
-                  <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-6 h-6 rounded-lg bg-blue-500/20 flex items-center justify-center ring-1 ring-blue-500/20">
+                  <svg className="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </div>
@@ -823,11 +805,11 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
               </div>
               <button
                 onClick={() => setIsPromptExpanded(false)}
-                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105 hover:bg-red-500/20"
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105 hover:bg-gray-500/20"
                 style={{ color: isDark ? '#9ca3af' : '#6b7280' }}
                 title="关闭 (Esc)"
               >
-                <svg className="w-4 h-4 hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 hover:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -854,7 +836,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
               </p>
               <button
                 onClick={() => setIsPromptExpanded(false)}
-                className="px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/25 hover:scale-105 active:scale-95 transition-all"
+                className="px-4 py-2 rounded-lg text-xs font-semibold text-white bg-blue-500 shadow-lg shadow-blue-500/25 hover:bg-blue-400 hover:scale-105 active:scale-95 transition-all"
               >
                 完成
               </button>
@@ -906,8 +888,8 @@ const SmartPlusDirector: React.FC<{
           }}
         >
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-5 h-5 rounded-lg bg-teal-500/20 flex items-center justify-center">
-                <LightbulbIcon className="w-3 h-3 text-teal-400"/>
+              <div className="w-5 h-5 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                <LightbulbIcon className="w-3 h-3 text-blue-400"/>
               </div>
               <h3 className="text-xs font-semibold" style={{ color: isDark ? '#fff' : '#0f172a' }}>导演模式</h3>
             </div>
@@ -923,7 +905,7 @@ const SmartPlusDirector: React.FC<{
                             onChange={(e) => handleConfigChange(component.id, 'enabled', e.target.checked)}
                         />
                          <div 
-                           className="w-7 h-4 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-teal-500 transition-colors"
+                           className="w-7 h-4 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-500 transition-colors"
                            style={{ background: isDark ? '#374151' : '#d1d5db' }}
                          ></div>
                     </label>
@@ -976,14 +958,14 @@ const BPModePanel: React.FC<{
           className="p-3 mb-3 rounded-xl"
           style={{
             background: isDark 
-              ? 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(245,158,11,0.04) 100%)'
-              : 'rgba(245,158,11,0.06)',
-            border: `1px solid ${isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.1)'}`,
+              ? 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.04) 100%)'
+              : 'rgba(59,130,246,0.06)',
+            border: `1px solid ${isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.1)'}`,
           }}
         >
              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                  <div className="w-5 h-5 rounded-lg bg-blue-500/20 flex items-center justify-center">
                     <span className="text-[10px]">⚡</span>
                   </div>
                   <h3 className="text-xs font-semibold" style={{ color: isDark ? '#fff' : '#0f172a' }}>BP 模式</h3>
@@ -992,7 +974,7 @@ const BPModePanel: React.FC<{
                   <span 
                     className="px-1.5 py-0.5 rounded text-[9px] font-medium flex items-center gap-1"
                     style={{
-                      background: 'rgba(99,102,241,0.15)',
+                      background: 'rgba(59,130,246,0.15)',
                       color: '#a5b4fc',
                     }}
                   >
@@ -1009,7 +991,7 @@ const BPModePanel: React.FC<{
                        style={{ color: isDark ? '#9ca3af' : '#6b7280' }}
                      >
                         <span>{v.label}</span>
-                        <span className="text-[9px] font-mono" style={{ color: 'rgba(245,158,11,0.6)' }}>/{v.name}</span>
+                        <span className="text-[9px] font-mono" style={{ color: 'rgba(59,130,246,0.6)' }}>/{v.name}</span>
                      </label>
                      <input 
                         type="text"
@@ -1018,7 +1000,7 @@ const BPModePanel: React.FC<{
                         className="w-full text-xs p-2.5 rounded-lg transition-all"
                         style={{
                           background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                          border: `1px solid ${isDark ? 'rgba(245,158,11,0.2)' : 'rgba(245,158,11,0.15)'}`,
+                          border: `1px solid ${isDark ? 'rgba(59,130,246,0.2)' : 'rgba(59,130,246,0.15)'}`,
                           color: isDark ? '#fff' : '#0f172a',
                         }}
                         placeholder={`输入 ${v.label}...`}
@@ -1060,7 +1042,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const renderIdeaItem = (idea: CreativeIdea, showFavorite = true) => (
     <div
       key={idea.id}
-      className="group liquid-card p-2 hover:border-indigo-500/30 transition-all cursor-pointer"
+      className="group liquid-card p-2 hover:border-blue-500/30 transition-all cursor-pointer"
       onClick={() => handleUseCreativeIdea(idea)}
     >
       <div className="flex items-center justify-between">
@@ -1081,8 +1063,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
               onClick={(e) => { e.stopPropagation(); onToggleFavorite(idea.id); }}
               className={`w-5 h-5 rounded flex items-center justify-center transition-all ${
                 idea.isFavorite 
-                  ? 'text-amber-400 hover:text-amber-300' 
-                  : 'text-gray-500 hover:text-amber-400 hover:bg-amber-500/10'
+                  ? 'text-blue-400 hover:text-blue-300' 
+                  : 'text-gray-500 hover:text-blue-400 hover:bg-blue-500/10'
               }`}
               title={idea.isFavorite ? '取消收藏' : '收藏'}
             >
@@ -1093,7 +1075,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
           )}
           <button
             onClick={(e) => { e.stopPropagation(); onEditIdea(idea); }}
-            className="w-5 h-5 rounded flex items-center justify-center text-gray-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all"
+            className="w-5 h-5 rounded flex items-center justify-center text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 transition-all"
             title="编辑"
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1102,7 +1084,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDeleteIdea(idea.id); }}
-            className="w-5 h-5 rounded flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+            className="w-5 h-5 rounded flex items-center justify-center text-gray-500 hover:text-gray-400 hover:bg-gray-500/10 transition-all"
             title="删除"
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1127,7 +1109,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
           {ideas.length > 5 && (
             <button 
               onClick={() => setView('library')}
-              className="w-full py-1.5 text-[10px] text-indigo-400 hover:text-indigo-300 transition-colors"
+              className="w-full py-1.5 text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
             >
               查看全部 {ideas.length} 个...
             </button>
@@ -1142,8 +1124,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
      {/* 标题栏 */}
      <div className="liquid-panel-section flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded bg-amber-500/15 flex items-center justify-center">
-            <svg className="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+          <div className="w-5 h-5 rounded bg-blue-500/15 flex items-center justify-center">
+            <svg className="w-3 h-3 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
               <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
             </svg>
           </div>
@@ -1181,8 +1163,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
      <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
         {favoriteIdeas.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-8">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center mb-3">
-              <svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-3">
+              <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
               </svg>
             </div>
@@ -1222,7 +1204,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
            <span style={{ color: theme.colors.textMuted }}>共 {creativeIdeas.length} 个创意</span>
            <button
              onClick={() => setView('local-library')}
-             className="text-indigo-400 hover:text-indigo-300 transition-colors"
+             className="text-blue-400 hover:text-blue-300 transition-colors"
            >
              管理全部 →
            </button>
@@ -1294,13 +1276,13 @@ const Canvas: React.FC<CanvasProps> = ({
       {/* 背景效果 - 适配明暗主题 */}
       {isDark ? (
         <>
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/20 via-gray-950 to-purple-950/10 pointer-events-none"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.15),transparent)] pointer-events-none"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-950/10 via-gray-950 to-gray-950 pointer-events-none"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(59,130,246,0.15),transparent)] pointer-events-none"></div>
         </>
       ) : (
         <>
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30 pointer-events-none"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.08),transparent)] pointer-events-none"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-white to-gray-50/20 pointer-events-none"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(59,130,246,0.08),transparent)] pointer-events-none"></div>
         </>
       )}
       
@@ -1398,30 +1380,30 @@ const Canvas: React.FC<CanvasProps> = ({
               {!isResultMinimized && (
                 <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-40 animate-scale-in">
                   <div className="
-                    bg-gradient-to-br from-indigo-900/80 via-purple-900/70 to-indigo-800/80
+                    bg-gradient-to-br from-gray-900/90 via-gray-900/80 to-gray-800/90
                     backdrop-blur-xl backdrop-saturate-150
                     rounded-2xl
-                    border-2 border-indigo-400/50
-                    shadow-[0_0_40px_rgba(99,102,241,0.5),0_0_80px_rgba(139,92,246,0.25)]
-                    ring-1 ring-indigo-500/30
+                    border-2 border-blue-400/50
+                    shadow-[0_0_20px_rgba(59,130,246,0.3)]
+                    ring-1 ring-blue-500/20
                     overflow-hidden p-5
                   ">
                     {/* 标题栏 */}
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
                       <div className="flex items-center gap-3">
                         {status === ApiStatus.Loading ? (
-                          <div className="w-8 h-8 rounded-full bg-indigo-500/30 flex items-center justify-center">
-                            <div className="w-4 h-4 border-2 border-indigo-300 border-t-transparent rounded-full animate-spin"></div>
+                          <div className="w-8 h-8 rounded-full bg-blue-500/30 flex items-center justify-center">
+                            <div className="w-4 h-4 border-2 border-blue-300 border-t-transparent rounded-full animate-spin"></div>
                           </div>
                         ) : status === ApiStatus.Success ? (
-                          <div className="w-8 h-8 rounded-full bg-green-500/30 flex items-center justify-center">
-                            <svg className="w-4 h-4 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <div className="w-8 h-8 rounded-full bg-blue-500/30 flex items-center justify-center">
+                            <svg className="w-4 h-4 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                           </div>
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-red-500/30 flex items-center justify-center">
-                            <svg className="w-4 h-4 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <div className="w-8 h-8 rounded-full bg-gray-500/30 flex items-center justify-center">
+                            <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
                           </div>
@@ -1430,7 +1412,7 @@ const Canvas: React.FC<CanvasProps> = ({
                           <h3 className="text-base font-semibold text-white">
                             {status === ApiStatus.Loading ? 'AI 正在创作中...' : status === ApiStatus.Success ? '作品已完成' : '生成遇到问题'}
                           </h3>
-                          <p className="text-xs text-indigo-300/70">
+                          <p className="text-xs text-blue-300/70">
                             {status === ApiStatus.Loading ? '请稍等，魔法正在发生' : status === ApiStatus.Success ? '点击图片查看大图' : '请稍后重试'}
                           </p>
                         </div>
@@ -1438,7 +1420,7 @@ const Canvas: React.FC<CanvasProps> = ({
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => setIsResultMinimized(true)}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-indigo-300 hover:text-white hover:bg-white/10 transition-all"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-300 hover:text-white hover:bg-white/10 transition-all"
                           title="收起到按钮旁"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1448,7 +1430,7 @@ const Canvas: React.FC<CanvasProps> = ({
                         {status !== ApiStatus.Loading && onDismissResult && (
                           <button
                             onClick={onDismissResult}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-indigo-300 hover:text-red-300 hover:bg-red-500/20 transition-all"
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-300 hover:text-gray-300 hover:bg-gray-500/20 transition-all"
                             title="关闭"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2999,8 +2981,16 @@ const App: React.FC = () => {
     }
   }, [generationHistory]);
 
+  const { theme, themeName } = useTheme();
+
   return (
-    <div className="h-screen bg-gray-950 text-gray-100 font-sans flex flex-row overflow-hidden selection:bg-indigo-500/30">
+    <div 
+      className="h-screen font-sans flex flex-row overflow-hidden selection:bg-blue-500/30 transition-colors duration-300"
+      style={{ 
+        backgroundColor: theme.colors.bgPrimary,
+        color: theme.colors.textPrimary
+      }}
+    >
       {/* 雪花效果 */}
       <SnowfallEffect />
       

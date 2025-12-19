@@ -141,7 +141,7 @@ export const LoginForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) =
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
               required
             />
           </div>
@@ -154,7 +154,7 @@ export const LoginForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) =
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
                   required
                 />
               </div>
@@ -164,7 +164,7 @@ export const LoginForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) =
                   type="text"
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
             </>
@@ -176,20 +176,20 @@ export const LoginForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) =
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
               required
               minLength={6}
             />
           </div>
 
           {error && (
-            <p className="text-red-400 text-sm text-center">{error}</p>
+            <p className="text-gray-400 text-sm text-center">{error}</p>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? '处理中...' : (mode === 'login' ? '登录' : '注册')}
           </button>
@@ -201,7 +201,7 @@ export const LoginForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) =
               setMode(mode === 'login' ? 'register' : 'login');
               setError('');
             }}
-            className="text-cyan-400 hover:text-cyan-300 text-sm"
+            className="text-blue-400 hover:text-blue-300 text-sm"
           >
             {mode === 'login' ? '没有账号？点击注册' : '已有账号？点击登录'}
           </button>
@@ -224,7 +224,7 @@ export const UserInfo: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="w-8 h-8 bg-cyan-600 rounded-full flex items-center justify-center text-white font-medium">
+      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
         {user.nickname?.[0] || user.username[0]}
       </div>
       <span className="text-white text-sm">{user.nickname || user.username}</span>

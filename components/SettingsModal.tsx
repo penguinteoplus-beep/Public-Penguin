@@ -149,7 +149,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       >
         {/* 保存成功提示 */}
         {saveSuccessMessage && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-green-500/90 text-white text-sm font-medium rounded-lg shadow-lg animate-fade-in">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-blue-500/90 text-white text-sm font-medium rounded-lg shadow-lg animate-fade-in">
             {saveSuccessMessage}
           </div>
         )}
@@ -192,7 +192,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               }}
               className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 activeMode === 'cloud' && isLoggedIn
-                  ? 'border-indigo-500 bg-indigo-500/10'
+                  ? 'border-blue-500 bg-blue-500/10'
                   : ''
               }`}
               style={{
@@ -202,14 +202,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             >
               <div className="flex items-start gap-4">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  activeMode === 'cloud' && isLoggedIn ? 'bg-indigo-500' : ''
+                  activeMode === 'cloud' && isLoggedIn ? 'bg-blue-500' : ''
                 }`} style={!(activeMode === 'cloud' && isLoggedIn) ? { background: isLight ? '#e2e8f0' : '#374151' } : {}}>
                   <CloudIcon className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <h4 className="text-sm font-semibold" style={{ color: isLight ? '#0f172a' : 'white' }}>云服务模式</h4>
-                    <span className="px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full">
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-500 text-white rounded-full">
                       推荐
                     </span>
                   </div>
@@ -217,12 +217,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     登录后使用云端 API，享受云创意库、历史同步等功能
                   </p>
                   {!isLoggedIn && (
-                    <button className="mt-2 text-xs text-indigo-400 hover:text-indigo-300 font-medium">
+                    <button className="mt-2 text-xs text-blue-400 hover:text-blue-300 font-medium">
                       点击登录 →
                     </button>
                   )}
                   {isLoggedIn && activeMode === 'cloud' && (
-                    <div className="mt-2 flex items-center gap-2 text-xs text-green-400">
+                    <div className="mt-2 flex items-center gap-2 text-xs text-blue-400">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
@@ -233,7 +233,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
               {/* 选中指示器 */}
               {activeMode === 'cloud' && isLoggedIn && (
-                <div className="absolute top-3 right-3 w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center">
+                <div className="absolute top-3 right-3 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
                   <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
@@ -246,7 +246,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => handleModeChange('local-thirdparty')}
               className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 activeMode === 'local-thirdparty'
-                  ? 'border-orange-500 bg-orange-500/10'
+                  ? 'border-blue-500 bg-blue-500/10'
                   : ''
               }`}
               style={{
@@ -256,7 +256,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             >
               <div className="flex items-start gap-4">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  activeMode === 'local-thirdparty' ? 'bg-orange-500' : ''
+                  activeMode === 'local-thirdparty' ? 'bg-blue-500' : ''
                 }`} style={activeMode !== 'local-thirdparty' ? { background: isLight ? '#e2e8f0' : '#374151' } : {}}>
                   <PlugIcon className="w-5 h-5 text-white" />
                 </div>
@@ -268,7 +268,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
               </div>
               {activeMode === 'local-thirdparty' && (
-                <div className="absolute top-3 right-3 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                <div className="absolute top-3 right-3 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
                   <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
@@ -286,7 +286,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     value={localThirdPartyUrl}
                     onChange={(e) => setLocalThirdPartyUrl(e.target.value)}
                     placeholder="https://ai.t8star.cn"
-                    className="w-full px-3 py-2 text-sm border rounded-lg transition-all focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full px-3 py-2 text-sm border rounded-lg transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     style={{
                       background: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(0,0,0,0.4)',
                       borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
@@ -302,7 +302,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       value={localThirdPartyKey}
                       onChange={(e) => setLocalThirdPartyKey(e.target.value)}
                       placeholder="sk-..."
-                      className="w-full px-3 py-2 pr-10 text-sm border rounded-lg transition-all focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                      className="w-full px-3 py-2 pr-10 text-sm border rounded-lg transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       style={{
                         background: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(0,0,0,0.4)',
                         borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
@@ -321,7 +321,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
                 <button
                   onClick={handleSaveLocalThirdParty}
-                  className="w-full py-2 text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
+                  className="w-full py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
                 >
                   保存配置
                 </button>
@@ -333,7 +333,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => handleModeChange('local-gemini')}
               className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 activeMode === 'local-gemini'
-                  ? 'border-purple-500 bg-purple-500/10'
+                  ? 'border-blue-500 bg-blue-500/10'
                   : ''
               }`}
               style={{
@@ -343,7 +343,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             >
               <div className="flex items-start gap-4">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  activeMode === 'local-gemini' ? 'bg-purple-500' : ''
+                  activeMode === 'local-gemini' ? 'bg-blue-500' : ''
                 }`} style={activeMode !== 'local-gemini' ? { background: isLight ? '#e2e8f0' : '#374151' } : {}}>
                   <DiamondIcon className="w-5 h-5 text-white" />
                 </div>
@@ -355,7 +355,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
               </div>
               {activeMode === 'local-gemini' && (
-                <div className="absolute top-3 right-3 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                <div className="absolute top-3 right-3 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
                   <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
@@ -374,7 +374,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       value={localGeminiKey}
                       onChange={(e) => setLocalGeminiKey(e.target.value)}
                       placeholder="AIza..."
-                      className="w-full px-3 py-2 pr-10 text-sm border rounded-lg transition-all focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                      className="w-full px-3 py-2 pr-10 text-sm border rounded-lg transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       style={{
                         background: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(0,0,0,0.4)',
                         borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
@@ -393,7 +393,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
                 <button
                   onClick={handleSaveGeminiKey}
-                  className="w-full py-2 text-sm font-medium bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors"
+                  className="w-full py-2 text-sm font-medium bg-blue-500 hover:bg-blue-400 text-white rounded-lg transition-colors"
                 >
                   保存配置
                 </button>
@@ -427,7 +427,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div className="text-3xl text-center mb-2">{t.icon}</div>
                   <p className="text-xs text-center font-medium" style={{ color: isLight ? '#475569' : '#d1d5db' }}>{t.displayName}</p>
                   {themeName === t.name && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
                       <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
@@ -439,9 +439,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             
             {/* 圣诞主题提示 */}
             {themeName === 'christmas' && (
-              <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-xl animate-fade-in">
+              <div className="flex items-center gap-2 p-3 bg-gray-500/10 border border-gray-500/30 rounded-xl animate-fade-in">
                 <span className="text-2xl">🎄</span>
-                <p className="text-xs text-red-300">圣诞快乐！🎁</p>
+                <p className="text-xs text-gray-300">圣诞快乐！🎁</p>
               </div>
             )}
           </div>
@@ -469,7 +469,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   checked={autoSaveEnabled} 
                   onChange={(e) => onAutoSaveToggle(e.target.checked)}
                 />
-                <div className="w-11 h-6 rounded-full peer peer-focus:ring-2 peer-focus:ring-indigo-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 transition-colors" style={{ background: autoSaveEnabled ? undefined : isLight ? '#e2e8f0' : '#374151' }}></div>
+                <div className="w-11 h-6 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 transition-colors" style={{ background: autoSaveEnabled ? undefined : isLight ? '#e2e8f0' : '#374151' }}></div>
               </label>
             </div>
 
@@ -484,8 +484,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
               <span className={`text-xs font-medium px-3 py-1 rounded-full ${
                 activeMode === 'cloud' || activeMode === 'local-thirdparty'
-                  ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' 
-                  : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' 
+                  : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
               }`}>
                 {activeMode === 'cloud' || activeMode === 'local-thirdparty' 
                   ? thirdPartyConfig.model || 'nano-banana-2' 
@@ -499,7 +499,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="p-6 border-t" style={{ borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)', background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(0,0,0,0.2)' }}>
           <button
             onClick={onClose}
-            className="w-full py-3 text-sm font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-xl transition-all shadow-lg shadow-indigo-500/20"
+            className="w-full py-3 text-sm font-semibold bg-blue-500 hover:bg-blue-400 text-white rounded-xl transition-all shadow-lg shadow-blue-500/20"
           >
             完成
           </button>

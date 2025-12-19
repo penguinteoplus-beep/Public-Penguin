@@ -134,7 +134,7 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ imageUrl, 
               href={imageUrl} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="mt-3 text-xs text-indigo-400 hover:text-indigo-300 underline"
+              className="mt-3 text-xs text-blue-400 hover:text-blue-300 underline"
             >
               在新窗口打开原图
             </a>

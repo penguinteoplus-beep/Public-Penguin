@@ -91,7 +91,7 @@ export const HistoryDock: React.FC<HistoryDockProps> = ({
             top: dragPos.y - 40,
           }}
         >
-          <div className="w-20 h-20 rounded-xl overflow-hidden shadow-2xl border-2 border-indigo-500 opacity-80">
+          <div className="w-20 h-20 rounded-xl overflow-hidden shadow-2xl border-2 border-blue-500 opacity-80">
             <img
               src={dragItem.imageUrl}
               alt=""
@@ -173,8 +173,8 @@ export const HistoryDock: React.FC<HistoryDockProps> = ({
                   <span
                     className={`w-3 h-3 rounded-full block shadow-lg ${
                       item.isThirdParty
-                        ? 'bg-orange-500 shadow-orange-500/50'
-                        : 'bg-indigo-500 shadow-indigo-500/50'
+                        ? 'bg-blue-500 shadow-blue-500/50'
+                        : 'bg-blue-500 shadow-blue-500/50'
                     }`}
                   />
                 </div>

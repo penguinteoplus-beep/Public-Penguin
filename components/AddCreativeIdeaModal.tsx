@@ -303,8 +303,8 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
             }}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-amber-500/15 flex items-center justify-center">
-                <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 rounded-full bg-blue-500/15 flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
@@ -326,7 +326,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
               </button>
               <button
                 onClick={handleConfirmClose}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-500 hover:bg-gray-600 text-white transition-all"
               >
                 关闭
               </button>
@@ -377,7 +377,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                   </button>
                 </div>
               ) : (
-                <label htmlFor="idea-image-upload" className="flex flex-col items-center justify-center w-full aspect-[3/2] border border-dashed rounded-lg cursor-pointer hover:border-indigo-500/50 transition-all" style={{ background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', borderColor: theme.colors.border }}>
+                <label htmlFor="idea-image-upload" className="flex flex-col items-center justify-center w-full aspect-[3/2] border border-dashed rounded-lg cursor-pointer hover:border-blue-500/50 transition-all" style={{ background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)', borderColor: theme.colors.border }}>
                   <UploadIcon className="w-6 h-6 mb-1" style={{ color: theme.colors.textMuted }} />
                   <p className="text-[10px]" style={{ color: theme.colors.textMuted }}>上传图片</p>
                 </label>
@@ -391,7 +391,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-2.5 py-1.5 border rounded-lg text-xs focus:border-indigo-500 outline-none transition-all"
+                className="w-full px-2.5 py-1.5 border rounded-lg text-xs focus:border-blue-500 outline-none transition-all"
                 style={{ 
                   background: isLight ? 'rgba(248,250,252,0.95)' : 'rgba(31,41,55,0.8)',
                   borderColor: theme.colors.border,
@@ -412,10 +412,10 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                     className={`px-2 py-1.5 text-[10px] font-medium rounded-lg transition-all ${
                       ideaType === type 
                         ? type === 'bp' 
-                          ? 'bg-yellow-500 text-white' 
+                          ? 'bg-blue-500 text-white' 
                           : type === 'smartPlus' 
-                            ? 'bg-teal-500 text-white' 
-                            : 'bg-indigo-500 text-white'
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-blue-500 text-white'
                         : ''
                     }`}
                     style={ideaType !== type ? {
@@ -438,7 +438,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                 <select
                   value={suggestedAspectRatio}
                   onChange={(e) => setSuggestedAspectRatio(e.target.value as AspectRatioType | '')}
-                  className="w-full px-2 py-1.5 border rounded-lg text-[10px] focus:border-indigo-500 outline-none"
+                  className="w-full px-2 py-1.5 border rounded-lg text-[10px] focus:border-blue-500 outline-none"
                   style={{ 
                     background: isLight ? 'rgba(248,250,252,0.95)' : 'rgba(31,41,55,0.95)',
                     borderColor: theme.colors.border,
@@ -460,7 +460,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                 <select
                   value={suggestedResolution}
                   onChange={(e) => setSuggestedResolution(e.target.value as ImageSizeType | '')}
-                  className="w-full px-2 py-1.5 border rounded-lg text-[10px] focus:border-indigo-500 outline-none"
+                  className="w-full px-2 py-1.5 border rounded-lg text-[10px] focus:border-blue-500 outline-none"
                   style={{ 
                     background: isLight ? 'rgba(248,250,252,0.95)' : 'rgba(31,41,55,0.95)',
                     borderColor: theme.colors.border,
@@ -486,7 +486,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                 min="0"
                 value={cost}
                 onChange={(e) => setCost(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-full px-2.5 py-1.5 border border-yellow-700/50 rounded-lg text-xs text-yellow-400 font-bold focus:border-yellow-500 outline-none"
+                className="w-full px-2.5 py-1.5 border border-blue-700/50 rounded-lg text-xs text-blue-400 font-bold focus:border-blue-500 outline-none"
                 style={{ background: isLight ? 'rgba(254,252,232,0.5)' : 'rgba(31,41,55,0.8)' }}
                 placeholder="0"
               />
@@ -494,8 +494,8 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
             
             {/* 权限设置 */}
             {(ideaType === 'bp' || ideaType === 'smartPlus') && (
-              <div className="p-2.5 bg-orange-500/5 border border-orange-500/20 rounded-lg space-y-1.5">
-                <div className="text-[10px] font-medium text-orange-400 flex items-center gap-1">
+              <div className="p-2.5 bg-blue-500/5 border border-blue-500/20 rounded-lg space-y-1.5">
+                <div className="text-[10px] font-medium text-blue-400 flex items-center gap-1">
                   <span>🔐</span> 分享权限
                 </div>
                 <label className="flex items-center justify-between cursor-pointer py-0.5">
@@ -510,7 +510,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                       }}
                       className="sr-only peer"
                     />
-                    <div className="w-7 h-3.5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-orange-500" style={{ background: isLight ? '#e2e8f0' : '#374151' }}></div>
+                    <div className="w-7 h-3.5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-blue-500" style={{ background: isLight ? '#e2e8f0' : '#374151' }}></div>
                   </div>
                 </label>
                 <label className={`flex items-center justify-between cursor-pointer py-0.5 ${!allowViewPrompt ? 'opacity-40' : ''}`}>
@@ -523,7 +523,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                       disabled={!allowViewPrompt}
                       className="sr-only peer"
                     />
-                    <div className="w-7 h-3.5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-orange-500" style={{ background: isLight ? '#e2e8f0' : '#374151' }}></div>
+                    <div className="w-7 h-3.5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-blue-500" style={{ background: isLight ? '#e2e8f0' : '#374151' }}></div>
                   </div>
                 </label>
               </div>
@@ -536,7 +536,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
             <div className="px-5 py-3 border-b flex items-center justify-between flex-shrink-0" style={{ borderColor: theme.colors.border }}>
               <div className="flex items-center gap-2">
                 <span className={`w-2 h-2 rounded-full ${
-                  ideaType === 'bp' ? 'bg-yellow-500' : ideaType === 'smartPlus' ? 'bg-teal-500' : 'bg-indigo-500'
+                  ideaType === 'bp' ? 'bg-blue-500' : ideaType === 'smartPlus' ? 'bg-blue-500' : 'bg-blue-500'
                 }`}></span>
                 <span className="text-sm font-medium" style={{ color: theme.colors.textPrimary }}>
                   {ideaType === 'standard' && "提示词编辑"}
@@ -553,10 +553,10 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                       onClick={() => insertVariable(f.type === 'agent' ? `{${f.name}}` : `/${f.name}`)}
                       className={`px-2 py-0.5 text-[10px] font-mono rounded transition-all hover:scale-105 active:scale-95 ${
                         f.type === 'agent'
-                          ? 'bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30'
-                          : 'bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30'
+                          ? 'bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30'
+                          : 'bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30'
                       }`}
-                      style={{ color: f.type === 'agent' ? (isLight ? '#6366f1' : '#a5b4fc') : (isLight ? '#d97706' : '#fcd34d') }}
+                      style={{ color: f.type === 'agent' ? (isLight ? '#3b82f6' : '#60a5fa') : (isLight ? '#3b82f6' : '#3b82f6') }}
                       title={`点击插入 ${f.type === 'agent' ? `{${f.name}}` : `/${f.name}`}`}
                     >
                       {f.type === 'agent' ? `{${f.name}}` : `/${f.name}`}
@@ -574,8 +574,8 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                 onChange={(e) => setPrompt(e.target.value)}
                 className={`flex-1 w-full p-4 border rounded-xl resize-none text-sm leading-relaxed font-mono outline-none transition-all ${
                   ideaType === 'bp' 
-                    ? 'border-yellow-700/30 focus:border-yellow-500/50 focus:ring-2 focus:ring-yellow-500/20' 
-                    : 'focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20'
+                    ? 'border-blue-700/30 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20' 
+                    : 'focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20'
                 }`}
                 style={{
                   background: isLight ? 'rgba(248,250,252,0.9)' : 'rgba(31,41,55,0.5)',
@@ -595,14 +595,14 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
             {/* BP 配置区域 */}
             {ideaType === 'bp' && (
               <div className="px-5 pb-4 flex-shrink-0">
-                <div className="p-4 bg-yellow-500/5 border border-yellow-700/30 rounded-xl">
+                <div className="p-4 bg-blue-500/5 border border-blue-700/30 rounded-xl">
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-medium text-yellow-400">BP 变量配置</span>
+                    <span className="text-xs font-medium text-blue-400">BP 变量配置</span>
                     <div className="flex gap-2">
-                      <button onClick={() => handleAddBPField('input')} className="text-[10px] flex items-center gap-1 bg-yellow-600/20 text-yellow-400 hover:bg-yellow-600/30 px-2 py-1 rounded-lg">
+                      <button onClick={() => handleAddBPField('input')} className="text-[10px] flex items-center gap-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 px-2 py-1 rounded-lg">
                         <PlusCircleIcon className="w-3 h-3"/> 手动变量
                       </button>
-                      <button onClick={() => handleAddBPField('agent')} className="text-[10px] flex items-center gap-1 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 px-2 py-1 rounded-lg">
+                      <button onClick={() => handleAddBPField('agent')} className="text-[10px] flex items-center gap-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 px-2 py-1 rounded-lg">
                         <LightbulbIcon className="w-3 h-3"/> AI 智能体
                       </button>
                     </div>
@@ -610,22 +610,22 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                   <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
                     {bpFields.map(v => (
                       <div key={v.id} className={`p-2.5 rounded-lg border ${
-                        v.type === 'agent' ? 'bg-indigo-900/20 border-indigo-700/50' : 'bg-yellow-900/10 border-yellow-800/30'
+                        v.type === 'agent' ? 'bg-blue-900/20 border-blue-700/50' : 'bg-blue-900/10 border-blue-800/30'
                       }`}>
                         <div className="flex gap-2 items-center">
                           <div className="relative flex items-center shrink-0">
-                            <span className={`absolute left-2 text-xs font-mono ${v.type === 'agent' ? 'text-indigo-400' : 'text-yellow-500'}`}>
+                            <span className={`absolute left-2 text-xs font-mono ${v.type === 'agent' ? 'text-blue-400' : 'text-blue-500'}`}>
                               {v.type === 'agent' ? '{' : '/'}
                             </span>
                             <input 
                               value={v.name} 
                               onChange={(e) => handleBPFieldChange(v.id, 'name', e.target.value)}
                               className={`w-20 pl-4 pr-2 py-1 bg-gray-800 border rounded text-[11px] text-white outline-none font-mono ${
-                                v.type === 'agent' ? 'border-indigo-600 focus:border-indigo-400' : 'border-yellow-700 focus:border-yellow-500'
+                                v.type === 'agent' ? 'border-blue-600 focus:border-blue-400' : 'border-blue-700 focus:border-blue-500'
                               }`}
                               placeholder="name"
                             />
-                            <span className={`absolute right-2 text-xs font-mono ${v.type === 'agent' ? 'text-indigo-400' : 'text-transparent'}`}>
+                            <span className={`absolute right-2 text-xs font-mono ${v.type === 'agent' ? 'text-blue-400' : 'text-transparent'}`}>
                               {v.type === 'agent' ? '}' : ''}
                             </span>
                           </div>
@@ -635,16 +635,16 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                             className="flex-grow py-1 px-2 bg-gray-800 border border-gray-700 rounded text-[11px] text-white focus:border-gray-500 outline-none" 
                             placeholder="显示标签"
                           />
-                          <button onClick={() => handleRemoveBPField(v.id)} className="text-gray-500 hover:text-red-400 p-0.5">
+                          <button onClick={() => handleRemoveBPField(v.id)} className="text-gray-500 hover:text-gray-400 p-0.5">
                             <XCircleIcon className="w-4 h-4"/>
                           </button>
                         </div>
                         {v.type === 'agent' && v.agentConfig && (
-                          <div className="mt-2 pt-2 border-t border-indigo-500/20">
+                          <div className="mt-2 pt-2 border-t border-blue-500/20">
                             <textarea 
                               value={v.agentConfig.instruction}
                               onChange={(e) => handleBPAgentConfigChange(v.id, 'instruction', e.target.value)}
-                              className="w-full bg-gray-800/50 text-[11px] text-gray-300 border border-indigo-900/50 rounded-lg p-2 h-12 resize-none focus:ring-1 focus:ring-indigo-500 outline-none"
+                              className="w-full bg-gray-800/50 text-[11px] text-gray-300 border border-blue-900/50 rounded-lg p-2 h-12 resize-none focus:ring-1 focus:ring-blue-500 outline-none"
                               placeholder="给智能体的指令..."
                             />
                           </div>
@@ -664,12 +664,12 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
             {/* Smart+ 配置区域 */}
             {ideaType === 'smartPlus' && (
               <div className="px-5 pb-4 flex-shrink-0">
-                <div className="p-4 bg-teal-500/5 border border-teal-700/30 rounded-xl">
+                <div className="p-4 bg-blue-500/5 border border-blue-700/30 rounded-xl">
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-medium text-teal-400">Smart+ 导演模式配置</span>
+                    <span className="text-xs font-medium text-blue-400">Smart+ 导演模式配置</span>
                     <button
                       onClick={handleAddSmartPlusComponent}
-                      className="text-[10px] flex items-center gap-1 bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 px-2 py-1 rounded-lg"
+                      className="text-[10px] flex items-center gap-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 px-2 py-1 rounded-lg"
                     >
                       <PlusCircleIcon className="w-3 h-3"/> 添加组件
                     </button>
@@ -684,25 +684,25 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
                             checked={component.enabled}
                             onChange={(e) => handleSmartPlusConfigChange(component.id, 'enabled', e.target.checked)}
                           />
-                          <div className="w-7 h-4 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-teal-500"></div>
+                          <div className="w-7 h-4 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-500"></div>
                         </label>
                         <input
                           type="text"
                           value={component.label}
                           onChange={(e) => handleSmartPlusConfigChange(component.id, 'label', e.target.value)}
-                          className="w-20 px-2 py-1 text-[11px] font-medium text-gray-200 bg-gray-800 border border-gray-700 rounded-lg focus:border-teal-500 outline-none"
+                          className="w-20 px-2 py-1 text-[11px] font-medium text-gray-200 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 outline-none"
                         />
                         <input
                           type="text"
                           value={component.features}
                           onChange={(e) => handleSmartPlusConfigChange(component.id, 'features', e.target.value)}
-                          className="flex-grow px-2 py-1 bg-gray-800 border border-gray-700 rounded-lg text-[11px] text-gray-300 focus:border-teal-500 outline-none"
+                          className="flex-grow px-2 py-1 bg-gray-800 border border-gray-700 rounded-lg text-[11px] text-gray-300 focus:border-blue-500 outline-none"
                           placeholder={`输入特征...`}
                           disabled={!component.enabled}
                         />
                         <button
                           onClick={() => handleDeleteSmartPlusComponent(component.id)}
-                          className="text-gray-500 hover:text-red-400 p-0.5"
+                          className="text-gray-500 hover:text-gray-400 p-0.5"
                         >
                           <XCircleIcon className="w-4 h-4" />
                         </button>
@@ -718,7 +718,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
         {/* 底部操作栏 */}
         <div className="px-6 py-4 border-t flex items-center justify-between flex-shrink-0" style={{ borderColor: theme.colors.border }}>
           <div>
-            {error && <p className="text-sm text-red-400">{error}</p>}
+            {error && <p className="text-sm text-gray-400">{error}</p>}
           </div>
           <div className="flex gap-3">
             <button 
@@ -733,7 +733,7 @@ export const AddCreativeIdeaModal: React.FC<AddCreativeIdeaModalProps> = ({ isOp
             </button>
             <button 
               onClick={handleSave} 
-              className="px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white text-sm font-medium rounded-lg shadow-lg shadow-indigo-500/25 transition-all"
+              className="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white text-sm font-medium rounded-lg shadow-lg shadow-blue-500/25 transition-all"
             >
               保存创意
             </button>

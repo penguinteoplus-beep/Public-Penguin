@@ -26,18 +26,18 @@ export const GenerateButton: React.FC<GenerateButtonProps> = ({
     
     // 如果有最小化结果，按钮本身切换状态（不添加延伸区域）
     if (hasMinimizedResult) {
-        // 根据状态确定颜色
+        // 根据状态确定颜色 - 冰雪主题（黑白灰冰蓝）
         const gradientClass = isLoading 
-            ? 'bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600'
+            ? 'bg-gradient-to-r from-blue-400 via-white to-blue-400'
             : isError 
-                ? 'bg-gradient-to-r from-red-500 via-rose-500 to-red-600'
-                : 'bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500';
+                ? 'bg-gradient-to-r from-gray-500 via-gray-400 to-gray-500'
+                : 'bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400';
         
         const buttonGradient = isLoading
-            ? 'bg-gradient-to-br from-purple-500 via-indigo-600 to-purple-700'
+            ? 'bg-gradient-to-br from-white via-blue-100 to-white'
             : isError 
-                ? 'bg-gradient-to-br from-red-500 via-rose-600 to-red-700'
-                : 'bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600';
+                ? 'bg-gradient-to-br from-gray-500 via-gray-600 to-gray-700'
+                : 'bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600';
         
         return (
             <div 
@@ -57,8 +57,8 @@ export const GenerateButton: React.FC<GenerateButtonProps> = ({
                 >
                     {isLoading ? (
                         <>
-                            <div className="w-7 h-7 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            <span className="text-[9px] font-bold mt-1 uppercase tracking-wide">生成中</span>
+                            <div className="w-7 h-7 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+                            <span className="text-[9px] font-bold mt-1 uppercase tracking-wide text-black">生成中</span>
                         </>
                     ) : isError ? (
                         <>
@@ -86,19 +86,21 @@ export const GenerateButton: React.FC<GenerateButtonProps> = ({
           className="group relative"
           title="Magic Generate (Ctrl+Enter)"
         >
-            <div className={`absolute -inset-2 bg-gradient-to-r from-purple-600 via-indigo-500 to-teal-400 rounded-full blur-md opacity-50 group-hover:opacity-100 animate-pulse transition duration-1000 ${disabled ? 'hidden' : 'block'}`}></div>
+            {/* 发光效果 - 冰蓝 */}
+            <div className={`absolute -inset-3 bg-blue-400 rounded-full blur-lg opacity-40 group-hover:opacity-60 animate-pulse transition-opacity duration-500 ${disabled ? 'hidden' : 'block'}`}></div>
+            
             <button
                 onClick={onClick}
                 disabled={disabled || status === ApiStatus.Loading}
-                className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 ease-in-out
+                className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-200 ease-out
                     ${disabled 
-                        ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700' 
-                        : 'bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 text-white shadow-2xl hover:scale-105 active:scale-95 border border-white/20'
+                        ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed border border-neutral-700' 
+                        : 'bg-white text-black shadow-2xl shadow-white/20 hover:scale-105 active:scale-95 border border-white/20'
                     }
                 `}
             >
                 {status === ApiStatus.Loading ? (
-                    <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <div className="w-8 h-8 border-2 border-neutral-300 border-t-neutral-800 rounded-full animate-spin"></div>
                 ) : (
                     <SparklesIcon className={`w-8 h-8 transform transition-transform duration-500 ${disabled ? '' : 'group-hover:rotate-12'}`} />
                 )}

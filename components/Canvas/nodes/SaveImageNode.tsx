@@ -25,7 +25,7 @@ const SaveImageNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         type="target"
         position={Position.Left}
         id="input-creative"
-        style={{ top: '25%', backgroundColor: '#a855f7', borderColor: '#7e22ce' }}
+        style={{ top: '25%', backgroundColor: '#3b82f6', borderColor: '#2563eb' }}
         className="!w-4 !h-4 !border-2 hover:!scale-125 transition-transform"
         title="创意库输入"
       />
@@ -60,7 +60,7 @@ const SaveImageNode: React.FC<NodeProps> = ({ id, data, selected }) => {
             onExecute?.();
           }}
           disabled={isGenerating}
-          className="w-7 h-7 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 flex items-center justify-center text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30"
+          className="w-7 h-7 rounded-lg bg-blue-500 hover:bg-blue-400 flex items-center justify-center text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/30"
           title="执行该节点"
         >
           {isGenerating ? (
@@ -73,7 +73,7 @@ const SaveImageNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         </button>
         <button
           onClick={() => nodeData.onDelete?.(id)}
-          className="w-6 h-6 rounded-lg bg-white/10 hover:bg-red-500/30 flex items-center justify-center text-gray-400 hover:text-red-400 transition-all"
+          className="w-6 h-6 rounded-lg bg-white/10 hover:bg-gray-500/30 flex items-center justify-center text-gray-400 hover:text-gray-300 transition-all"
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -85,7 +85,7 @@ const SaveImageNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <div className="p-4">
         {isGenerating ? (
           <div className="w-full h-32 rounded-xl bg-black/30 flex flex-col items-center justify-center gap-3">
-            <div className="w-8 h-8 border-3 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-3 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
             <span className="text-sm text-gray-400">正在生成...</span>
           </div>
         ) : generatedImageUrl ? (
@@ -100,16 +100,16 @@ const SaveImageNode: React.FC<NodeProps> = ({ id, data, selected }) => {
             </div>
           </div>
         ) : error ? (
-          <div className="w-full h-32 rounded-xl bg-red-500/10 border border-red-500/30 flex flex-col items-center justify-center gap-2">
+          <div className="w-full h-32 rounded-xl bg-gray-500/10 border border-gray-500/30 flex flex-col items-center justify-center gap-2">
             <span className="text-2xl">❌</span>
-            <span className="text-sm text-red-400">{error}</span>
+            <span className="text-sm text-gray-400">{error}</span>
           </div>
         ) : (
           <div className="w-full h-32 rounded-xl bg-black/20 border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-2">
             <div className="flex gap-2">
-              <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" style={{ animationDelay: '0s' }} />
+              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: '0s' }} />
               <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: '0.2s' }} />
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" style={{ animationDelay: '0.4s' }} />
+              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: '0.4s' }} />
             </div>
             <span className="text-xs text-gray-500">连接节点后执行流程</span>
           </div>
@@ -120,7 +120,7 @@ const SaveImageNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <div className="px-4 pb-3">
         <div className="text-xs text-gray-500 space-y-1">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-purple-400" />
+            <span className="w-2 h-2 rounded-full bg-blue-400" />
             <span>创意库 (必选)</span>
           </div>
           <div className="flex items-center gap-2">
@@ -128,7 +128,7 @@ const SaveImageNode: React.FC<NodeProps> = ({ id, data, selected }) => {
             <span>参考图片 (可选)</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-400" />
+            <span className="w-2 h-2 rounded-full bg-blue-400" />
             <span>提示词 (可选)</span>
           </div>
         </div>

@@ -1149,9 +1149,9 @@ export const Desktop: React.FC<DesktopProps> = ({
       {/* 文件拖放提示遮罩 */}
       {isFileDragging && (
         <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
-          <div className="absolute inset-0 bg-indigo-500/20 border-4 border-dashed border-indigo-500 rounded-xl" />
+          <div className="absolute inset-0 bg-blue-500/20 border-4 border-dashed border-blue-500 rounded-xl" />
           <div className="relative flex flex-col items-center gap-4 p-8 bg-black/60 backdrop-blur-xl rounded-2xl border border-white/20">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl">
+            <div className="w-20 h-20 rounded-2xl bg-blue-500 flex items-center justify-center shadow-2xl">
               <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -1172,7 +1172,7 @@ export const Desktop: React.FC<DesktopProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索..."
-            className="w-44 px-3 py-2 pl-8 text-xs backdrop-blur-xl border rounded-lg transition-all focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 focus:w-64"
+            className="w-44 px-3 py-2 pl-8 text-xs backdrop-blur-xl border rounded-lg transition-all focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 focus:w-64"
             style={{
               background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(18,18,26,0.95)',
               borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)',
@@ -1215,7 +1215,7 @@ export const Desktop: React.FC<DesktopProps> = ({
           onClick={() => setHideFileNames(!hideFileNames)}
           className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg backdrop-blur-xl border transition-all hover:scale-105 ${
             hideFileNames
-              ? 'bg-indigo-500/20 border-indigo-500/30'
+              ? 'bg-blue-500/20 border-blue-500/30'
               : ''
           }`}
           style={!hideFileNames ? {
@@ -1241,7 +1241,7 @@ export const Desktop: React.FC<DesktopProps> = ({
         >
           <button
             onClick={openFolderId ? onFolderClose : onStackClose}
-            className="text-[13px] transition-colors flex items-center gap-1.5 hover:text-indigo-400"
+            className="text-[13px] transition-colors flex items-center gap-1.5 hover:text-blue-400"
             style={{ color: isLight ? '#475569' : '#a1a1aa' }}
           >
             <ChevronLeftIcon className="w-4 h-4" />
@@ -1249,7 +1249,7 @@ export const Desktop: React.FC<DesktopProps> = ({
           </button>
           <span style={{ color: isLight ? '#cbd5e1' : '#52525b' }}>/</span>
           <span className="text-[13px] font-medium flex items-center gap-1.5" style={{ color: isLight ? '#0f172a' : 'white' }}>
-            {openFolderId ? <FolderOpenIcon className="w-4 h-4 text-yellow-500" /> : <StackIcon className="w-4 h-4 text-indigo-400" />}
+            {openFolderId ? <FolderOpenIcon className="w-4 h-4 text-blue-500" /> : <StackIcon className="w-4 h-4 text-blue-400" />}
             {openFolderId 
               ? (items.find(i => i.id === openFolderId)?.name || '文件夹')
               : (items.find(i => i.id === openStackId)?.name || '叠放')
@@ -1285,7 +1285,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                 isSelected
                   ? 'ring-2 ring-offset-2 ring-offset-transparent shadow-xl scale-105'
                   : isDropTarget
-                  ? 'ring-2 ring-green-500 scale-110 shadow-2xl'
+                  ? 'ring-2 ring-blue-500 scale-110 shadow-2xl'
                   : 'hover:scale-105 hover:shadow-lg'
               }`}
               style={{
@@ -1344,7 +1344,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                 </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <FolderIcon className="w-10 h-10 text-yellow-500/80" />
+                  <FolderIcon className="w-10 h-10 text-blue-500/80" />
                 </div>
               )}
               
@@ -1380,7 +1380,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                   }
                 }}
                 autoFocus
-                className="mt-1 w-full text-xs text-center bg-black/60 border border-white/30 rounded px-1 py-0.5 outline-none focus:border-indigo-500"
+                className="mt-1 w-full text-xs text-center bg-black/60 border border-white/30 rounded px-1 py-0.5 outline-none focus:border-blue-500"
                 style={{ color: theme.colors.textPrimary }}
                 onClick={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
@@ -1505,7 +1505,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                 {/* 下载 */}
                 <button
                   onClick={() => handleDownloadImage(selectedImageItem)}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 text-white font-medium rounded-lg text-xs hover:bg-indigo-500 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white font-medium rounded-lg text-xs hover:bg-blue-500 transition-colors"
                   title="下载图片"
                 >
                   <DownloadIcon className="w-4 h-4" />
@@ -1515,7 +1515,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                 {onImageEditAgain && (
                   <button
                     onClick={() => onImageEditAgain(selectedImageItem)}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-teal-600 text-white font-medium rounded-lg text-xs hover:bg-teal-500 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white font-medium rounded-lg text-xs hover:bg-blue-500 transition-colors"
                     title="再次编辑"
                   >
                     <EditIcon className="w-4 h-4" />
@@ -1526,7 +1526,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                 {onImageRegenerate && (
                   <button
                     onClick={() => onImageRegenerate(selectedImageItem)}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-orange-600 text-white font-medium rounded-lg text-xs hover:bg-orange-500 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white font-medium rounded-lg text-xs hover:bg-blue-500 transition-colors"
                     title="重新生成"
                   >
                     <RefreshIcon className="w-4 h-4" />
@@ -1555,30 +1555,30 @@ export const Desktop: React.FC<DesktopProps> = ({
             <>
               <button
                 onClick={handleCreateFolder}
-                className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2"
                 style={{ color: theme.colors.textPrimary }}
               >
-                <FolderIcon className="w-4 h-4 text-yellow-500" />
+                <FolderIcon className="w-4 h-4 text-blue-500" />
                 <span>新建文件夹</span>
               </button>
               {/* 选中多个图片时可以叠放 */}
               {selectedIds.length >= 2 && selectedIds.every(id => items.find(i => i.id === id)?.type === 'image') && (
                 <button
                   onClick={handleCreateStack}
-                  className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2"
                   style={{ color: theme.colors.textPrimary }}
                 >
-                  <LayersIcon className="w-4 h-4 text-indigo-400" />
+                  <LayersIcon className="w-4 h-4 text-blue-400" />
                   <span>叠放选中图片 ({selectedIds.length})</span>
                 </button>
               )}
               {clipboard && clipboard.items.length > 0 && (
                 <button
                   onClick={handlePaste}
-                  className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2"
                   style={{ color: theme.colors.textPrimary }}
                 >
-                  <ClipboardIcon className="w-4 h-4 text-teal-400" />
+                  <ClipboardIcon className="w-4 h-4 text-blue-400" />
                   <span>粘贴 ({clipboard.items.length})</span>
                 </button>
               )}
@@ -1596,20 +1596,20 @@ export const Desktop: React.FC<DesktopProps> = ({
                       handleToggleStack(contextMenu.itemId!);
                       setContextMenu(null);
                     }}
-                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2"
                     style={{ color: theme.colors.textPrimary }}
                   >
                     {(items.find(i => i.id === contextMenu.itemId) as DesktopStackItem)?.isExpanded 
-                      ? <><StackIcon className="w-4 h-4 text-indigo-400" /><span>收起叠放</span></>
-                      : <><StackExpandIcon className="w-4 h-4 text-indigo-400" /><span>展开叠放</span></>
+                      ? <><StackIcon className="w-4 h-4 text-blue-400" /><span>收起叠放</span></>
+                      : <><StackExpandIcon className="w-4 h-4 text-blue-400" /><span>展开叠放</span></>
                     }
                   </button>
                   <button
                     onClick={() => handleUnstack(contextMenu.itemId!)}
-                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    <UnstackIcon className="w-4 h-4 text-purple-400" />
+                    <UnstackIcon className="w-4 h-4 text-blue-400" />
                     <span>解散叠放</span>
                   </button>
                   <div className="h-px my-1" style={{ background: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)' }} />
@@ -1621,10 +1621,10 @@ export const Desktop: React.FC<DesktopProps> = ({
                       await handleExportAsZip(container?.name || '叠放', images);
                     }}
                     disabled={isExporting}
-                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    <PackageIcon className="w-4 h-4 text-orange-400" />
+                    <PackageIcon className="w-4 h-4 text-blue-400" />
                     <span>{isExporting ? '导出中...' : '导出压缩包'}</span>
                   </button>
                   <button
@@ -1633,10 +1633,10 @@ export const Desktop: React.FC<DesktopProps> = ({
                       await handleBatchDownload(images);
                     }}
                     disabled={isExporting}
-                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    <DownloadIcon className="w-4 h-4 text-teal-400" />
+                    <DownloadIcon className="w-4 h-4 text-blue-400" />
                     <span>{isExporting ? '下载中...' : '批量下载'}</span>
                   </button>
                   <div className="h-px my-1" style={{ background: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)' }} />
@@ -1649,10 +1649,10 @@ export const Desktop: React.FC<DesktopProps> = ({
                       if (item) handleItemDoubleClick(item);
                       setContextMenu(null);
                     }}
-                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    <FolderOpenIcon className="w-4 h-4 text-yellow-500" />
+                    <FolderOpenIcon className="w-4 h-4 text-blue-500" />
                     <span>打开</span>
                   </button>
                   <div className="h-px my-1" style={{ background: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)' }} />
@@ -1664,10 +1664,10 @@ export const Desktop: React.FC<DesktopProps> = ({
                       await handleExportAsZip(container?.name || '文件夹', images);
                     }}
                     disabled={isExporting}
-                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    <PackageIcon className="w-4 h-4 text-orange-400" />
+                    <PackageIcon className="w-4 h-4 text-blue-400" />
                     <span>{isExporting ? '导出中...' : '导出压缩包'}</span>
                   </button>
                   <button
@@ -1676,10 +1676,10 @@ export const Desktop: React.FC<DesktopProps> = ({
                       await handleBatchDownload(images);
                     }}
                     disabled={isExporting}
-                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    <DownloadIcon className="w-4 h-4 text-teal-400" />
+                    <DownloadIcon className="w-4 h-4 text-blue-400" />
                     <span>{isExporting ? '下载中...' : '批量下载'}</span>
                   </button>
                   <div className="h-px my-1" style={{ background: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)' }} />
@@ -1692,7 +1692,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                       if (item) handleItemDoubleClick(item);
                       setContextMenu(null);
                     }}
-                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2"
                     style={{ color: theme.colors.textPrimary }}
                   >
                     <EyeIcon className="w-4 h-4 text-blue-400" />
@@ -1709,10 +1709,10 @@ export const Desktop: React.FC<DesktopProps> = ({
                   }
                   setContextMenu(null);
                 }}
-                className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2"
                 style={{ color: theme.colors.textPrimary }}
               >
-                <RenameIcon className="w-4 h-4 text-amber-400" />
+                <RenameIcon className="w-4 h-4 text-blue-400" />
                 <span>重命名</span>
               </button>
               <div className="h-px my-1" style={{ background: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)' }} />
@@ -1724,7 +1724,7 @@ export const Desktop: React.FC<DesktopProps> = ({
             <>
               <button
                 onClick={() => { handleCopy(); setContextMenu(null); }}
-                className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2"
                 style={{ color: theme.colors.textPrimary }}
               >
                 <CopyIcon className="w-4 h-4 text-blue-400" />
@@ -1732,20 +1732,20 @@ export const Desktop: React.FC<DesktopProps> = ({
               </button>
               <button
                 onClick={() => { handleCut(); setContextMenu(null); }}
-                className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2"
                 style={{ color: theme.colors.textPrimary }}
               >
-                <ScissorsIcon className="w-4 h-4 text-orange-400" />
+                <ScissorsIcon className="w-4 h-4 text-blue-400" />
                 <span>剪切</span>
               </button>
               {/* 在文件夹内时显示移出选项 */}
               {openFolderId && (
                 <button
                   onClick={handleMoveOutOfFolder}
-                  className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2"
                   style={{ color: theme.colors.textPrimary }}
                 >
-                  <MoveOutIcon className="w-4 h-4 text-purple-400" />
+                  <MoveOutIcon className="w-4 h-4 text-blue-400" />
                   <span>移出文件夹</span>
                 </button>
               )}
@@ -1753,10 +1753,10 @@ export const Desktop: React.FC<DesktopProps> = ({
               {openStackId && (
                 <button
                   onClick={handleMoveOutOfStack}
-                  className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2"
                   style={{ color: theme.colors.textPrimary }}
                 >
-                  <MoveOutIcon className="w-4 h-4 text-purple-400" />
+                  <MoveOutIcon className="w-4 h-4 text-blue-400" />
                   <span>移出叠放</span>
                 </button>
               )}
@@ -1764,10 +1764,10 @@ export const Desktop: React.FC<DesktopProps> = ({
               {selectedIds.length >= 2 && selectedIds.every(id => items.find(i => i.id === id)?.type === 'image') && (
                 <button
                   onClick={handleCreateStack}
-                  className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2"
                   style={{ color: theme.colors.textPrimary }}
                 >
-                  <LayersIcon className="w-4 h-4 text-indigo-400" />
+                  <LayersIcon className="w-4 h-4 text-blue-400" />
                   <span>叠放选中图片 ({selectedIds.length})</span>
                 </button>
               )}
@@ -1779,10 +1779,10 @@ export const Desktop: React.FC<DesktopProps> = ({
                       await handleExportSelected(true);
                     }}
                     disabled={isExporting}
-                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    <PackageIcon className="w-4 h-4 text-orange-400" />
+                    <PackageIcon className="w-4 h-4 text-blue-400" />
                     <span>{isExporting ? '导出中...' : '导出压缩包'}</span>
                   </button>
                   <button
@@ -1790,10 +1790,10 @@ export const Desktop: React.FC<DesktopProps> = ({
                       await handleExportSelected(false);
                     }}
                     disabled={isExporting}
-                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-indigo-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-[12px] hover:bg-blue-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
                     style={{ color: theme.colors.textPrimary }}
                   >
-                    <DownloadIcon className="w-4 h-4 text-teal-400" />
+                    <DownloadIcon className="w-4 h-4 text-blue-400" />
                     <span>{isExporting ? '下载中...' : '批量下载'}</span>
                   </button>
                 </>
@@ -1801,7 +1801,7 @@ export const Desktop: React.FC<DesktopProps> = ({
               <div className="h-px my-1" style={{ background: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)' }} />
               <button
                 onClick={handleDeleteSelected}
-                className="w-full px-3 py-2 text-left text-[12px] hover:bg-red-500/10 transition-colors text-red-400 flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-[12px] hover:bg-gray-500/10 transition-colors text-gray-400 flex items-center gap-2"
               >
                 <TrashIcon className="w-4 h-4" />
                 <span>删除 ({selectedIds.length})</span>

@@ -138,7 +138,7 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
       {/* 贞贞API开关 */}
       <div className="flex items-center justify-between group">
         <label htmlFor="third-party-toggle" className="text-sm font-medium text-gray-400 group-hover:text-gray-300 transition-colors flex items-center gap-2 cursor-pointer">
-          <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+          <span className="w-2 h-2 rounded-full bg-blue-500"></span>
           贞贞API
         </label>
         <div className="relative inline-flex items-center cursor-pointer">
@@ -149,17 +149,17 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
             checked={thirdPartyConfig.enabled} 
             onChange={(e) => handleThirdPartyToggle(e.target.checked)}
           />
-          <div className="w-9 h-5 bg-gray-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600 transition-colors"></div>
+          <div className="w-9 h-5 bg-gray-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600 transition-colors"></div>
         </div>
       </div>
       
       {/* 贞贞API配置区域 */}
       {thirdPartyConfig.enabled && (
-        <div className="flex flex-col gap-3 p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
+        <div className="flex flex-col gap-3 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-orange-400">贞贞API配置</span>
+            <span className="text-xs font-medium text-blue-400">贞贞API配置</span>
             {isTpKeySet && (
-              <div className="flex items-center gap-1 text-xs text-green-400 bg-green-900/30 px-2 py-0.5 rounded-full">
+              <div className="flex items-center gap-1 text-xs text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded-full">
                 <CheckCircleIcon className="w-3.5 h-3.5" />
                 <span>已配置</span>
               </div>
@@ -174,7 +174,7 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
               value={tpBaseUrl}
               onChange={(e) => setTpBaseUrl(e.target.value)}
               placeholder="https://ai.t8star.cn"
-              className="w-full p-2 bg-gray-900/80 border border-gray-600 rounded-md text-xs focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
+              className="w-full p-2 bg-gray-900/80 border border-gray-600 rounded-md text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
             />
           </div>
           
@@ -186,7 +186,7 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
               value={tpApiKey}
               onChange={(e) => setTpApiKey(e.target.value)}
               placeholder={isTpKeySet ? "输入新 Key 更新" : "输入贞贞 API Key"}
-              className="w-full p-2 bg-gray-900/80 border border-gray-600 rounded-md text-xs focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
+              className="w-full p-2 bg-gray-900/80 border border-gray-600 rounded-md text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
             />
           </div>
           
@@ -198,21 +198,21 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
               value={tpChatModel}
               onChange={(e) => setTpChatModel(e.target.value)}
               placeholder="gemini-2.5-pro"
-              className="w-full p-2 bg-gray-900/80 border border-gray-600 rounded-md text-xs focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
+              className="w-full p-2 bg-gray-900/80 border border-gray-600 rounded-md text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
             />
           </div>
           
           <button
             onClick={handleThirdPartySave}
             disabled={!tpBaseUrl.trim()}
-            className="w-full py-2 bg-orange-600 text-white font-semibold rounded-lg text-xs shadow-md hover:bg-orange-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-2 bg-blue-600 text-white font-semibold rounded-lg text-xs shadow-md hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
           >
             保存配置
           </button>
           
           {/* 余额查询和跳转功能 */}
           {isTpKeySet && (
-            <div className="flex flex-col gap-2 pt-2 border-t border-orange-500/20">
+            <div className="flex flex-col gap-2 pt-2 border-t border-blue-500/20">
               <div className="flex gap-2">
                 <button
                   onClick={handleCheckBalance}
@@ -247,7 +247,7 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
             href="https://ai.t8star.cn/register?aff=64350e39653" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-[11px] text-center text-orange-400 hover:text-orange-300 underline underline-offset-2 transition-colors"
+            className="text-[11px] text-center text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
           >
             👉 点击这里获取贞贞API Key
           </a>
@@ -262,7 +262,7 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
               Gemini API Key
             </label>
             {isKeySet && (
-              <div className="flex items-center gap-1 text-xs text-green-400 bg-green-900/30 px-2 py-0.5 rounded-full">
+              <div className="flex items-center gap-1 text-xs text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded-full">
                 <CheckCircleIcon className="w-3.5 h-3.5" />
                 <span>已设置</span>
               </div>
@@ -276,12 +276,12 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
               onChange={(e) => setKeyInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSave()}
               placeholder={isKeySet ? "输入新 Key 更新" : "在此输入您的 API Key"}
-              className="w-full flex-grow p-2 bg-gray-900/80 border border-gray-600 rounded-md text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
+              className="w-full flex-grow p-2 bg-gray-900/80 border border-gray-600 rounded-md text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
             />
             <button
               onClick={handleSave}
               disabled={!keyInput}
-              className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm shadow-md hover:bg-indigo-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg text-sm shadow-md hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
             >
               保存
             </button>

@@ -53,6 +53,8 @@ export interface CreativeIdea {
   isSmartPlus?: boolean;
   isBP?: boolean;
   isRunningHub?: boolean; // 新增：RunningHub 工作流
+  isFavorite?: boolean; // 新增：是否收藏
+  isCloudIdea?: boolean; // 新增：是否为云端创意
   smartPlusConfig?: SmartPlusConfig;
   bpFields?: BPField[]; // Renamed from bpVariables to support generic fields
   runningHubConfig?: RunningHubConfig; // 新增：RunningHub 配置
@@ -176,6 +178,12 @@ export interface GenerationHistory {
   inputImageData?: string; // 原始输入图片的 base64 数据（用于重新生成）
   inputImageName?: string; // 原始输入图片的文件名
   inputImageType?: string; // 原始输入图片的 MIME 类型
+  // 多图支持：保存所有输入图片
+  inputImages?: Array<{
+    data: string;
+    name: string;
+    type: string;
+  }>;
   // 创意库相关信息（用于重新生成时恢复）
   creativeTemplateId?: number; // 使用的创意库模板 ID
   creativeTemplateType?: 'smart' | 'smartPlus' | 'bp' | 'none'; // 创意库类型

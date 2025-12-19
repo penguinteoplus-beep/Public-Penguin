@@ -14,6 +14,7 @@ import { SettingsIcon } from './components/icons/SettingsIcon';
 import { PlusCircleIcon } from './components/icons/PlusCircleIcon';
 import { GenerateButton } from './components/GenerateButton';
 import { PenguinIcon } from './components/icons/PenguinIcon';
+import { PIcon, PebbleIcon, CloudIcon, PlugIcon, DiamondIcon, WarningIcon } from './components/icons/PIcon';
 import { ImageIcon } from './components/icons/ImageIcon';
 import { LightbulbIcon } from './components/icons/LightbulbIcon';
 import { HistoryStrip } from './components/HistoryStrip';
@@ -74,6 +75,7 @@ interface RightPanelProps {
   setView: (view: 'editor' | 'local-library' | 'cloud-library') => void;
   onDeleteIdea: (id: number) => void;
   onEditIdea: (idea: CreativeIdea) => void;
+  onToggleFavorite?: (id: number) => void; // 新增：切换收藏状态
 }
 
 interface CanvasProps {
@@ -125,6 +127,11 @@ interface CanvasProps {
   onDesktopImagePreview?: (item: DesktopImageItem) => void;
   onDesktopImageEditAgain?: (item: DesktopImageItem) => void;
   onDesktopImageRegenerate?: (item: DesktopImageItem) => void;
+  // 拖放文件回调
+  onFileDrop?: (files: FileList) => void;
+  // 最小化结果状态
+  isResultMinimized: boolean;
+  setIsResultMinimized: (value: boolean) => void;
 }
 
 // --- IndexedDB Service ---
@@ -284,30 +291,49 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
 }) => {
   const { theme, themeName, setTheme } = useTheme();
   
+  // 提示词放大弹窗状态
+  const [isPromptExpanded, setIsPromptExpanded] = useState(false);
+  const expandedPromptRef = useRef<HTMLTextAreaElement>(null);
+  
+  // 处理ESC关闭弹窗
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isPromptExpanded) {
+        setIsPromptExpanded(false);
+      }
+    };
+    if (isPromptExpanded) {
+      document.addEventListener('keydown', handleKeyDown);
+      // 聚焦到放大的输入框
+      setTimeout(() => expandedPromptRef.current?.focus(), 100);
+    }
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isPromptExpanded]);
+  
   // 明暗切换
   const toggleDarkMode = () => {
     setTheme(themeName === 'light' ? 'dark' : 'light');
   };
   const isDark = themeName !== 'light';
   
-  // 根据模式获取显示信息
+  // 根据模式获取显示信息 - 使用SVG图标
   const getModeDisplay = () => {
     switch (currentApiMode) {
       case 'cloud':
         return {
-          icon: '☁️',
+          icon: <CloudIcon className="w-3 h-3" />,
           text: '云端已连接',
           bgClass: 'modern-badge primary',
         };
       case 'local-thirdparty':
         return {
-          icon: '🔌',
+          icon: <PlugIcon className="w-3 h-3" />,
           text: '贞贞API',
           bgClass: 'modern-badge warning',
         };
       case 'local-gemini':
         return {
-          icon: '💎',
+          icon: <DiamondIcon className="w-3 h-3" />,
           text: 'Gemini本地',
           bgClass: 'modern-badge success',
         };
@@ -352,7 +378,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
       >
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-1 ring-white/10">
-            <span className="text-base">🐧</span>
+            <PIcon className="w-5 h-5 text-white" />
           </div>
           <div>
             <h1 className="text-sm font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Pebbling</h1>
@@ -467,7 +493,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
                       : '#86efac',
                   }}
                 >
-                  <span className="text-[8px]">{modeDisplay.icon}</span>
+                <span className="text-[8px]">{modeDisplay.icon}</span>
                   <span>{modeDisplay.text}</span>
                 </div>
               </div>
@@ -482,7 +508,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
                 }}
                 title="充值"
               >
-                <span className="text-sm">🪙</span>
+                <PebbleIcon className="w-4 h-4 text-amber-400" />
                 <span className="text-xs font-bold text-amber-400">{currentUser.coins || 0}</span>
               </button>
             </>
@@ -496,7 +522,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
               }}
             >
               <span className="flex items-center justify-center gap-2">
-                <span>☁️</span>
+                <CloudIcon className="w-4 h-4" />
                 登录云端服务
               </span>
             </button>
@@ -603,9 +629,24 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
         {/* 提示词区域 - 自动扩展到底部 */}
         <div className="flex-1 flex flex-col min-h-[150px]">
           <div className="flex items-center justify-between mb-2">
-             <h2 className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: isDark ? '#6b7280' : '#9ca3af' }}>
-                {hasActiveTemplate ? '关键词' : '提示词'}
-             </h2>
+             <div className="flex items-center gap-1.5">
+               <h2 className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: isDark ? '#6b7280' : '#9ca3af' }}>
+                  {hasActiveTemplate ? '关键词' : '提示词'}
+               </h2>
+               {/* 放大按钮 */}
+               {canViewPrompt && canEditPrompt && !activeBPTemplate && (
+                 <button
+                   onClick={() => setIsPromptExpanded(true)}
+                   className="w-5 h-5 rounded-md flex items-center justify-center transition-all hover:scale-110 hover:bg-white/10"
+                   style={{ color: isDark ? '#6b7280' : '#9ca3af' }}
+                   title="放大编辑 (Esc关闭)"
+                 >
+                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                   </svg>
+                 </button>
+               )}
+             </div>
              <div className="flex items-center gap-1.5">
                {hasActiveTemplate && (
                  <div className="flex items-center gap-1">
@@ -740,10 +781,87 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
           border: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`,
         }}
       >
-        <p className="text-[9px] font-medium" style={{ color: isDark ? '#4b5563' : '#9ca3af' }}>
-          ⚠️ AI 内容仅供学习测试
+        <p className="text-[9px] font-medium flex items-center justify-center gap-1" style={{ color: isDark ? '#4b5563' : '#9ca3af' }}>
+          <WarningIcon className="w-3 h-3" />
+          AI 内容仅供学习测试
         </p>
       </div>
+      
+      {/* 提示词放大弹窗 */}
+      {isPromptExpanded && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsPromptExpanded(false);
+          }}
+        >
+          {/* 背景遮罩 */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          
+          {/* 弹窗内容 */}
+          <div 
+            className="relative w-[560px] max-w-[90vw] p-4 rounded-2xl shadow-2xl"
+            style={{
+              background: isDark 
+                ? 'linear-gradient(135deg, rgba(20,20,28,0.98) 0%, rgba(15,15,20,0.99) 100%)'
+                : 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.99) 100%)',
+              border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 标题栏 */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-indigo-500/20">
+                  <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </div>
+                <h3 className="text-sm font-semibold" style={{ color: isDark ? '#fff' : '#0f172a' }}>
+                  编辑提示词
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsPromptExpanded(false)}
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105 hover:bg-red-500/20"
+                style={{ color: isDark ? '#9ca3af' : '#6b7280' }}
+                title="关闭 (Esc)"
+              >
+                <svg className="w-4 h-4 hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* 放大的提示词输入框 */}
+            <textarea
+              ref={expandedPromptRef}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="描述想生成的画面..."
+              className="w-full h-[300px] p-4 rounded-xl resize-none text-sm leading-relaxed"
+              style={{
+                background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                color: isDark ? '#fff' : '#0f172a',
+              }}
+            />
+            
+            {/* 底部提示 */}
+            <div className="flex items-center justify-between mt-3">
+              <p className="text-[10px]" style={{ color: isDark ? '#6b7280' : '#9ca3af' }}>
+                按 Esc 或点击外部关闭
+              </p>
+              <button
+                onClick={() => setIsPromptExpanded(false)}
+                className="px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/25 hover:scale-105 active:scale-95 transition-all"
+              >
+                完成
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
   </aside>
   );
 };
@@ -929,16 +1047,17 @@ const RightPanel: React.FC<RightPanelProps> = ({
   setView,
   onDeleteIdea,
   onEditIdea,
+  onToggleFavorite,
 }) => {
   const { theme } = useTheme();
   
-  // 按类型分组创意库
-  const smartIdeas = creativeIdeas.filter(idea => idea.isSmart && !idea.isSmartPlus && !idea.isBP);
-  const smartPlusIdeas = creativeIdeas.filter(idea => idea.isSmartPlus);
-  const bpIdeas = creativeIdeas.filter(idea => idea.isBP);
+  // 收藏的创意库
+  const favoriteIdeas = creativeIdeas.filter(idea => idea.isFavorite);
+  // 最近使用的创意库（按order排序，取前5个）
+  const recentIdeas = [...creativeIdeas].sort((a, b) => (b.order || 0) - (a.order || 0)).slice(0, 5);
   
-  // 渲染单个创意项
-  const renderIdeaItem = (idea: CreativeIdea) => (
+  // 渲染单个创意项 - 改进版本，支持收藏
+  const renderIdeaItem = (idea: CreativeIdea, showFavorite = true) => (
     <div
       key={idea.id}
       className="group liquid-card p-2 hover:border-indigo-500/30 transition-all cursor-pointer"
@@ -956,6 +1075,22 @@ const RightPanel: React.FC<RightPanelProps> = ({
           </span>
         </div>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* 收藏按钮 */}
+          {showFavorite && onToggleFavorite && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggleFavorite(idea.id); }}
+              className={`w-5 h-5 rounded flex items-center justify-center transition-all ${
+                idea.isFavorite 
+                  ? 'text-amber-400 hover:text-amber-300' 
+                  : 'text-gray-500 hover:text-amber-400 hover:bg-amber-500/10'
+              }`}
+              title={idea.isFavorite ? '取消收藏' : '收藏'}
+            >
+              <svg className="w-3 h-3" fill={idea.isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+            </button>
+          )}
           <button
             onClick={(e) => { e.stopPropagation(); onEditIdea(idea); }}
             className="w-5 h-5 rounded flex items-center justify-center text-gray-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all"
@@ -1007,10 +1142,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
      {/* 标题栏 */}
      <div className="liquid-panel-section flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded bg-purple-500/15 flex items-center justify-center">
-            <LibraryIcon className="w-3 h-3 text-purple-400"/>
+          <div className="w-5 h-5 rounded bg-amber-500/15 flex items-center justify-center">
+            <svg className="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+            </svg>
           </div>
-          <h2 className="text-[12px] font-semibold" style={{ color: theme.colors.textPrimary }}>创意库</h2>
+          <h2 className="text-[12px] font-semibold" style={{ color: theme.colors.textPrimary }}>收藏创意</h2>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -1025,7 +1162,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
             <PlusCircleIcon className="w-3 h-3" />
           </button>
           <button
-            onClick={() => setView('library')}
+            onClick={() => setView('local-library')}
             className="w-6 h-6 rounded-md flex items-center justify-center transition-all hover:scale-105 press-scale"
             style={{ 
               background: 'var(--glass-bg)',
@@ -1040,29 +1177,41 @@ const RightPanel: React.FC<RightPanelProps> = ({
         </div>
      </div>
      
-     {/* 创意列表 */}
+     {/* 收藏列表 */}
      <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-        {creativeIdeas.length === 0 ? (
+        {favoriteIdeas.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-8">
-            <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-3">
-              <LibraryIcon className="w-6 h-6 text-purple-400"/>
+            <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center mb-3">
+              <svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
             </div>
-            <p className="text-[11px] font-medium" style={{ color: theme.colors.textPrimary }}>还没有创意</p>
-            <p className="text-[10px] mt-1" style={{ color: theme.colors.textMuted }}>点击右上角创建第一个</p>
+            <p className="text-[11px] font-medium" style={{ color: theme.colors.textPrimary }}>还没有收藏</p>
+            <p className="text-[10px] mt-1" style={{ color: theme.colors.textMuted }}>在创意库中点击星标收藏</p>
             <button
-              onClick={() => setAddIdeaModalOpen(true)}
+              onClick={() => setView('local-library')}
               className="mt-4 px-4 py-2 liquid-btn text-[11px]"
             >
-              <PlusCircleIcon className="w-3.5 h-3.5 mr-1.5" />
-              新建创意
+              <LibraryIcon className="w-3.5 h-3.5 mr-1.5" />
+              浏览创意库
             </button>
           </div>
         ) : (
-          <>
-            {renderGroup('BP 模式', bpIdeas, 'BP', 'warning')}
-            {renderGroup('Smart+', smartPlusIdeas, 'S+', 'success')}
-            {renderGroup('Smart', smartIdeas, 'S', 'primary')}
-          </>
+          <div className="space-y-1.5">
+            {favoriteIdeas.map(idea => renderIdeaItem(idea, false))}
+          </div>
+        )}
+        
+        {/* 最近使用 - 当收藏不多时显示 */}
+        {favoriteIdeas.length < 3 && recentIdeas.length > 0 && (
+          <div className="mt-4 pt-3 border-t" style={{ borderColor: theme.colors.border }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-medium" style={{ color: theme.colors.textMuted }}>最近使用</span>
+            </div>
+            <div className="space-y-1.5">
+              {recentIdeas.slice(0, 3).map(idea => renderIdeaItem(idea))}
+            </div>
+          </div>
         )}
      </div>
      
@@ -1072,7 +1221,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
          <div className="flex items-center justify-between text-[10px]">
            <span style={{ color: theme.colors.textMuted }}>共 {creativeIdeas.length} 个创意</span>
            <button
-             onClick={() => setView('library')}
+             onClick={() => setView('local-library')}
              className="text-indigo-400 hover:text-indigo-300 transition-colors"
            >
              管理全部 →
@@ -1129,9 +1278,9 @@ const Canvas: React.FC<CanvasProps> = ({
   onDesktopImagePreview,
   onDesktopImageEditAgain,
   onDesktopImageRegenerate,
-  onGenerateFromFlow,
-  onSaveImageFromFlow,
-  onCanvasClick,
+  onFileDrop,
+  isResultMinimized,
+  setIsResultMinimized,
 }) => {
   const { theme, themeName } = useTheme();
   const isDark = themeName !== 'light';
@@ -1239,34 +1388,91 @@ const Canvas: React.FC<CanvasProps> = ({
             onImageRegenerate={onDesktopImageRegenerate}
             history={history}
             creativeIdeas={creativeIdeas}
+            onFileDrop={onFileDrop}
           />
           
-          {/* 生成结果浮层 - 现代化设计 */}
+          {/* 生成结果浮层 - 毛玻璃效果 + 最小化联动 */}
           {(status === ApiStatus.Loading || (status === ApiStatus.Success && content) || (status === ApiStatus.Error && error)) && (
-            <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-40 modern-card p-5 animate-scale-in">
-              {/* 关闭按钮 */}
-              {status !== ApiStatus.Loading && onDismissResult && (
-                <button
-                  onClick={onDismissResult}
-                  className="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 rounded-xl flex items-center justify-center text-gray-300 hover:text-white transition-all shadow-lg border border-white/10"
-                  title="关闭"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+            <>
+              {/* 正常展开状态 - 居中显示 */}
+              {!isResultMinimized && (
+                <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-40 animate-scale-in">
+                  <div className="
+                    bg-gradient-to-br from-indigo-900/80 via-purple-900/70 to-indigo-800/80
+                    backdrop-blur-xl backdrop-saturate-150
+                    rounded-2xl
+                    border-2 border-indigo-400/50
+                    shadow-[0_0_40px_rgba(99,102,241,0.5),0_0_80px_rgba(139,92,246,0.25)]
+                    ring-1 ring-indigo-500/30
+                    overflow-hidden p-5
+                  ">
+                    {/* 标题栏 */}
+                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+                      <div className="flex items-center gap-3">
+                        {status === ApiStatus.Loading ? (
+                          <div className="w-8 h-8 rounded-full bg-indigo-500/30 flex items-center justify-center">
+                            <div className="w-4 h-4 border-2 border-indigo-300 border-t-transparent rounded-full animate-spin"></div>
+                          </div>
+                        ) : status === ApiStatus.Success ? (
+                          <div className="w-8 h-8 rounded-full bg-green-500/30 flex items-center justify-center">
+                            <svg className="w-4 h-4 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-red-500/30 flex items-center justify-center">
+                            <svg className="w-4 h-4 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                          </div>
+                        )}
+                        <div>
+                          <h3 className="text-base font-semibold text-white">
+                            {status === ApiStatus.Loading ? 'AI 正在创作中...' : status === ApiStatus.Success ? '作品已完成' : '生成遇到问题'}
+                          </h3>
+                          <p className="text-xs text-indigo-300/70">
+                            {status === ApiStatus.Loading ? '请稍等，魔法正在发生' : status === ApiStatus.Success ? '点击图片查看大图' : '请稍后重试'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setIsResultMinimized(true)}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-indigo-300 hover:text-white hover:bg-white/10 transition-all"
+                          title="收起到按钮旁"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        {status !== ApiStatus.Loading && onDismissResult && (
+                          <button
+                            onClick={onDismissResult}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-indigo-300 hover:text-red-300 hover:bg-red-500/20 transition-all"
+                            title="关闭"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <GeneratedImageDisplay
+                      status={status}
+                      error={error}
+                      content={content}
+                      onPreviewClick={onPreviewClick}
+                      onEditAgain={onEditAgain}
+                      onRegenerate={onRegenerate}
+                      prompt={prompt}
+                      imageSize={imageSize}
+                    />
+                  </div>
+                </div>
               )}
-              <GeneratedImageDisplay
-                status={status}
-                error={error}
-                content={content}
-                onPreviewClick={onPreviewClick}
-                onEditAgain={onEditAgain}
-                onRegenerate={onRegenerate}
-                prompt={prompt}
-                imageSize={imageSize}
-              />
-            </div>
+            </>
           )}
         </div>
       )}
@@ -1364,6 +1570,7 @@ const App: React.FC = () => {
   const [desktopSelectedIds, setDesktopSelectedIds] = useState<string[]>([]);
   const [openFolderId, setOpenFolderId] = useState<string | null>(null);
   const [openStackId, setOpenStackId] = useState<string | null>(null); // 叠放打开状态
+  const [isResultMinimized, setIsResultMinimized] = useState(false); // 生成结果最小化状态
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importIdeasInputRef = useRef<HTMLInputElement>(null);
@@ -1539,6 +1746,8 @@ const App: React.FC = () => {
   const handleLogout = async () => {
     apiLogout();
     setCurrentUser(null);
+    // 退出登录后清空云端创意库
+    setCloudCreativeIdeas([]);
     // 退出后，如果没有本地配置，切换到本地Gemini模式
     if (!thirdPartyApiConfig.apiKey && !thirdPartyApiConfig.baseUrl) {
       const localConfig: ThirdPartyApiConfig = {
@@ -1552,6 +1761,24 @@ const App: React.FC = () => {
     // 退出后切换到本地数据
     await loadDataFromLocal();
   };
+
+  // 切换收藏状态
+  const handleToggleFavorite = useCallback(async (id: number) => {
+    const targetIdea = localCreativeIdeas.find(idea => idea.id === id);
+    if (!targetIdea) return;
+    
+    const updatedIdeas = localCreativeIdeas.map(idea => 
+      idea.id === id ? { ...idea, isFavorite: !idea.isFavorite } : idea
+    );
+    setLocalCreativeIdeas(updatedIdeas);
+    
+    // 保存到IndexedDB
+    try {
+      await saveCreativeIdeaToDB({ ...targetIdea, isFavorite: !targetIdea.isFavorite });
+    } catch (e) {
+      console.error('保存收藏状态失败:', e);
+    }
+  }, [localCreativeIdeas]);
 
   const handleSetPrompt = (value: string) => {
     setPrompt(value);
@@ -1716,7 +1943,7 @@ const App: React.FC = () => {
     imageUrl: string, 
     promptText: string, 
     isThirdParty: boolean, 
-    inputFile?: File | null,
+    inputFiles?: File[], // 修改为数组支持多图
     creativeInfo?: {
       templateId?: number;
       templateType: 'smart' | 'smartPlus' | 'bp' | 'none';
@@ -1728,16 +1955,30 @@ const App: React.FC = () => {
     let inputImageData: string | undefined;
     let inputImageName: string | undefined;
     let inputImageType: string | undefined;
+    let inputImages: Array<{ data: string; name: string; type: string }> | undefined;
     
-    if (inputFile) {
+    // 保存所有输入图片（多图支持）
+    if (inputFiles && inputFiles.length > 0) {
       try {
-        inputImageData = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
-          reader.readAsDataURL(inputFile);
-        });
-        inputImageName = inputFile.name;
-        inputImageType = inputFile.type;
+        inputImages = await Promise.all(inputFiles.map(async (file) => {
+          const data = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+            reader.readAsDataURL(file);
+          });
+          return {
+            data,
+            name: file.name,
+            type: file.type
+          };
+        }));
+        
+        // 保持向后兼容：第一张图片也保存到单图字段
+        if (inputImages.length > 0) {
+          inputImageData = inputImages[0].data;
+          inputImageName = inputImages[0].name;
+          inputImageType = inputImages[0].type;
+        }
       } catch (e) {
         console.warn('保存输入图片失败:', e);
       }
@@ -1754,6 +1995,7 @@ const App: React.FC = () => {
       inputImageData,
       inputImageName,
       inputImageType,
+      inputImages, // 多图支持
       // 创意库信息
       creativeTemplateId: creativeInfo?.templateId,
       creativeTemplateType: creativeInfo?.templateType || 'none',
@@ -2389,7 +2631,7 @@ const App: React.FC = () => {
           templateId = activeSmartTemplate.id;
         }
         
-        await saveToHistory(result.imageUrl, promptToSave, thirdPartyApiConfig.enabled, files.length > 0 ? files[0] : null, {
+        await saveToHistory(result.imageUrl, promptToSave, thirdPartyApiConfig.enabled, files.length > 0 ? files : [], {
           templateId,
           templateType,
           bpInputs: templateType === 'bp' ? { ...bpInputs } : undefined,
@@ -2578,7 +2820,7 @@ const App: React.FC = () => {
     setPreviewImageUrl(item.imageUrl);
   }, []);
 
-  // 桌面图片操作 - 再编辑（将图片添加到上传列表并设置提示词）
+  // 桌面图片操作 - 再编辑（将图片添加到上传列表，不携带提示词）
   const handleDesktopImageEditAgain = useCallback(async (item: DesktopImageItem) => {
     try {
       // 将图片URL转换为File对象
@@ -2590,10 +2832,10 @@ const App: React.FC = () => {
       setFiles(prev => [...prev, file]);
       setActiveFileIndex(files.length); // 选中新添加的图片
       
-      // 设置提示词
-      if (item.prompt) {
-        setPrompt(item.prompt);
-      }
+      // 不携带提示词 - 让用户重新输入
+      // if (item.prompt) {
+      //   setPrompt(item.prompt);
+      // }
     } catch (e) {
       console.error('添加图片到编辑列表失败:', e);
     }
@@ -2614,8 +2856,50 @@ const App: React.FC = () => {
     if (item.historyId) {
       const historyItem = generationHistory.find(h => h.id === item.historyId);
       if (historyItem) {
-        // 恢复输入图片
-        if (historyItem.inputImageData && historyItem.inputImageType) {
+        // 恢复所有输入图片（多图支持）
+        if (historyItem.inputImages && historyItem.inputImages.length > 0) {
+          try {
+            const restoredFiles = await Promise.all(historyItem.inputImages.map(async (img, index) => {
+              const byteCharacters = atob(img.data);
+              const byteNumbers = new Array(byteCharacters.length);
+              for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+              }
+              const byteArray = new Uint8Array(byteNumbers);
+              const blob = new Blob([byteArray], { type: img.type });
+              return new File([blob], img.name, { type: img.type });
+            }));
+            
+            setFiles(restoredFiles);
+            setActiveFileIndex(0);
+          } catch (e) {
+            console.warn('恢复多图失败:', e);
+            // 回退到单图恢复
+            if (historyItem.inputImageData && historyItem.inputImageType) {
+              try {
+                const byteCharacters = atob(historyItem.inputImageData);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                  byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: historyItem.inputImageType });
+                const restoredFile = new File([blob], historyItem.inputImageName || 'restored-input.png', { type: historyItem.inputImageType });
+                
+                setFiles([restoredFile]);
+                setActiveFileIndex(0);
+              } catch (e2) {
+                console.warn('恢复单图也失败:', e2);
+                setFiles([]);
+                setActiveFileIndex(null);
+              }
+            } else {
+              setFiles([]);
+              setActiveFileIndex(null);
+            }
+          }
+        } else if (historyItem.inputImageData && historyItem.inputImageType) {
+          // 向后兼容：单图恢复
           try {
             const byteCharacters = atob(historyItem.inputImageData);
             const byteNumbers = new Array(byteCharacters.length);
@@ -2828,6 +3112,9 @@ const App: React.FC = () => {
           onDesktopImagePreview={handleDesktopImagePreview}
           onDesktopImageEditAgain={handleDesktopImageEditAgain}
           onDesktopImageRegenerate={handleDesktopImageRegenerate}
+          onFileDrop={handleFileSelection}
+          isResultMinimized={isResultMinimized}
+          setIsResultMinimized={setIsResultMinimized}
         />
         {view === 'editor' && (
              <div className="absolute left-1/2 -translate-x-1/2 z-30 transition-all duration-300 bottom-6">
@@ -2835,6 +3122,8 @@ const App: React.FC = () => {
                     onClick={handleGenerateClick}
                     disabled={!canGenerate}
                     status={status}
+                    hasMinimizedResult={isResultMinimized && (status === ApiStatus.Loading || status === ApiStatus.Success || status === ApiStatus.Error)}
+                    onExpandResult={() => setIsResultMinimized(false)}
                 />
              </div>
         )}
@@ -2848,6 +3137,7 @@ const App: React.FC = () => {
           setView={setView}
           onDeleteIdea={handleDeleteCreativeIdea}
           onEditIdea={handleStartEditIdea}
+          onToggleFavorite={handleToggleFavorite}
         />
       </div>
       

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ThirdPartyApiConfig } from '../types';
 import { useTheme, ThemeName } from '../contexts/ThemeContext';
+import { CloudIcon, PlugIcon, DiamondIcon } from './icons/PIcon';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -203,7 +204,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                   activeMode === 'cloud' && isLoggedIn ? 'bg-indigo-500' : ''
                 }`} style={!(activeMode === 'cloud' && isLoggedIn) ? { background: isLight ? '#e2e8f0' : '#374151' } : {}}>
-                  <span className="text-xl">☁️</span>
+                  <CloudIcon className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -257,7 +258,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                   activeMode === 'local-thirdparty' ? 'bg-orange-500' : ''
                 }`} style={activeMode !== 'local-thirdparty' ? { background: isLight ? '#e2e8f0' : '#374151' } : {}}>
-                  <span className="text-xl">🔌</span>
+                  <PlugIcon className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
                   <h4 className="text-sm font-semibold" style={{ color: isLight ? '#0f172a' : 'white' }}>贞贞 API</h4>
@@ -344,7 +345,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                   activeMode === 'local-gemini' ? 'bg-purple-500' : ''
                 }`} style={activeMode !== 'local-gemini' ? { background: isLight ? '#e2e8f0' : '#374151' } : {}}>
-                  <span className="text-xl">💎</span>
+                  <DiamondIcon className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
                   <h4 className="text-sm font-semibold" style={{ color: isLight ? '#0f172a' : 'white' }}>Gemini API</h4>

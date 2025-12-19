@@ -40,12 +40,14 @@ interface DesktopProps {
   history?: GenerationHistory[];
   // 创意库（用于显示名称）
   creativeIdeas?: { id: number; title: string }[];
+  // 拖放文件回调（从电脑拖拽图片到桌面）
+  onFileDrop?: (files: FileList) => void;
 }
 
 const GRID_SIZE = 100; // 网格大小
 const ICON_SIZE = 80; // 图标大小
 const DRAG_THRESHOLD = 5; // 拖拽阈值，超过此距离才认为是拖拽
-export const TOP_OFFSET = 80; // 顶部偏移（搜索框+工具栏）
+export const TOP_OFFSET = 100; // 顶部偏移（搜索框+工具栏）- 增加避免套叠
 const PADDING = 24; // 桌面内边距
 // 不再使用固定行列，改为动态计算
 
@@ -77,6 +79,7 @@ export const Desktop: React.FC<DesktopProps> = ({
   onImageRegenerate,
   history = [],
   creativeIdeas = [],
+  onFileDrop,
 }) => {
   const { theme, themeName } = useTheme();
   const isLight = themeName === 'light';
@@ -105,6 +108,7 @@ export const Desktop: React.FC<DesktopProps> = ({
   const [hideFileNames, setHideFileNames] = useState(false); // 是否隐藏文件名
   const [isExporting, setIsExporting] = useState(false); // 导出中状态
   const [showPreview, setShowPreview] = useState(false); // 是否显示预览（空格键控制）
+  const [isFileDragging, setIsFileDragging] = useState(false); // 是否有文件被拖拽到桌面
 
   // 获取当前显示的项目（根据是否在文件夹或叠放内）
   const baseItems = openFolderId
@@ -1074,6 +1078,54 @@ export const Desktop: React.FC<DesktopProps> = ({
     }
   };
 
+  // 处理文件拖放事件（从电脑拖拽图片到桌面）
+  const handleFileDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // 检查是否有文件
+    if (e.dataTransfer.types.includes('Files')) {
+      setIsFileDragging(true);
+    }
+  }, []);
+
+  const handleFileDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.types.includes('Files')) {
+      e.dataTransfer.dropEffect = 'copy';
+    }
+  }, []);
+
+  const handleFileDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // 只有离开容器时才取消拖拽状态
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (rect) {
+      const { clientX, clientY } = e;
+      if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) {
+        setIsFileDragging(false);
+      }
+    }
+  }, []);
+
+  const handleFileDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsFileDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      // 过滤出图片文件
+      const imageFiles = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+      if (imageFiles.length > 0 && onFileDrop) {
+        // 创建一个新的 FileList类似对象
+        const dt = new DataTransfer();
+        imageFiles.forEach(f => dt.items.add(f));
+        onFileDrop(dt.files);
+      }
+    }
+  }, [onFileDrop]);
+
   return (
     <div
       ref={containerRef}
@@ -1089,9 +1141,30 @@ export const Desktop: React.FC<DesktopProps> = ({
       onMouseDown={handleContainerMouseDown}
       onContextMenu={(e) => handleContextMenu(e)}
       onDragStart={(e) => e.preventDefault()}
+      onDragEnter={handleFileDragEnter}
+      onDragOver={handleFileDragOver}
+      onDragLeave={handleFileDragLeave}
+      onDrop={handleFileDrop}
     >
-      {/* 搜索框 + 自动叠放 + 隐藏文件名按钮 - 右上角 */}
-      <div className="absolute top-5 right-6 z-20 flex items-center gap-2">
+      {/* 文件拖放提示遮罩 */}
+      {isFileDragging && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="absolute inset-0 bg-indigo-500/20 border-4 border-dashed border-indigo-500 rounded-xl" />
+          <div className="relative flex flex-col items-center gap-4 p-8 bg-black/60 backdrop-blur-xl rounded-2xl border border-white/20">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl">
+              <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-semibold text-white">拖放图片到这里</p>
+              <p className="text-sm text-gray-400 mt-1">图片将添加到上传区域</p>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* 搜索框 + 自动叠放 + 隐藏文件名按钮 - 右上角，留出中间标签空间 */}
+      <div className="absolute top-14 right-6 z-20 flex items-center gap-2">
         {/* 搜索框 */}
         <div className="relative">
           <input

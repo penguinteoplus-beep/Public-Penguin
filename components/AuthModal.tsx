@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { login, register, User } from '../services/api/auth';
+import { PIcon } from './icons/PIcon';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -72,8 +73,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
       <div className="relative w-full max-w-md mx-4 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
         {/* 头部 */}
         <div className="p-6 border-b border-white/10 bg-gradient-to-r from-indigo-600/20 to-purple-600/20">
-          <h2 className="text-xl font-bold text-white">
-            🐧 {mode === 'login' ? '登录 Pebbling UI' : '加入 Pebbling UI'}
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <PIcon className="w-6 h-6" />
+            {mode === 'login' ? '登录 Pebbling UI' : '加入 Pebbling UI'}
           </h2>
           <p className="text-sm text-gray-400 mt-1">
             {mode === 'login' ? '欢迎回来，继续你的创作之旅' : '注册账号，开启AI创作之旅'}

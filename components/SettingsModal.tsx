@@ -319,6 +319,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </button>
                   </div>
                 </div>
+                <a
+                  href="https://ai.t8star.cn/register?aff=64350e39653"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2 text-xs font-medium text-center rounded-lg transition-all hover:scale-[1.02] flex items-center justify-center gap-1.5"
+                  style={{
+                    backgroundColor: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.05)',
+                    color: isLight ? '#3b82f6' : '#60a5fa',
+                    border: `1px solid ${isLight ? 'rgba(59,130,246,0.2)' : 'rgba(96,165,250,0.2)'}`
+                  }}
+                >
+                  🔑 获取Key
+                </a>
                 <button
                   onClick={handleSaveLocalThirdParty}
                   className="w-full py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"

@@ -1,20 +1,17 @@
 import React from 'react';
 
-// P 字母图标 - 用于 Pebbling 品牌
-export const PIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+// P 字母图标 - 用于 Penguin UI 品牌标识
+export const PIcon: React.FC<{ className?: string; style?: React.CSSProperties }> = ({ className = "w-6 h-6", style }) => (
+  <svg className={className} style={style} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* 粗厚的P字母 - 填充式设计 */}
     <path 
-      d="M7 4h6a5 5 0 0 1 0 10H7V4z" 
-      stroke="currentColor" 
-      strokeWidth="2.5" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
+      d="M6 3h7a6 6 0 0 1 0 12H9v6H6V3z" 
+      fill="currentColor"
     />
     <path 
-      d="M7 4v16" 
-      stroke="currentColor" 
-      strokeWidth="2.5" 
-      strokeLinecap="round" 
+      d="M9 6h4a3 3 0 0 1 0 6H9V6z" 
+      fill="currentColor"
+      style={{ opacity: 0 }}
     />
   </svg>
 );

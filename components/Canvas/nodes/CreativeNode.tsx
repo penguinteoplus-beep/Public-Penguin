@@ -65,7 +65,7 @@ const CreativeNode: React.FC<NodeProps> = ({ id, data, selected }) => {
             <div className="flex-1 min-w-0">
               <div className="text-sm font-bold text-white truncate">{idea.title}</div>
               <div className="text-xs text-gray-400 flex items-center gap-1.5 mt-1 flex-wrap">
-                {idea.isBP && <span className="px-1.5 py-0.5 bg-blue-500/30 rounded-md text-blue-300 text-[10px]">BP</span>}
+                {idea.isBP && <span className="px-1.5 py-0.5 bg-amber-500/50 rounded-md text-amber-200 text-[10px]">BP</span>}
                 {idea.isSmartPlus && <span className="px-1.5 py-0.5 bg-blue-500/30 rounded-md text-blue-300 text-[10px]">S+</span>}
                 {idea.isSmart && <span className="px-1.5 py-0.5 bg-blue-500/30 rounded-md text-blue-300 text-[10px]">Smart</span>}
                 {idea.cost && <span className="text-blue-400 flex items-center gap-0.5">🪨 {idea.cost}</span>}

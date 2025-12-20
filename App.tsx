@@ -11,6 +11,7 @@ import { CreativeLibrary } from './components/CreativeLibrary';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { LibraryIcon } from './components/icons/LibraryIcon';
 import { SettingsIcon } from './components/icons/SettingsIcon';
+import { BoltIcon } from './components/icons/BoltIcon';
 import { PlusCircleIcon } from './components/icons/PlusCircleIcon';
 import { GenerateButton } from './components/GenerateButton';
 import { PenguinIcon } from './components/icons/PenguinIcon';
@@ -99,6 +100,7 @@ interface CanvasProps {
   onExportIdeas: () => void;
   onImportIdeas: () => void;
   onReorderIdeas: (ideas: CreativeIdea[]) => void;
+  onToggleFavorite?: (id: number) => void;
   onEditAgain?: () => void; // 再次编辑
   onRegenerate?: () => void; // 重新生成
   onDismissResult?: () => void; // 关闭结果浮层
@@ -383,8 +385,8 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
             <PIcon className="w-5 h-5" style={{ strokeWidth: 3, color: theme.colors.textPrimary }} />
           </div>
           <div>
-            <h1 className="text-sm font-bold" style={{ color: theme.colors.textPrimary }}>Pebbling</h1>
-            <p className="text-[9px] font-medium tracking-wide" style={{ color: theme.colors.textMuted }}>AI Creative Studio</p>
+            <h1 className="text-sm font-bold" style={{ color: theme.colors.textPrimary }}>Penguin UI</h1>
+            <p className="text-[9px] font-medium tracking-wide" style={{ color: theme.colors.textMuted }}>PenguinPebbling</p>
           </div>
         </div>
         
@@ -965,8 +967,8 @@ const BPModePanel: React.FC<{
         >
              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                    <span className="text-[10px]">⚡</span>
+                  <div className="w-5 h-5 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                    <BoltIcon className="w-3 h-3 text-amber-400"/>
                   </div>
                   <h3 className="text-xs font-semibold" style={{ color: isDark ? '#fff' : '#0f172a' }}>BP 模式</h3>
                 </div>
@@ -1038,7 +1040,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   // 最近使用的创意库（按order排序，取前5个）
   const recentIdeas = [...creativeIdeas].sort((a, b) => (b.order || 0) - (a.order || 0)).slice(0, 5);
   
-  // 渲染单个创意项 - 改进版本，支持收藏
+  // 渲染单个创意项 - 改进版本，支持收藏和BP标签
   const renderIdeaItem = (idea: CreativeIdea, showFavorite = true) => (
     <div
       key={idea.id}
@@ -1055,6 +1057,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
           <span className="text-[11px] font-medium truncate" style={{ color: theme.colors.textPrimary }}>
             {idea.title}
           </span>
+          {/* BP标签 */}
+          {idea.isBP && (
+            <span className="px-1 py-0.5 bg-amber-500/20 text-amber-400 text-[8px] font-bold rounded flex-shrink-0">
+              BP
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
           {/* 收藏按钮 */}
@@ -1263,6 +1271,7 @@ const Canvas: React.FC<CanvasProps> = ({
   onFileDrop,
   isResultMinimized,
   setIsResultMinimized,
+  onToggleFavorite,
 }) => {
   const { theme, themeName } = useTheme();
   const isDark = themeName !== 'light';
@@ -1347,6 +1356,7 @@ const Canvas: React.FC<CanvasProps> = ({
             onExport={onExportIdeas}
             onImport={onImportIdeas}
             onReorder={onReorderIdeas}
+            onToggleFavorite={onToggleFavorite}
           />
         </div>
       ) : (
@@ -3105,6 +3115,7 @@ const App: React.FC = () => {
           onFileDrop={handleFileSelection}
           isResultMinimized={isResultMinimized}
           setIsResultMinimized={setIsResultMinimized}
+          onToggleFavorite={handleToggleFavorite}
         />
         {view === 'editor' && (
              <div className="absolute left-1/2 -translate-x-1/2 z-30 transition-all duration-300 bottom-6">
